@@ -1,0 +1,39 @@
+# Shared helpers: logging and symlink logic.
+
+function Write-Info  { param($Msg) Write-Host "[INFO] $Msg" -ForegroundColor Green }
+function Write-Warn  { param($Msg) Write-Host "[WARN] $Msg" -ForegroundColor Yellow }
+function Write-Err   { param($Msg) Write-Host "[ERROR] $Msg" -ForegroundColor Red }
+
+function Ensure-Linked {
+    param([string]$Source, [string]$Target)
+
+    if (-not (Test-Path $Source)) { return }
+
+    $targetParent = Split-Path -Parent $Target
+    if (-not (Test-Path $targetParent)) {
+        New-Item -ItemType Directory -Path $targetParent -Force | Out-Null
+    }
+
+    if (Test-Path $Target) {
+        $item = Get-Item $Target -Force
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            if ($item.Target -eq $Source) {
+                Write-Host "  [SKIP] $Target"
+                return
+            }
+            Remove-Item $Target -Force
+        } else {
+            $backup = "$Target.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+            Move-Item $Target $backup
+            Write-Info "Backed up: $Target -> $backup"
+        }
+    }
+
+    $sourceItem = Get-Item $Source -Force
+    if ($sourceItem.PSIsContainer) {
+        cmd /c mklink /J "$Target" "$Source" | Out-Null
+    } else {
+        New-Item -ItemType SymbolicLink -Path $Target -Target $Source -Force | Out-Null
+    }
+    Write-Host "  [LINK] $Source -> $Target"
+}

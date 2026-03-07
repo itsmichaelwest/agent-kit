@@ -1,0 +1,29 @@
+{
+  "skills": [
+    { "name": "subagent-driven-development", "repo": "BumpyClock/dotfiles", "path": "skills/subagent-driven-development" },
+    { "name": "programming",                 "repo": "BumpyClock/dotfiles", "path": "skills/programming" },
+    { "name": "design-engineering",          "repo": "BumpyClock/dotfiles", "path": "skills/design-engineering" },
+    { "name": "swift-concurrency-expert",    "repo": "Dimillian/Skills", "path": "swift-concurrency-expert" },
+    { "name": "swiftui-performance-audit",   "repo": "Dimillian/Skills", "path": "swiftui-performance-audit" },
+    { "name": "swiftui-expert-skill",        "repo": "AvdLee/SwiftUI-Agent-Skill", "path": "swiftui-expert-skill" },
+    { "name": "swiftui-pro",                 "repo": "twostraws/swiftui-agent-skill", "path": "swiftui-pro" },
+    { "name": "liquid-glass",                "repo": "haider-nawaz/liquid-glass-skill", "path": "plugins/liquid-glass/skills/liquid-glass" },
+    { "name": "ios-simulator-skill",         "repo": "conorluddy/ios-simulator-skill", "path": "ios-simulator-skill" },
+    { "name": "winui3-csharp-app",           "repo": "BumpyClock/dotfiles", "path": "skills/winui3-csharp-app" },
+    { "name": "using-dotnet",               "repo": "novotnyllc/dotnet-artisan", "path": "skills/using-dotnet" },
+    { "name": "dotnet-advisor",             "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-advisor" },
+    { "name": "dotnet-csharp",              "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-csharp" },
+    { "name": "dotnet-api",                 "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-api" },
+    { "name": "dotnet-ui",                  "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-ui" },
+    { "name": "dotnet-testing",             "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-testing" },
+    { "name": "dotnet-devops",              "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-devops" },
+    { "name": "dotnet-tooling",             "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-tooling" },
+    { "name": "dotnet-debugging",           "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-debugging" },
+    { "name": "ux-designer",                 "repo": "BumpyClock/dotfiles", "path": "skills/ux-designer" },
+    { "name": "skill-creator",               "repo": "BumpyClock/dotfiles", "path": "skills/skill-creator" },
+    { "name": "git-workflow",                "repo": "BumpyClock/dotfiles", "path": "skills/git-workflow" },
+    { "name": "react-best-practices",        "repo": "vercel-labs/agent-skills", "path": "skills/react-best-practices" },
+    { "name": "web-design-guidelines",       "repo": "vercel-labs/agent-skills", "path": "skills/web-design-guidelines" },
+    { "name": "webapp-testing",              "repo": "anthropics/skills", "path": "skills/webapp-testing" }
+  ]
+}

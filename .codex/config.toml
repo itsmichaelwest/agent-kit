@@ -1,0 +1,74 @@
+model = "gpt-5.3-codex"
+model_reasoning_effort = "high"
+web_search = "live"
+personality = "pragmatic"
+
+[features]
+multi_agent = true
+prevent_idle_sleep = true
+
+[agents]
+max_threads = 16
+
+[agents.architect]
+description = "Decompose hard problems into buildable pieces - system design, service boundaries, API contracts, and architecture decisions. Does not write code."
+config_file = "agents/architect.toml"
+
+[agents.developer]
+description = "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
+config_file = "agents/developer.toml"
+
+[agents.developer-lite]
+description = "Simpler coding tasks - implement features, fix bugs, or refactor with TDD. Uses a faster, cheaper model."
+config_file = "agents/developer-lite.toml"
+
+[agents.reviewer]
+description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
+config_file = "agents/reviewer.toml"
+
+[agents.researcher]
+description = "Online research - gathering up-to-date information, evaluating libraries/tools, synthesizing findings, and providing actionable recommendations."
+config_file = "agents/researcher.toml"
+
+[agents.explore]
+description = "Navigate and explore codebases - find files, search content, and analyze code structure. Read-only."
+config_file = "agents/explore.toml"
+
+[agents.planner]
+description = "Break down complex tasks into structured implementation plans with clear steps and dependencies."
+config_file = "agents/planner.toml"
+
+[agents.git-ops]
+description = "Git operations - rebases, cherry-picks, conflict resolution, history cleanup, and branch management. Does not modify code."
+config_file = "agents/git-ops.toml"
+
+[agents.code-flow-analyzer]
+description = "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
+config_file = "agents/code-flow-analyzer.toml"
+
+[agents.codebase-investigator]
+description = "Locate specific code patterns, understand how features are implemented, trace data flow, or find relevant code sections."
+config_file = "agents/codebase-investigator.toml"
+
+[agents.ux-designer]
+description = "Produce implementation-ready UX design documentation with layout, components, interactions, and accessibility guidance. Does not write code."
+config_file = "agents/ux-designer.toml"
+
+[agents.security-auditor]
+description = "Code-level security review - OWASP top 10, dependency vulnerabilities, secrets in code, auth/authz patterns, and input validation. Read-only."
+config_file = "agents/security-auditor.toml"
+
+[agents.debugger]
+description = "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
+config_file = "agents/debugger.toml"
+
+[agents.performance-engineer]
+description = "Performance analysis - profile interpretation, bottleneck identification, and optimization recommendations for CPU, memory, I/O, and database queries. Read-only."
+config_file = "agents/performance-engineer.toml"
+
+[agents.technical-writer]
+description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
+config_file = "agents/technical-writer.toml"
+
+[projects."/Users/michael"]
+trust_level = "trusted"

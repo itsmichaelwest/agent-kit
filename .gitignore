@@ -1,0 +1,30 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Secrets & local overrides
+secrets/
+.env
+.env.*
+.claude/settings.local.json
+
+# Claude session data
+.claude/projects/
+.claude/memory/
+.claude/plans/
+.claude/statsig/
+.claude/todos/
+
+# Codex system skills (bundled with the CLI, not repo content)
+skills/.system/
+
+# Dependencies
+node_modules/
