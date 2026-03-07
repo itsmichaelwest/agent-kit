@@ -40,10 +40,6 @@ config_file = "agents/explore.toml"
 description = "Break down complex tasks into structured implementation plans with clear steps and dependencies."
 config_file = "agents/planner.toml"
 
-[agents.git-ops]
-description = "Git operations - rebases, cherry-picks, conflict resolution, history cleanup, and branch management. Does not modify code."
-config_file = "agents/git-ops.toml"
-
 [agents.code-flow-analyzer]
 description = "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
 config_file = "agents/code-flow-analyzer.toml"
