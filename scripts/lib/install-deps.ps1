@@ -4,7 +4,6 @@ function Install-Deps {
     Write-Info "Installing dependencies..."
 
     $packages = @(
-        "Git.Git",
         "GitHub.cli",
         "Schniz.fnm",
         "eza-community.eza",

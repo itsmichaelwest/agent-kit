@@ -98,7 +98,7 @@ case "$ACTION" in
   link-ai-agents) link_ai_agents ;;
   shell)          inject_zsh_config ;;
   shell-remove)   remove_zsh_config ;;
-  reset)          unlink_dotfiles; unlink_ai_agents; remove_zsh_config; uninstall_deps ;;
+  reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
   update-skills)  update_skills ;;
   list-skills)    list_skills ;;
   status)         show_status ;;

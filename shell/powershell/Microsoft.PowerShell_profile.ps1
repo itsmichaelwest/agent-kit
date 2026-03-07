@@ -3,7 +3,9 @@
 # =============================================================================
 
 # Oh-My-Posh prompt
-oh-my-posh init pwsh | Invoke-Expression
+if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
+    oh-my-posh init pwsh | Invoke-Expression
+}
 
 # =============================================================================
 # NODE (fnm)

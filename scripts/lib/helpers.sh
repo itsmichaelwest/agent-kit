@@ -40,6 +40,16 @@ remove_link() {
   if [[ -L "$target" ]]; then
     rm "$target"
     echo "  [REMOVED] $target"
+
+    # Restore the most recent backup created by ensure_linked
+    local dir basename latest
+    dir="$(dirname "$target")"
+    basename="$(basename "$target")"
+    latest="$(ls -1t "$dir/${basename}.backup."* 2>/dev/null | head -1)"
+    if [[ -n "$latest" ]]; then
+      mv "$latest" "$target"
+      echo "  [RESTORED] $target (from $(basename "$latest"))"
+    fi
   elif [[ -e "$target" ]]; then
     warn "Not a symlink, skipping: $target"
   fi

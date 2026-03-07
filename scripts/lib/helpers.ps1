@@ -12,6 +12,14 @@ function Remove-Link {
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
             Remove-Item $Target -Force
             Write-Host "  [REMOVED] $Target"
+
+            # Restore the most recent backup created by Ensure-Linked
+            $backups = Get-ChildItem -Path (Split-Path -Parent $Target) -Filter "$(Split-Path -Leaf $Target).backup.*" -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending
+            if ($backups) {
+                Move-Item $backups[0].FullName $Target
+                Write-Host "  [RESTORED] $Target (from $($backups[0].Name))"
+            }
         } else {
             Write-Warn "Not a symlink, skipping: $Target"
         }
