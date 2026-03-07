@@ -11,6 +11,13 @@
 - New deps: quick health check (recent releases/commits, adoption).
 - Before coding: check `docs/` if present, follow links until domain is clear.
 
+## Git
+
+- When asked to "commit staged changes", commit exactly what is staged - do not stage or unstage files yourself.
+- If the staging looks wrong, warn but still follow the instruction.
+- Only run `git add -A` or `git add .` if nothing is staged.
+- Stage specific files by name when you need to stage.
+
 ## External libs/frameworks
 
 - Prefer existing, well-maintained libraries over custom code when they reduce complexity.
