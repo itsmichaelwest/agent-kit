@@ -28,6 +28,10 @@ function Install-Deps {
                 [System.Environment]::GetEnvironmentVariable("Path", "Machine")
 
     # Install PowerShell modules (Install-PSResource ships with PS7.4+, defaults to CurrentUser)
+    # Ensure the CurrentUser modules directory exists (OneDrive may redirect Documents)
+    $userModDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell\Modules'
+    if (-not (Test-Path $userModDir)) { New-Item -ItemType Directory -Path $userModDir -Force | Out-Null }
+
     $modules = @("Terminal-Icons", "z", "PSFzf", "PSReadLine")
     foreach ($mod in $modules) {
         if (-not (Get-Module -ListAvailable -Name $mod)) {

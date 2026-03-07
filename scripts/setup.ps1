@@ -84,7 +84,7 @@ function Show-Status {
         "$env:USERPROFILE\.gitconfig"
         "$env:USERPROFILE\.gitignore_global"
         "$env:USERPROFILE\.config\starship.toml"
-        "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+        "$(Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell\Microsoft.PowerShell_profile.ps1')"
     )
     foreach ($target in $dotfileTargets) {
         if (Test-Path $target) {

@@ -6,8 +6,9 @@ function Unlink-Dotfiles {
     Remove-Link "$env:USERPROFILE\.gitignore_global"
     Remove-Link "$env:USERPROFILE\.config\starship.toml"
 
-    # PowerShell profile
-    Remove-Link "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+    # PowerShell profile (use MyDocuments to handle OneDrive redirect)
+    $psDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
+    Remove-Link "$psDir\Microsoft.PowerShell_profile.ps1"
 
     # Windows Terminal
     @(
@@ -26,8 +27,9 @@ function Link-Dotfiles {
     Ensure-Linked "$DotfilesDir\.gitignore_global" "$env:USERPROFILE\.gitignore_global"
 
     Write-Info "Linking PowerShell profile..."
+    $psDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
     Ensure-Linked "$DotfilesDir\shell\powershell\Microsoft.PowerShell_profile.ps1" `
-        "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+        "$psDir\Microsoft.PowerShell_profile.ps1"
 
     Write-Info "Linking config directories..."
     Ensure-Linked "$DotfilesDir\.config\starship.toml" "$env:USERPROFILE\.config\starship.toml"
