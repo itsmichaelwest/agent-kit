@@ -16,8 +16,10 @@ function Install-Deps {
     )
 
     foreach ($id in $packages) {
-        winget list --id $id --exact --accept-source-agreements 2>$null | Out-Null
-        if ($LASTEXITCODE -ne 0) {
+        $output = winget list --id $id --exact --accept-source-agreements 2>$null | Out-String
+        if ($output -match [regex]::Escape($id)) {
+            Write-Host "  [OK] $id"
+        } else {
             Write-Info "Installing $id..."
             winget install --id $id --exact -h --accept-package-agreements --accept-source-agreements
         }
@@ -35,7 +37,9 @@ function Install-Deps {
 
     $modules = @("Terminal-Icons", "z", "PSFzf", "PSReadLine")
     foreach ($mod in $modules) {
-        if (-not (Test-Path "$localModDir\$mod")) {
+        if (Test-Path "$localModDir\$mod") {
+            Write-Host "  [OK] $mod"
+        } else {
             Write-Info "Installing module: $mod"
             Save-PSResource -Name $mod -Path $localModDir -TrustRepository -IncludeXml
         }
@@ -45,7 +49,9 @@ function Install-Deps {
     if (Get-Command fnm -ErrorAction SilentlyContinue) {
         fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
         $ltsInstalled = fnm list 2>$null | Select-String "lts-latest"
-        if (-not $ltsInstalled) {
+        if ($ltsInstalled) {
+            Write-Host "  [OK] Node.js LTS (fnm)"
+        } else {
             Write-Info "Installing latest Node.js LTS via fnm..."
             fnm install --lts
             fnm default lts-latest
@@ -71,8 +77,8 @@ function Uninstall-Deps {
     )
 
     foreach ($id in $packages) {
-        winget list --id $id --exact --accept-source-agreements 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
+        $output = winget list --id $id --exact --accept-source-agreements 2>$null | Out-String
+        if ($output -match [regex]::Escape($id)) {
             Write-Info "Uninstalling $id..."
             winget uninstall --id $id --exact --silent 2>$null
         }

@@ -32,9 +32,7 @@ function Ensure-Linked {
     if (-not (Test-Path $Source)) { return }
 
     $targetParent = Split-Path -Parent $Target
-    if (-not (Test-Path $targetParent)) {
-        New-Item -ItemType Directory -Path $targetParent -Force | Out-Null
-    }
+    [System.IO.Directory]::CreateDirectory($targetParent) | Out-Null
 
     if (Test-Path $Target) {
         $item = Get-Item $Target -Force
@@ -54,8 +52,22 @@ function Ensure-Linked {
     $sourceItem = Get-Item $Source -Force
     if ($sourceItem.PSIsContainer) {
         New-Item -ItemType Junction -Path $Target -Target $Source -Force | Out-Null
+        Write-Host "  [LINK] $Source -> $Target"
     } else {
-        New-Item -ItemType SymbolicLink -Path $Target -Target $Source -Force | Out-Null
+        try {
+            New-Item -ItemType SymbolicLink -Path $Target -Target $Source -Force | Out-Null
+            Write-Host "  [LINK] $Source -> $Target"
+        } catch {
+            # File symlinks need Developer Mode or elevation — try gsudo, then copy
+            if (Get-Command gsudo -ErrorAction SilentlyContinue) {
+                Write-Info "Elevating to create symlink..."
+                gsudo New-Item -ItemType SymbolicLink -Path $Target -Target $Source -Force | Out-Null
+                Write-Host "  [LINK] $Source -> $Target (elevated)"
+            } else {
+                Copy-Item $Source $Target -Force
+                Write-Host "  [COPY] $Source -> $Target" -ForegroundColor Yellow
+                Write-Warn "Install gsudo (winget install gerardog.gsudo) or enable Developer Mode for symlinks"
+            }
+        }
     }
-    Write-Host "  [LINK] $Source -> $Target"
 }
