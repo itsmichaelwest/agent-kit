@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents")]
+    [ValidateSet("install", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "list-skills")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -46,6 +46,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\install-deps.ps1"
 . "$ScriptsDir\lib\link-dotfiles.ps1"
 . "$ScriptsDir\lib\link-ai-agents.ps1"
+. "$ScriptsDir\lib\update-skills.ps1"
 
 if ($Help -or -not $Action) {
     Write-Host @"
@@ -56,6 +57,8 @@ Commands:
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
+  update-skills       Install/update skills from manifest
+  list-skills         Show skills and install status
   reset               Remove all links and uninstall dependencies
   status              Show current link status
   project-agents      Link agents into a project (-ProjectPath required)
@@ -110,6 +113,8 @@ switch ($Action) {
     "link"           { Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
     "link-ai-agents" { Link-AiAgents $DotfilesDir }
+    "update-skills"  { $code = Update-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "list-skills"    { $code = List-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "reset"          { Unlink-Dotfiles; Unlink-AiAgents $DotfilesDir; Uninstall-Deps }
     "status"         { Show-Status }
     "project-agents" {

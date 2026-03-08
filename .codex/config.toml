@@ -9,6 +9,9 @@ sandbox_mode = "danger-full-access"
 multi_agent = true
 prevent_idle_sleep = true
 
+[windows]
+sandbox = "elevated"
+
 [agents]
 max_threads = 16
 
@@ -67,6 +70,3 @@ config_file = "agents/performance-engineer.toml"
 [agents.technical-writer]
 description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
 config_file = "agents/technical-writer.toml"
-
-[projects."/Users/michael"]
-trust_level = "trusted"
