@@ -8,6 +8,7 @@
 
 ## Environment
 
+- Work with parallel subagents where it makes sense.
 - Default workspace: `F:\` (Windows Dev Drive), or `~/Developer` (macOS).
 - Editor: `code <path>`.
 - Commits: Conventional Commits (`feat|fix|refactor|build|ci|chore|docs|style|perf|test`).

@@ -1,4 +1,4 @@
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
 model_reasoning_effort = "high"
 web_search = "live"
 personality = "pragmatic"
@@ -70,3 +70,11 @@ config_file = "agents/performance-engineer.toml"
 [agents.technical-writer]
 description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
 config_file = "agents/technical-writer.toml"
+
+[agents.ui-polisher]
+description = "Captures screenshots of running apps, identifies visual issues, applies fixes, and re-verifies. Works across web, Windows, macOS, and iOS/watchOS Simulator."
+config_file = "agents/ui-polisher.toml"
+
+[agents.codebase-reviewer]
+description = "Full codebase audit using multiple AI engines in parallel. Splits by module, reviews from different perspectives, deduplicates into a prioritized report."
+config_file = "agents/codebase-reviewer.toml"
