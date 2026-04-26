@@ -56,10 +56,10 @@ install_deps() {
   # CLI tools
   info "Installing CLI tools..."
   case $os in
-    macos)  brew install gh ripgrep fd bat fzf eza starship ast-grep ;;
-    arch)   sudo pacman -S --noconfirm git github-cli curl wget ripgrep fd bat fzf eza starship ast-grep ;;
+    macos)  brew install gh ripgrep fd bat fzf eza starship ast-grep jq ;;
+    arch)   sudo pacman -S --noconfirm git github-cli curl wget ripgrep fd bat fzf eza starship ast-grep jq ;;
     ubuntu)
-      sudo apt install -y git gh curl wget ripgrep fd-find bat fzf
+      sudo apt install -y git gh curl wget ripgrep fd-find bat fzf jq
       [[ -f /usr/bin/fdfind && ! -f /usr/bin/fd ]] && sudo ln -s /usr/bin/fdfind /usr/bin/fd
       [[ -f /usr/bin/batcat && ! -f /usr/bin/bat ]] && sudo ln -s /usr/bin/batcat /usr/bin/bat
       if ! command -v eza &>/dev/null; then
@@ -91,11 +91,11 @@ install_deps() {
     fnm default lts-latest
   fi
 
-  # Default shell
-  if [[ "${SHELL##*/}" != "zsh" ]]; then
-    info "Setting zsh as default shell..."
-    chsh -s "$(which zsh)"
-    info "Log out and back in for the shell change to take effect"
+  # Default shell — don't auto-chsh; just hint. The user's login shell is a
+  # global change and should be opt-in.
+  if [[ "${SHELL##*/}" != "zsh" ]] && command -v zsh &>/dev/null; then
+    info "This kit's shell config is zsh-only. To switch your login shell, run:"
+    info "  chsh -s \"\$(which zsh)\"  # then log out and back in"
   fi
 }
 
