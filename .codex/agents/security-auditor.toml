@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex"
+name = "security-auditor"
+description = "Code-level security review - OWASP top 10, dependency vulnerabilities, secrets in code, auth/authz patterns, and input validation. Read-only."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

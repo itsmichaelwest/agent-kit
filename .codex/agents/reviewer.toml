@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex"
+name = "reviewer"
+description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

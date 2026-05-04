@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex-spark"
+name = "developer-lite"
+description = "Simpler coding tasks - implement features, fix bugs, or refactor with TDD. Uses a faster, cheaper model."
+
+model = "gpt-5.4-mini"
 model_reasoning_effort = "high"
 
 developer_instructions = """

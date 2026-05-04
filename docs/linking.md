@@ -2,6 +2,10 @@
 
 The setup scripts create symlinks from this repo into tool-specific config directories. Everything uses `ensure_linked` which is idempotent — safe to re-run at any time.
 
+When you update this repo on an existing machine, re-running `link` or `install` is the supported migration path. The scripts back up conflicting non-symlink targets, replace legacy paths with the current layout, and write a layout version marker for status reporting.
+
+Plugin declarations live in the tool-native config files already tracked in this repo. See [plugins.md](./plugins.md).
+
 ## Commands
 
 ```bash
@@ -63,18 +67,29 @@ All base dotfile links are optional — if the source file doesn't exist in the 
 |--------|--------|
 | `AGENTS.md` | `~/.codex/AGENTS.md` |
 | `prompts/` | `~/.codex/prompts` |
-| `skills/` | `~/.codex/skills` |
+| `skills/` | `~/.agents/skills` |
 | `docs/` | `~/.codex/docs` |
+| `.codex/agents/` | `~/.codex/agents` |
+| `.codex/config.toml` | `~/.codex/config.toml` |
 
 ### Copilot CLI
 
 | Source | Target |
 |--------|--------|
-| `AGENTS.md` | `~/.copilot/instructions.md` |
+| `AGENTS.md` | `~/.copilot/copilot-instructions.md` |
 | `prompts/` | `~/.copilot/prompts` |
 | `skills/` | `~/.copilot/skills` |
 | `docs/` | `~/.copilot/docs` |
-| `agents/` | `~/.copilot/agents` |
+| `agents/*.md` | `~/.copilot/agents/*.agent.md` |
+
+## Legacy cleanup
+
+The upgrade step removes these older targets after relinking the current layout:
+
+| Legacy target | Current target |
+|--------|--------|
+| `~/.codex/skills` | `~/.agents/skills` |
+| `~/.copilot/instructions.md` | `~/.copilot/copilot-instructions.md` |
 
 ## Shell Config (macOS/Linux)
 

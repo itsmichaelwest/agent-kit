@@ -6,6 +6,7 @@
     "docs": "docs",
     "agents": "agents",
     "claude_settings": ".claude/settings.json",
+    "copilot_settings": ".copilot/settings.json",
     "codex_agents": ".codex/agents",
     "codex_settings": ".codex/config.toml"
   },
@@ -20,14 +21,14 @@
     { "source": "prompts",         "path": "~/.codex/prompts" },
     { "source": "instructions",    "path": "~/.codex/AGENTS.md" },
     { "source": "docs",            "path": "~/.codex/docs" },
-    { "source": "skills",          "path": "~/.codex/skills" },
+    { "source": "skills",          "path": "~/.agents/skills" },
     { "source": "codex_settings",   "path": "~/.codex/config.toml" },
     { "source": "codex_agents",    "path": "~/.codex/agents" },
 
     { "source": "prompts",         "path": "~/.copilot/prompts" },
-    { "source": "instructions",    "path": "~/.copilot/instructions.md" },
+    { "source": "copilot_settings", "path": "~/.copilot/settings.json" },
+    { "source": "instructions",    "path": "~/.copilot/copilot-instructions.md" },
     { "source": "docs",            "path": "~/.copilot/docs" },
-    { "source": "skills",          "path": "~/.copilot/skills" },
-    { "source": "agents",          "path": "~/.copilot/agents" }
+    { "source": "skills",          "path": "~/.copilot/skills" }
   ]
 }

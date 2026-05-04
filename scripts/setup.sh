@@ -9,6 +9,7 @@ source "$SCRIPTS_DIR/lib/helpers.sh"
 source "$SCRIPTS_DIR/lib/install-deps.sh"
 source "$SCRIPTS_DIR/lib/link-dotfiles.sh"
 source "$SCRIPTS_DIR/lib/link-ai-agents.sh"
+source "$SCRIPTS_DIR/lib/plugin-status.sh"
 source "$SCRIPTS_DIR/lib/shell-config.sh"
 source "$SCRIPTS_DIR/lib/update-skills.sh"
 
@@ -30,6 +31,7 @@ Commands:
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
   list-skills         Show skills and install status
+  plugin-status       Show plugin status vs repo config
   status              Show current link status
   project-agents <path>  Link agents into a project
 
@@ -41,7 +43,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills)
+    install|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|plugin-status)
       ACTION="$1" ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
@@ -82,6 +84,9 @@ show_status() {
   info "AI agent links:"
   show_ai_agent_status
 
+  echo ""
+  show_plugin_status
+
   # Shell config
   echo ""
   if grep -q "# >>> dotfiles zsh start" "$HOME/.zshrc" 2>/dev/null; then
@@ -101,6 +106,7 @@ case "$ACTION" in
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
   update-skills)  update_skills ;;
   list-skills)    list_skills ;;
+  plugin-status)  show_plugin_status ;;
   status)         show_status ;;
   project-agents)
     [[ -z "$PROJECT_AGENTS" ]] && { err "Missing project path"; exit 1; }

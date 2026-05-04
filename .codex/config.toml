@@ -1,80 +1,171 @@
-model = "gpt-5.4"
-model_reasoning_effort = "high"
-web_search = "live"
-personality = "pragmatic"
 commit_attribution = ""
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+personality = "pragmatic"
 sandbox_mode = "danger-full-access"
-
-[features]
-multi_agent = true
-prevent_idle_sleep = true
-
-[windows]
-sandbox = "elevated"
+web_search = "live"
 
 [agents]
 max_threads = 16
 
 [agents.architect]
-description = "Decompose hard problems into buildable pieces - system design, service boundaries, API contracts, and architecture decisions. Does not write code."
 config_file = "agents/architect.toml"
-
-[agents.developer]
-description = "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
-config_file = "agents/developer.toml"
-
-[agents.developer-lite]
-description = "Simpler coding tasks - implement features, fix bugs, or refactor with TDD. Uses a faster, cheaper model."
-config_file = "agents/developer-lite.toml"
-
-[agents.reviewer]
-description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
-config_file = "agents/reviewer.toml"
-
-[agents.researcher]
-description = "Online research - gathering up-to-date information, evaluating libraries/tools, synthesizing findings, and providing actionable recommendations."
-config_file = "agents/researcher.toml"
-
-[agents.explore]
-description = "Navigate and explore codebases - find files, search content, and analyze code structure. Read-only."
-config_file = "agents/explore.toml"
-
-[agents.planner]
-description = "Break down complex tasks into structured implementation plans with clear steps and dependencies."
-config_file = "agents/planner.toml"
+description = "Decompose hard problems into buildable pieces - system design, service boundaries, API contracts, and architecture decisions. Does not write code."
 
 [agents.code-flow-analyzer]
-description = "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
 config_file = "agents/code-flow-analyzer.toml"
+description = "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
 
 [agents.codebase-investigator]
-description = "Locate specific code patterns, understand how features are implemented, trace data flow, or find relevant code sections."
 config_file = "agents/codebase-investigator.toml"
-
-[agents.ux-designer]
-description = "Produce implementation-ready UX design documentation with layout, components, interactions, and accessibility guidance. Does not write code."
-config_file = "agents/ux-designer.toml"
-
-[agents.security-auditor]
-description = "Code-level security review - OWASP top 10, dependency vulnerabilities, secrets in code, auth/authz patterns, and input validation. Read-only."
-config_file = "agents/security-auditor.toml"
-
-[agents.debugger]
-description = "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
-config_file = "agents/debugger.toml"
-
-[agents.performance-engineer]
-description = "Performance analysis - profile interpretation, bottleneck identification, and optimization recommendations for CPU, memory, I/O, and database queries. Read-only."
-config_file = "agents/performance-engineer.toml"
-
-[agents.technical-writer]
-description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
-config_file = "agents/technical-writer.toml"
-
-[agents.ui-polisher]
-description = "Captures screenshots of running apps, identifies visual issues, applies fixes, and re-verifies. Works across web, Windows, macOS, and iOS/watchOS Simulator."
-config_file = "agents/ui-polisher.toml"
+description = "Locate specific code patterns, understand how features are implemented, trace data flow, or find relevant code sections."
 
 [agents.codebase-reviewer]
-description = "Full codebase audit using multiple AI engines in parallel. Splits by module, reviews from different perspectives, deduplicates into a prioritized report."
 config_file = "agents/codebase-reviewer.toml"
+description = "Full codebase audit using multiple AI engines in parallel. Splits by module, reviews from different perspectives, deduplicates into a prioritized report."
+
+[agents.debugger]
+config_file = "agents/debugger.toml"
+description = "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
+
+[agents.developer]
+config_file = "agents/developer.toml"
+description = "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
+
+[agents.developer-lite]
+config_file = "agents/developer-lite.toml"
+description = "Simpler coding tasks - implement features, fix bugs, or refactor with TDD. Uses a faster, cheaper model."
+
+[agents.explore]
+config_file = "agents/explore.toml"
+description = "Navigate and explore codebases - find files, search content, and analyze code structure. Read-only."
+
+[agents.performance-engineer]
+config_file = "agents/performance-engineer.toml"
+description = "Performance analysis - profile interpretation, bottleneck identification, and optimization recommendations for CPU, memory, I/O, and database queries. Read-only."
+
+[agents.planner]
+config_file = "agents/planner.toml"
+description = "Break down complex tasks into structured implementation plans with clear steps and dependencies."
+
+[agents.researcher]
+config_file = "agents/researcher.toml"
+description = "Online research - gathering up-to-date information, evaluating libraries/tools, synthesizing findings, and providing actionable recommendations."
+
+[agents.reviewer]
+config_file = "agents/reviewer.toml"
+description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs \u2014 does not modify code."
+
+[agents.security-auditor]
+config_file = "agents/security-auditor.toml"
+description = "Code-level security review - OWASP top 10, dependency vulnerabilities, secrets in code, auth/authz patterns, and input validation. Read-only."
+
+[agents.technical-writer]
+config_file = "agents/technical-writer.toml"
+description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
+
+[agents.ui-polisher]
+config_file = "agents/ui-polisher.toml"
+description = "Captures screenshots of running apps, identifies visual issues, applies fixes, and re-verifies. Works across web, Windows, macOS, and iOS/watchOS Simulator."
+
+[agents.ux-designer]
+config_file = "agents/ux-designer.toml"
+description = "Produce implementation-ready UX design documentation with layout, components, interactions, and accessibility guidance. Does not write code."
+
+[features]
+multi_agent = true
+prevent_idle_sleep = true
+
+[marketplaces]
+
+[marketplaces.claude-plugins-official]
+source_type = "git"
+source = "https://github.com/anthropics/claude-plugins-official.git"
+
+[marketplaces.openai-bundled]
+source_type = "local"
+source = "/Users/michael/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+source_type = "local"
+source = "/Users/michael/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins]
+
+[plugins."browser-use@openai-bundled"]
+enabled = true
+
+[plugins."build-ios-apps@openai-curated"]
+enabled = true
+
+[plugins."build-macos-apps@openai-curated"]
+enabled = true
+
+[plugins."code-review@claude-plugins-official"]
+enabled = true
+
+[plugins."code-simplifier@claude-plugins-official"]
+enabled = true
+
+[plugins."codex-security@openai-curated"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."feature-dev@claude-plugins-official"]
+enabled = true
+
+[plugins."figma@claude-plugins-official"]
+enabled = true
+
+[plugins."figma@openai-curated"]
+enabled = true
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."playwright@claude-plugins-official"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."security-guidance@claude-plugins-official"]
+enabled = true
+
+[plugins."skill-creator@claude-plugins-official"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."superpowers@claude-plugins-official"]
+enabled = true
+
+[plugins."superpowers@openai-curated"]
+enabled = true
+
+[projects]
+
+[projects."/Users/michael/Developer/Range"]
+trust_level = "trusted"
+
+[projects."/Users/michael/Developer/range-site"]
+trust_level = "trusted"
+
+[projects."/Users/michael/agent-kit"]
+trust_level = "trusted"
+
+[shell_environment_policy]
+inherit = "core"
+
+[shell_environment_policy.set]
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1"
+ENABLE_LSP_TOOL = "1"
+
+[tui]
+status_line = ["model-with-reasoning", "context-remaining", "current-dir", "git-branch", "five-hour-limit"]
+
+[windows]
+sandbox = "elevated"

@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex"
+name = "code-flow-analyzer"
+description = "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

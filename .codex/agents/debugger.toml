@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex"
+name = "debugger"
+description = "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 
 developer_instructions = """

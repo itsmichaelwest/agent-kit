@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex"
+name = "planner"
+description = "Break down complex tasks into structured implementation plans with clear steps and dependencies."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

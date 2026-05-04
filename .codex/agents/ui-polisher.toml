@@ -1,4 +1,7 @@
-model = "gpt-5.4"
+name = "ui-polisher"
+description = "Captures screenshots of running apps, identifies visual issues, applies fixes, and re-verifies. Works across web, Windows, macOS, and iOS/watchOS Simulator."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 
 developer_instructions = """

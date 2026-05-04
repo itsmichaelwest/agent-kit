@@ -30,6 +30,7 @@
     { "name": "swiftui-ui-patterns",         "repo": "Dimillian/Skills", "path": "swiftui-ui-patterns" },
     { "name": "swiftui-view-refactor",       "repo": "Dimillian/Skills", "path": "swiftui-view-refactor" },
     { "name": "emil-design-eng",             "repo": "emilkowalski/skill", "path": "skills/emil-design-eng" },
-    { "name": "make-interfaces-feel-better", "repo": "jakubkrehel/make-interfaces-feel-better", "path": "skills/make-interfaces-feel-better" }
+    { "name": "make-interfaces-feel-better", "repo": "jakubkrehel/make-interfaces-feel-better", "path": "skills/make-interfaces-feel-better" },
+    { "name": "userinterface-wiki",          "repo": "raphaelsalaja/userinterface-wiki", "path": "skills" }
   ]
 }

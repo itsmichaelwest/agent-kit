@@ -41,7 +41,7 @@ agent-kit/
 │   ├── config.toml            # Codex config + agent registry
 │   └── agents/                # Codex agent definitions (.toml)
 ├── prompts/                   # Slash commands (shared across tools)
-├── skills/                    # Domain-specific skill packs
+├── skills/                    # Canonical global skill source
 ├── docs/                      # Reference docs for agents
 ├── shell/
 │   ├── zsh/shared.zsh         # Zsh config (injected into ~/.zshrc)
@@ -60,17 +60,20 @@ See [docs/dependencies.md](docs/dependencies.md) for the full list of tools inst
 
 ## What Gets Linked
 
-The setup scripts symlink agents, skills, prompts, and docs into the config directories for each supported AI tool (GitHub Copilot CLI, Codex, Claude Code). All links are defined declaratively in [`scripts/ai-agent-links.json`](scripts/ai-agent-links.json).
+The setup scripts symlink agents, skills, prompts, and docs into the config directories for each supported AI tool (GitHub Copilot CLI, Codex, Claude Code). Most static link targets are defined declaratively in [`scripts/ai-agent-links.json`](scripts/ai-agent-links.json); a few tool-specific migrations are handled directly in the setup scripts.
 
 See [docs/linking.md](docs/linking.md) for the full mapping.
+See [docs/plugins.md](docs/plugins.md) for the plugin model and config surfaces.
+
+For existing machines, the supported upgrade path is to pull the latest repo and re-run `./scripts/setup.sh link` or `.\scripts\setup.ps1 link`. The scripts migrate legacy targets in place, back up conflicting non-symlink files or directories, and relink the current global layout.
 
 ## Agents
 
-Agents are specialized personas with distinct roles, models, and instructions. Each agent is defined twice: as a `.md` file for GitHub Copilot CLI/Claude Code (`agents/`) and a `.toml` file for Codex CLI (`.codex/agents/`).
+Agents are specialized personas with distinct roles, models, and instructions. Each agent is defined twice: as a `.md` source file for Claude Code and Copilot (`agents/`) and a `.toml` file for Codex CLI (`.codex/agents/`). During setup, Copilot-compatible global agent links are created with the required `*.agent.md` filenames under `~/.copilot/agents/`.
 
 ## Skills
 
-Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files.
+Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files. The repo `skills/` directory is the canonical global source and is linked into both `~/.agents/skills` and tool-specific locations that still need them.
 
 ### Managing skills
 
@@ -96,9 +99,25 @@ Then run `./scripts/setup.sh update-skills`.
 
 To create a local skill, drop a folder into `skills/` with a `SKILL.md` containing YAML frontmatter.
 
+## Plugins
+
+Plugins are managed from the tool-native config files already in the repo.
+
+```bash
+./scripts/setup.sh plugin-status
+```
+
+Plugin payloads are not committed to the repo. Desired plugin declarations live in the repo-owned tool configs:
+
+- Claude: `.claude/settings.json`
+- Codex: `.codex/config.toml`
+- Copilot: `.copilot/settings.json`
+
+`link` and `install` link those desired configs into the home-directory tool locations. Copilot's installed plugin inventory remains auto-managed in `~/.copilot/config.json`.
+
 ## Adding a New AI Tool
 
-Add entries to [`scripts/ai-agent-links.json`](scripts/ai-agent-links.json) mapping source directories to the tool's config paths, then re-run `setup.sh link-ai-agents`.
+Add entries to [`scripts/ai-agent-links.json`](scripts/ai-agent-links.json) for simple link targets, then re-run `setup.sh link-ai-agents`. Tool-specific migrations such as Copilot agent filename rewriting live in the setup scripts rather than the manifest.
 
 ## Acknowledgements
 

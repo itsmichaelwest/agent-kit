@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex-spark"
+name = "explore"
+description = "Navigate and explore codebases - find files, search content, and analyze code structure. Read-only."
+
+model = "gpt-5.4-mini"
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 

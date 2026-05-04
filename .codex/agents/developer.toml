@@ -1,4 +1,7 @@
-model = "gpt-5.3-codex"
+name = "developer"
+description = "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 
 developer_instructions = """
