@@ -14,9 +14,10 @@ inject_zsh_config() {
     exit 1
   fi
 
-  # Break lingering symlink
   if [[ -L "$zshrc" ]]; then
-    warn "Removing ~/.zshrc symlink so we can manage the file directly"
+    local target
+    target="$(readlink "$zshrc")"
+    warn "Removing ~/.zshrc symlink ($target) so we can manage the file directly"
     rm "$zshrc"
   fi
 
@@ -42,32 +43,58 @@ inject_zsh_config() {
   esac
   block+="$MARK_END"
 
-  # Replace existing block or append
-  if grep -q "$MARK_START" "$zshrc"; then
-    awk -v start="$MARK_START" -v end="$MARK_END" -v block="$block" '
-      $0 == start { print block; skip=1; next }
-      $0 == end { skip=0; next }
-      !skip { print }
-    ' "$zshrc" > "$zshrc.tmp" && mv "$zshrc.tmp" "$zshrc"
-  else
-    printf '\n%s\n' "$block" >> "$zshrc"
-  fi
+  python3 - "$zshrc" "$MARK_START" "$MARK_END" "$block" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+zshrc = Path(sys.argv[1])
+start = sys.argv[2]
+end = sys.argv[3]
+block = sys.argv[4]
+content = zshrc.read_text() if zshrc.exists() else ""
+pattern = re.compile(rf"\n?{re.escape(start)}\n.*?\n{re.escape(end)}\n?", re.DOTALL)
+replacement = f"\n{block}\n"
+
+if re.search(pattern, content):
+    updated = re.sub(pattern, replacement, content, count=1)
+else:
+    updated = content.rstrip("\n") + replacement
+
+zshrc.write_text(updated.lstrip("\n"))
+PY
 
   info "Injected dotfiles zsh config into ~/.zshrc"
 }
 
 remove_zsh_config() {
   local zshrc="$HOME/.zshrc"
+  if [[ -L "$zshrc" ]]; then
+    local target
+    target="$(readlink "$zshrc")"
+    warn "Removing ~/.zshrc symlink ($target) so we can manage the file directly"
+    rm "$zshrc"
+    touch "$zshrc"
+  fi
+
   if [[ ! -f "$zshrc" ]] || ! grep -q "$MARK_START" "$zshrc"; then
     warn "No managed zsh block found to remove"
     return
   fi
 
-  awk -v start="$MARK_START" -v end="$MARK_END" '
-    $0 == start { skip=1; next }
-    $0 == end { skip=0; next }
-    !skip { print }
-  ' "$zshrc" > "$zshrc.tmp" && mv "$zshrc.tmp" "$zshrc"
+  python3 - "$zshrc" "$MARK_START" "$MARK_END" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+zshrc = Path(sys.argv[1])
+start = sys.argv[2]
+end = sys.argv[3]
+content = zshrc.read_text()
+pattern = re.compile(rf"\n?{re.escape(start)}\n.*?\n{re.escape(end)}\n?", re.DOTALL)
+updated = re.sub(pattern, "\n", content, count=1).strip("\n")
+zshrc.write_text(updated + ("\n" if updated else ""))
+PY
 
   info "Removed dotfiles zsh block from ~/.zshrc"
 }

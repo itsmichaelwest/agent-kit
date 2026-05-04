@@ -1,8 +1,12 @@
 ---
-name: developer-mini
-description: Use this agent for simpler coding tasks - implement features, fix bugs, or refactor with Test-Driven Development. Uses a faster, cheaper model than the full developer agent.
-model: sonnet
-color: yellow
+name: "developer"
+description: "Use this agent for medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
+model_class: "strong"
+claude:
+  color: "orange"
+codex:
+  description: "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
+  model_reasoning_effort: "high"
 ---
 
 # Role

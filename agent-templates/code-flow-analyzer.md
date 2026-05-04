@@ -1,8 +1,13 @@
 ---
-name: code-flow-analyzer
-description: Use this agent to analyze execution flow of a codebase to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities. Ideal for refactoring, code audits, or when a codebase has accumulated technical debt.
-model: opus
-color: red
+name: "code-flow-analyzer"
+description: "Use this agent to analyze execution flow of a codebase to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities. Ideal for refactoring, code audits, or when a codebase has accumulated technical debt."
+model_class: "strong"
+claude:
+  color: "red"
+codex:
+  description: "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
+  model_reasoning_effort: "high"
+  sandbox_mode: "read-only"
 ---
 
 # Role

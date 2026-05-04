@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "list-skills", "plugin-status")]
+    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "list-skills", "plugin-status")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -44,6 +44,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 
 . "$ScriptsDir\lib\helpers.ps1"
 . "$ScriptsDir\lib\install-deps.ps1"
+. "$ScriptsDir\lib\compile-agents.ps1"
 . "$ScriptsDir\lib\link-dotfiles.ps1"
 . "$ScriptsDir\lib\link-ai-agents.ps1"
 . "$ScriptsDir\lib\plugin-status.ps1"
@@ -55,6 +56,7 @@ Usage: setup.ps1 <command> [options]
 
 Commands:
   install             Full setup: deps + links
+  compile-agents      Compile agent templates into tool outputs
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
@@ -114,10 +116,11 @@ function Show-Status {
 }
 
 switch ($Action) {
-    "install"        { Install-Deps; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
-    "link"           { Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
+    "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
+    "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
-    "link-ai-agents" { Link-AiAgents $DotfilesDir }
+    "link-ai-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-AiAgents $DotfilesDir }
     "update-skills"  { $code = Update-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "list-skills"    { $code = List-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "plugin-status"  { $code = Show-PluginStatus $DotfilesDir; if ($code -ne 0) { exit $code } }

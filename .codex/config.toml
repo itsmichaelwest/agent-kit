@@ -146,6 +146,9 @@ enabled = true
 [plugins."superpowers@openai-curated"]
 enabled = true
 
+[plugins."github@claude-plugins-official"]
+enabled = true
+
 [projects]
 
 [projects."/Users/michael/Developer/Range"]

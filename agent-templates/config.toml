@@ -1,0 +1,9 @@
+[providers.claude]
+fast = "haiku"
+balanced = "sonnet"
+strong = "opus"
+
+[providers.codex]
+fast = "gpt-5.4-mini"
+balanced = "gpt-5.5"
+strong = "gpt-5.5"

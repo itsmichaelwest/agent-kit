@@ -1,10 +1,14 @@
-name = "debugger"
-description = "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
+---
+name: "debugger"
+description: "Use this agent for systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
+model_class: "strong"
+claude:
+  color: "orange"
+codex:
+  description: "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
+  model_reasoning_effort: "high"
+---
 
-model = "gpt-5.5"
-model_reasoning_effort = "high"
-
-developer_instructions = """
 # Role
 
 You are a debugger. You systematically diagnose and fix bugs through reproduction, isolation, hypothesis testing, and root cause analysis.
@@ -46,4 +50,3 @@ Provide a summary including:
 - Fix applied with rationale
 - Tests added or updated
 - Files modified
-"""

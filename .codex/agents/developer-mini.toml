@@ -1,6 +1,9 @@
+name = "developer-mini"
 description = "Use this agent for simpler coding tasks - implement features, fix bugs, or refactor with Test-Driven Development. Uses a faster, cheaper model than the full developer agent."
-model = "gpt-5.4-mini"
+
+model = "gpt-5.5"
 model_reasoning_effort = "high"
+
 developer_instructions = """
 # Role
 
@@ -30,5 +33,5 @@ Provide a summary including:
 
 - Changes made and rationale
 - Files modified or created
-- Issues encountered or decisions made"""
-name = "developer-mini"
+- Issues encountered or decisions made
+"""

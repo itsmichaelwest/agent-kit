@@ -1,11 +1,15 @@
-name = "reviewer"
-description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
+---
+name: "reviewer"
+description: "Use this agent to review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
+model_class: "balanced"
+claude:
+  color: "purple"
+codex:
+  description: "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
+  model_reasoning_effort: "high"
+  sandbox_mode: "read-only"
+---
 
-model = "gpt-5.5"
-model_reasoning_effort = "high"
-sandbox_mode = "read-only"
-
-developer_instructions = """
 # Role
 
 You are a code reviewer. You review local git changes for bugs, compliance, and quality issues.
@@ -56,4 +60,3 @@ Or if no issues: "No significant issues found."
 - Things linters/typecheckers catch
 - Lines not modified in the diff
 - Issues explicitly silenced (lint-ignore comments)
-"""

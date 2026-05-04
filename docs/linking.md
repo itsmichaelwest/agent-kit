@@ -5,11 +5,13 @@ The setup scripts create symlinks from this repo into tool-specific config direc
 When you update this repo on an existing machine, re-running `link` or `install` is the supported migration path. The scripts back up conflicting non-symlink targets, replace legacy paths with the current layout, and write a layout version marker for status reporting.
 
 Plugin declarations live in the tool-native config files already tracked in this repo. See [plugins.md](./plugins.md).
+Agent definitions are compiled from `agent-templates/` before linking. See [agents.md](./agents.md).
 
 ## Commands
 
 ```bash
 # macOS/Linux
+./scripts/setup.sh compile-agents    # rebuild generated agent outputs
 ./scripts/setup.sh link              # link everything
 ./scripts/setup.sh link-dotfiles     # base dotfiles only
 ./scripts/setup.sh link-ai-agents    # AI agent configs only
@@ -21,6 +23,7 @@ Plugin declarations live in the tool-native config files already tracked in this
 
 ```powershell
 # Windows
+.\scripts\setup.ps1 compile-agents
 .\scripts\setup.ps1 link
 .\scripts\setup.ps1 link-dotfiles
 .\scripts\setup.ps1 link-ai-agents

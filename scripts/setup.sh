@@ -7,6 +7,7 @@ export DOTFILES_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 
 source "$SCRIPTS_DIR/lib/helpers.sh"
 source "$SCRIPTS_DIR/lib/install-deps.sh"
+source "$SCRIPTS_DIR/lib/compile-agents.sh"
 source "$SCRIPTS_DIR/lib/link-dotfiles.sh"
 source "$SCRIPTS_DIR/lib/link-ai-agents.sh"
 source "$SCRIPTS_DIR/lib/plugin-status.sh"
@@ -23,6 +24,7 @@ Usage: setup.sh <command> [options]
 
 Commands:
   install             Full setup: deps + links + shell config
+  compile-agents      Compile agent templates into tool outputs
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
@@ -43,7 +45,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|plugin-status)
+    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|plugin-status)
       ACTION="$1" ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
@@ -97,10 +99,11 @@ show_status() {
 }
 
 case "$ACTION" in
-  install)        install_deps; link_dotfiles; link_ai_agents; inject_zsh_config ;;
-  link)           link_dotfiles; link_ai_agents ;;
+  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config ;;
+  compile-agents) compile_agents ;;
+  link)           compile_agents; link_dotfiles; link_ai_agents ;;
   link-dotfiles)  link_dotfiles ;;
-  link-ai-agents) link_ai_agents ;;
+  link-ai-agents) compile_agents; link_ai_agents ;;
   shell)          inject_zsh_config ;;
   shell-remove)   remove_zsh_config ;;
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
