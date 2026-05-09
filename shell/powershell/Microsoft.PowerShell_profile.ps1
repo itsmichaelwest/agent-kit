@@ -42,12 +42,21 @@ if (Get-Module -ListAvailable -Name PSFzf) {
 # PSREADLINE
 # =============================================================================
 
-Set-PSReadLineOption -PredictionSource History
-Set-PSReadLineOption -PredictionViewStyle ListView
 Set-PSReadLineOption -EditMode Windows
 Set-PSReadLineOption -MaximumHistoryCount 10000
 Set-PSReadLineOption -HistoryNoDuplicates
 Set-PSReadLineOption -BellStyle None
+
+# Prediction needs an interactive TTY — skip in non-console hosts (Codex, redirected I/O)
+# to avoid "predictive IntelliSense cannot be used" warnings.
+$isInteractiveConsole = $Host.Name -eq 'ConsoleHost' -and
+    -not [Console]::IsInputRedirected -and
+    -not [Console]::IsOutputRedirected -and
+    -not [Console]::IsErrorRedirected
+if ($isInteractiveConsole) {
+    Set-PSReadLineOption -PredictionSource History
+    Set-PSReadLineOption -PredictionViewStyle ListView
+}
 
 # =============================================================================
 # EZA (modern ls)

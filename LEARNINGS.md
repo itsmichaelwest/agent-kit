@@ -1,0 +1,1 @@
+- Guard `Set-PSReadLineOption` prediction settings behind an interactive console check (`ConsoleHost` + non-redirected stdin/stdout/stderr) to avoid warnings in non-TTY hosts like Codex command runs.
