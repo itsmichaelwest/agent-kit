@@ -69,7 +69,7 @@
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": false,
+    "ralph-loop@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
