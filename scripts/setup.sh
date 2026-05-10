@@ -7,6 +7,7 @@ export DOTFILES_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 
 source "$SCRIPTS_DIR/lib/helpers.sh"
 source "$SCRIPTS_DIR/lib/install-deps.sh"
+source "$SCRIPTS_DIR/lib/install-mcp.sh"
 source "$SCRIPTS_DIR/lib/compile-agents.sh"
 source "$SCRIPTS_DIR/lib/link-dotfiles.sh"
 source "$SCRIPTS_DIR/lib/link-ai-agents.sh"
@@ -23,7 +24,7 @@ usage() {
 Usage: setup.sh <command> [options]
 
 Commands:
-  install             Full setup: deps + links + shell config
+  install             Full setup: deps + links + shell config + MCP servers
   compile-agents      Compile agent templates into tool outputs
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
@@ -33,6 +34,7 @@ Commands:
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
   list-skills         Show skills and install status
+  install-mcp         Install user-scope MCP servers from mcp/servers.json
   plugin-status       Show plugin status vs repo config
   status              Show current link status
   project-agents <path>  Link agents into a project
@@ -45,7 +47,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|plugin-status)
+    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|install-mcp|plugin-status)
       ACTION="$1" ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
@@ -99,7 +101,8 @@ show_status() {
 }
 
 case "$ACTION" in
-  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config ;;
+  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp ;;
+  install-mcp)    install_mcp ;;
   compile-agents) compile_agents ;;
   link)           compile_agents; link_dotfiles; link_ai_agents ;;
   link-dotfiles)  link_dotfiles ;;

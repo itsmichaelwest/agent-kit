@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/itsmichaelwest/agent-kit/mcp/mcp-config.schema.json",
+  "title": "MCP server manifest",
+  "description": "Canonical MCP server manifest matching Claude Code .mcp.json and Copilot CLI ~/.copilot/mcp-config.json shape.",
+  "type": "object",
+  "required": ["mcpServers"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "_comment": { "type": "string" },
+    "mcpServers": {
+      "type": "object",
+      "description": "Map of server name to definition.",
+      "patternProperties": {
+        "^[A-Za-z0-9_-]+$": { "$ref": "#/$defs/server" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["stdio", "http", "sse"],
+          "default": "stdio",
+          "description": "Transport type."
+        },
+        "url": {
+          "type": "string",
+          "description": "Server URL. Required for http/sse. Supports ${ENV_VAR} expansion."
+        },
+        "command": {
+          "type": "string",
+          "description": "Executable to launch. Required for stdio."
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Arguments passed to the stdio command."
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables for stdio servers. Values support ${ENV_VAR} expansion.",
+          "additionalProperties": { "type": "string" }
+        },
+        "headers": {
+          "description": "HTTP/SSE headers. Object form (Copilot CLI / Claude .mcp.json native) or array of 'Name: Value' strings (CLI-flag form). Values support ${ENV_VAR} expansion.",
+          "oneOf": [
+            { "type": "object", "additionalProperties": { "type": "string" } },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "tools": {
+          "description": "Copilot CLI tool filter: '*' for all, array of names, or empty for none.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Request timeout in milliseconds (Copilot CLI)."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["http", "sse"] } }, "required": ["type"] },
+          "then": { "required": ["url"] }
+        },
+        {
+          "if": {
+            "anyOf": [
+              { "properties": { "type": { "const": "stdio" } }, "required": ["type"] },
+              { "not": { "required": ["type"] } }
+            ]
+          },
+          "then": { "required": ["command"] }
+        }
+      ]
+    }
+  }
+}

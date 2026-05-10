@@ -1,0 +1,10 @@
+{
+  "$schema": "./mcp-config.schema.json",
+  "_comment": "Canonical MCP server manifest. Shape matches Claude Code (.mcp.json) and Copilot CLI (~/.copilot/mcp-config.json). For Claude, scripts/lib/install-mcp.sh re-applies entries at user scope. For Copilot, ~/.copilot/mcp-config.json is symlinked directly to this file via scripts/ai-agent-links.json. Reference secrets via ${ENV_VAR}; export them before running setup. OAuth servers (Gmail/Drive/Calendar/Figma) are not declared here — they require interactive auth per device.",
+  "mcpServers": {
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp"
+    }
+  }
+}
