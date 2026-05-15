@@ -1,0 +1,8 @@
+# Mark third-party skill content as vendored + generated so GitHub:
+#   - excludes it from language statistics
+#   - collapses diffs by default in PR views
+# Skills are managed by `npx skills` (vercel-labs/skills) and refreshed via
+# `./scripts/setup.sh update-skills`. Local skills authored in this repo are
+# the same shape as upstream ones; treat them the same to keep the rule simple.
+skills/** linguist-vendored=true
+skills/** linguist-generated=true
