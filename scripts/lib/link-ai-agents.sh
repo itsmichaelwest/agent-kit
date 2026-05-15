@@ -99,6 +99,43 @@ link_copilot_agents() {
   done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 }
 
+# Generate ~/.copilot/settings.json by merging the committed shared settings
+# with an optional gitignored .copilot/settings.local.json overlay. Written as
+# a real file (not a symlink) so Copilot CLI can write runtime keys without
+# polluting the repo.
+link_copilot_settings() {
+  local shared="$DOTFILES_DIR/.copilot/settings.json"
+  local overlay="$DOTFILES_DIR/.copilot/settings.local.json"
+  local target="$HOME/.copilot/settings.json"
+
+  if [[ ! -f "$shared" ]]; then
+    warn "Missing $shared"
+    return
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    err "jq required to merge copilot settings"
+    return 1
+  fi
+
+  mkdir -p "$(dirname "$target")"
+
+  if [[ -L "$target" ]]; then
+    rm "$target"
+  elif [[ -e "$target" ]]; then
+    mv "$target" "${target}.backup.$(date +%Y%m%d_%H%M%S)"
+    info "Backed up existing settings.json"
+  fi
+
+  if [[ -f "$overlay" ]]; then
+    jq -s '.[0] * .[1] | del(.["$schema_comment"])' "$shared" "$overlay" > "$target"
+    echo "  [MERGE] $target (shared + local overlay)"
+  else
+    jq 'del(.["$schema_comment"])' "$shared" > "$target"
+    echo "  [WRITE] $target (shared only — create .copilot/settings.local.json to override)"
+  fi
+}
+
 unlink_copilot_agents() {
   local source_dir="$DOTFILES_DIR/agents"
   local target_dir="$HOME/.copilot/agents"
@@ -185,6 +222,7 @@ link_ai_agents() {
   cleanup_legacy_ai_agent_targets
   link_manifest_targets
   link_copilot_agents
+  link_copilot_settings
   write_ai_agent_layout_marker
 }
 

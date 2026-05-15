@@ -15,6 +15,7 @@ secrets/
 .env
 .env.*
 .claude/settings.local.json
+.copilot/settings.local.json
 
 # Claude session data
 .claude/projects/

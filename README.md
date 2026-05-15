@@ -139,7 +139,9 @@ Plugin payloads are not committed to the repo. Desired plugin declarations live 
 
 - Claude: `.claude/settings.json`
 - Codex: `.codex/config.toml`
-- Copilot: `.copilot/settings.json`
+- Copilot: `.copilot/settings.json` (declarative shared bits) + `.copilot/settings.local.json` (gitignored personal overrides)
+
+For Copilot, `~/.copilot/settings.json` is **generated** at link time by merging the committed `.copilot/settings.json` with an optional `.copilot/settings.local.json` overlay. Copy `.copilot/settings.local.example.json` to `.copilot/settings.local.json` and edit it for per-machine values like `model`, `trustedFolders`, or anything else you don't want shared. Runtime state (installed plugin cache paths, login info, first-launch timestamp) stays in `~/.copilot/config.json`, which Copilot CLI manages itself and is never touched by setup.
 
 `link` and `install` link those desired configs into the home-directory tool locations. Copilot's installed plugin inventory remains auto-managed in `~/.copilot/config.json`.
 

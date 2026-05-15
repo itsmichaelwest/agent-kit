@@ -194,6 +194,49 @@ function Unlink-AiAgents {
     }
 }
 
+function Link-CopilotSettings {
+    param([string]$DotfilesDir)
+
+    $shared = Join-Path $DotfilesDir ".copilot\settings.json"
+    $overlay = Join-Path $DotfilesDir ".copilot\settings.local.json"
+    $target = Join-Path $env:USERPROFILE ".copilot\settings.json"
+
+    if (-not (Test-Path $shared)) {
+        Write-Warn "Missing $shared"
+        return
+    }
+
+    $targetDir = Split-Path -Parent $target
+    if (-not (Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    }
+
+    if (Test-Path $target) {
+        $item = Get-Item $target -Force
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            Remove-Item $target -Force
+        } else {
+            $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            Move-Item $target "$target.backup.$stamp"
+            Write-Info "Backed up existing settings.json"
+        }
+    }
+
+    $sharedObj = Get-Content $shared -Raw | ConvertFrom-Json -AsHashtable
+    $sharedObj.Remove('$schema_comment') | Out-Null
+
+    if (Test-Path $overlay) {
+        $overlayObj = Get-Content $overlay -Raw | ConvertFrom-Json -AsHashtable
+        $overlayObj.Remove('$schema_comment') | Out-Null
+        foreach ($k in $overlayObj.Keys) { $sharedObj[$k] = $overlayObj[$k] }
+        $sharedObj | ConvertTo-Json -Depth 32 | Set-Content -Path $target
+        Write-Host "  [MERGE] $target (shared + local overlay)"
+    } else {
+        $sharedObj | ConvertTo-Json -Depth 32 | Set-Content -Path $target
+        Write-Host "  [WRITE] $target (shared only — create .copilot\settings.local.json to override)"
+    }
+}
+
 function Link-AiAgents {
     param([string]$DotfilesDir)
 
@@ -211,6 +254,7 @@ function Link-AiAgents {
     Cleanup-LegacyAiAgentTargets
     Link-ManifestAiTargets $DotfilesDir $manifest
     Link-CopilotAgents $DotfilesDir
+    Link-CopilotSettings $DotfilesDir
     Write-AiAgentLayoutMarker
 }
 

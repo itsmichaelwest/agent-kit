@@ -27,7 +27,6 @@
     { "source": "codex_agents",    "path": "~/.codex/agents" },
 
     { "source": "prompts",         "path": "~/.copilot/prompts" },
-    { "source": "copilot_settings", "path": "~/.copilot/settings.json" },
     { "source": "mcp_config",      "path": "~/.copilot/mcp-config.json" },
     { "source": "instructions",    "path": "~/.copilot/copilot-instructions.md" },
     { "source": "docs",            "path": "~/.copilot/docs" },

@@ -1,0 +1,7 @@
+{
+  "$schema_comment": "Personal/per-machine overrides merged on top of .copilot/settings.json at link time. Copy this file to .copilot/settings.local.json (gitignored) and edit. Only include keys you want to override.",
+  "model": "claude-sonnet-4.6",
+  "trustedFolders": [
+    "/Users/example/Developer/my-project"
+  ]
+}

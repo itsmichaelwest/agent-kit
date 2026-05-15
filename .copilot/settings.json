@@ -1,13 +1,7 @@
 {
   "logLevel": "all",
   "experimental": true,
-  "model": "gpt-5.5",
-  "staff": true,
-  "enabledPlugins": {
-    "copilot-sdk@awesome-copilot": true,
-    "csharp-dotnet-development@awesome-copilot": true,
-    "workiq@work-iq": true
-  },
+  "showReasoning": true,
   "extraKnownMarketplaces": {
     "awesome-copilot": {
       "source": {
@@ -21,5 +15,10 @@
         "repo": "microsoft/work-iq"
       }
     }
+  },
+  "enabledPlugins": {
+    "copilot-sdk@awesome-copilot": true,
+    "csharp-dotnet-development@awesome-copilot": true,
+    "workiq@work-iq": true
   }
 }
