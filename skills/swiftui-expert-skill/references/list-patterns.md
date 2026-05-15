@@ -1,5 +1,16 @@
 # SwiftUI List Patterns Reference
 
+## Table of Contents
+
+- [ForEach Identity and Stability](#foreach-identity-and-stability)
+- [Enumerated Sequences](#enumerated-sequences)
+- [List with Custom Styling](#list-with-custom-styling)
+- [List with Pull-to-Refresh](#list-with-pull-to-refresh)
+- [Empty States with ContentUnavailableView (iOS 17+)](#empty-states-with-contentunavailableview-ios-17)
+- [Custom List Backgrounds](#custom-list-backgrounds)
+- [Table](#table)
+- [Summary Checklist](#summary-checklist)
+
 ## ForEach Identity and Stability
 
 **Always provide stable identity for `ForEach`.** Never use `.indices` for dynamic content.
@@ -340,6 +351,58 @@ struct TipTable: View {
             TableRow(Purchase(price: 20))
             TableRow(Purchase(price: 50))
             TableRow(Purchase(price: 75))
+        }
+    }
+}
+```
+
+### Table with Dynamic Number of Columns
+
+> **Availability:** iOS 17.4+, iPadOS 17.4+, Mac Catalyst 17.4+, macOS 14.4+, visionOS 1.1+
+
+If the number of columns is not known at runtime use `TableColumnForEach` to create columns based on a `RandomAccessCollection` of some data type. Either the collection’s elements must conform to `Identifiable` or you need to provide an id parameter to the `TableColumnForEach` initializer.
+
+This can be mixed with static compile time known `TableColumn` usage.
+
+```swift
+struct AudioChannel: Identifiable {
+    let name: String
+    let id: UUID
+}
+
+struct AudioSample: Identifiable {
+    let id: UUID
+    let timestamp: TimeInterval
+    func level(channel: AudioChannel.ID) -> Double {
+        1
+    }
+}
+
+@Observable
+class AudioSampleTrack {
+    let channels: [AudioChannel]
+    var samples: [AudioSample]
+}
+
+struct ContentView: View {
+    var track: AudioSampleTrack
+
+    var body: some View {
+        Table(track.samples) {
+            TableColumn("Timestamp (ms)") { sample in
+                Text(sample.timestamp, format: .number.scale(1000))
+                    .monospacedDigit()
+            }
+            TableColumnForEach(track.channels) { channel in
+                TableColumn(channel.name) { sample in
+                    Text(sample.level(channel: channel.id),
+                         format: .number.precision(.fractionLength(2))
+                    )
+                    .monospacedDigit()
+                }
+                .width(ideal: 70)
+                .alignment(.numeric)
+            }
         }
     }
 }

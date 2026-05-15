@@ -1,85 +1,63 @@
 # Implementer Subagent Prompt Template
 
-Use this template when dispatching an implementer subagent.
+Use when dispatching one atomic `tsq` child task to an implementer.
 
-```
-Task tool (general-purpose):
-  description: "Implement Task N: [task name]"
-  prompt: |
-    You are implementing Task N: [task name]
+```text
+Role: implementer subagent.
 
-    ## Task Description
+Mode: implementation
+Thoroughness: [quick | standard | deep]
 
-    [FULL TEXT of task from plan - paste it here, don't make subagent read file]. Use programming skill to ensure your implementation meets the requirements.
+Tasque:
+- Parent: [tsq parent ID]
+- Child: [tsq child ID]
 
-    ## Context
+Task: [Task N: name]
 
-    [Scene-setting: where this fits, dependencies, architectural context. Coding agent will not have the full project context, so provide what they need to know to understand the task. They are not expected to make complex decisions, just implement the task as specified, if any decisions need to be made you must make those decisions yourself and include in the content and this prompt.]
+Full child task text:
+[Paste exact task from plan/tsq. Do not make worker fetch tsq or read the plan as primary source.]
 
-    ## Before You Begin
+Context:
+[Why this task exists, dependencies, contracts, relevant existing patterns.]
 
-    If you have questions about:
-    - The requirements or acceptance criteria
-    - The approach or implementation strategy
-    - Dependencies or assumptions
-    - Test expectations (unit/integration/e2e) or TDD requirements
-    - Whether any test type can be skipped
-    - Anything unclear in the task description
+Owned scope:
+- You may edit: [paths/modules]
+- You must not edit: [paths/modules]
+- If you need outside scope, stop with NEEDS_CONTEXT.
+- Other agents may be editing elsewhere. Do not revert unrelated edits. Adapt to existing changes.
 
-    **Ask them now.** Raise any concerns before starting work.
+Acceptance criteria:
+[Specific outcomes and tests.]
 
-    ## Your Job
+Verification:
+- Focused checks: [exact commands]
+- Smoke/live verification if user-visible: [exact command/manual check]
 
-    Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (follow the specified unit/integration/e2e plan and TDD requirements; do not skip test types without explicit authorization)
-    3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+Your job:
+1. Ask questions before starting if requirements, approach, dependencies, or acceptance criteria are unclear.
+2. Implement exactly this child task.
+3. Write/update tests as required. Prefer TDD for behavior changes.
+4. Run focused verification.
+5. Run smoke/live verification when task affects CLI/app/UI/user-visible behavior.
+6. Do not commit unless caller explicitly says commits are requested.
+7. Do not create branches, stashes, or destructive git operations unless explicitly requested.
+8. Do not spawn subagents.
+9. Self-review before reporting.
+10. Report status.
 
-    Work from: [directory]
+Escalate with NEEDS_CONTEXT or BLOCKED when:
+- Task requires architecture/product decision not in plan.
+- Owned scope is insufficient.
+- Existing code contradicts task.
+- You need broad restructuring not anticipated by plan.
+- You are uncertain about correctness after reasonable investigation.
 
-    **While you work:** If you encounter something unexpected or unclear, **ask questions**.
-    It's always OK to pause and clarify. Don't guess or make assumptions.
-
-    ## Before Reporting Back: Self-Review
-
-    Review your work with fresh eyes. Ask yourself:
-
-    **Completeness:**
-    - Did I fully implement everything in the spec?
-    - Did I miss any requirements?
-    - Are there edge cases I didn't handle?
-
-    **Quality:**
-    - Is this my best work?
-    - Are names clear and accurate (match what things do, not how they work)?
-    - Is the code clean and maintainable?
-
-    **Discipline:**
-    - Did I avoid overbuilding (YAGNI)?
-    - Did I follow SOLID principles?
-    - Did I avoid code duplication (DRY)?
-    - Did I only build what was requested?
-    - Did I follow existing patterns in the codebase?
-    - Do not discard any changes made by you. There may be parallel agents working on different files, discarding changes may cause loss of work for those agents. 
-
-    **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
-    - Are tests comprehensive?
-
-    If you find issues during self-review, fix them now before reporting.
-
-    ## Report Format
-
-    When done, report:
-    - What you implemented
-    - What you tested and test results
-    - Files changed
-    - Self-review findings (if any)
-    - Any issues or concerns
-    - **CRITICAL** Write the report in `.ai_agents/session_context/{todaysdate}/{hour-based-folder-name}/coding-agent-reports/task-{taskid}-report.md`. This is critical because it ensures that the orchestrator can track progress and identify issues early and is your only mechanism for communication with the orchestrator.
-
+Report format:
+- Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
+- Summary
+- Files changed
+- Tests run + exact results
+- Smoke/live verification + exact results, or not run + why
+- Self-review findings
+- Concerns/questions/blockers
 ```
