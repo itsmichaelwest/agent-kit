@@ -1,36 +1,85 @@
 {
-  "skills": [
-    { "name": "subagent-driven-development", "repo": "BumpyClock/dotfiles", "path": "skills/subagent-driven-development" },
-    { "name": "programming",                 "repo": "BumpyClock/dotfiles", "path": "skills/programming" },
-    { "name": "design-engineering",          "repo": "BumpyClock/dotfiles", "path": "skills/design-engineering" },
-    { "name": "swift-concurrency-expert",    "repo": "Dimillian/Skills", "path": "swift-concurrency-expert" },
-    { "name": "swiftui-performance-audit",   "repo": "Dimillian/Skills", "path": "swiftui-performance-audit" },
-    { "name": "swiftui-expert-skill",        "repo": "AvdLee/SwiftUI-Agent-Skill", "path": "swiftui-expert-skill" },
-    { "name": "swiftui-pro",                 "repo": "twostraws/swiftui-agent-skill", "path": "swiftui-pro" },
-    { "name": "liquid-glass",                "repo": "haider-nawaz/liquid-glass-skill", "path": "plugins/liquid-glass/skills/liquid-glass" },
-    { "name": "ios-simulator-skill",         "repo": "conorluddy/ios-simulator-skill", "path": "ios-simulator-skill" },
-    { "name": "winui3-csharp-app",           "repo": "BumpyClock/dotfiles", "path": "skills/winui3-csharp-app" },
-    { "name": "using-dotnet",               "repo": "novotnyllc/dotnet-artisan", "path": "skills/using-dotnet" },
-    { "name": "dotnet-advisor",             "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-advisor" },
-    { "name": "dotnet-csharp",              "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-csharp" },
-    { "name": "dotnet-api",                 "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-api" },
-    { "name": "dotnet-ui",                  "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-ui" },
-    { "name": "dotnet-testing",             "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-testing" },
-    { "name": "dotnet-devops",              "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-devops" },
-    { "name": "dotnet-tooling",             "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-tooling" },
-    { "name": "dotnet-debugging",           "repo": "novotnyllc/dotnet-artisan", "path": "skills/dotnet-debugging" },
-    { "name": "ux-designer",                 "repo": "BumpyClock/dotfiles", "path": "skills/ux-designer" },
-    { "name": "skill-creator",               "repo": "BumpyClock/dotfiles", "path": "skills/skill-creator" },
-    { "name": "git-workflow",                "repo": "BumpyClock/dotfiles", "path": "skills/git-workflow" },
-    { "name": "react-best-practices",        "repo": "vercel-labs/agent-skills", "path": "skills/react-best-practices" },
-    { "name": "web-design-guidelines",       "repo": "vercel-labs/agent-skills", "path": "skills/web-design-guidelines" },
-    { "name": "webapp-testing",              "repo": "anthropics/skills", "path": "skills/webapp-testing" },
-    { "name": "winui-app",                   "repo": "openai/skills", "path": "skills/.curated/winui-app" },
-    { "name": "swiftui-liquid-glass",        "repo": "Dimillian/Skills", "path": "swiftui-liquid-glass" },
-    { "name": "swiftui-ui-patterns",         "repo": "Dimillian/Skills", "path": "swiftui-ui-patterns" },
-    { "name": "swiftui-view-refactor",       "repo": "Dimillian/Skills", "path": "swiftui-view-refactor" },
-    { "name": "emil-design-eng",             "repo": "emilkowalski/skill", "path": "skills/emil-design-eng" },
-    { "name": "make-interfaces-feel-better", "repo": "jakubkrehel/make-interfaces-feel-better", "path": "skills/make-interfaces-feel-better" },
-    { "name": "userinterface-wiki",          "repo": "raphaelsalaja/userinterface-wiki", "path": "skills" }
+  "$comment": "Skills installed via `npx skills` (vercel-labs/skills). Each entry maps to one `npx skills add` invocation. Names follow the upstream package's canonical naming (npx may apply a vendor prefix on collision).",
+  "agents": ["github-copilot", "codex", "claude-code"],
+  "scope": "global",
+  "sources": [
+    {
+      "repo": "BumpyClock/dotfiles",
+      "skills": [
+        "subagent-driven-development",
+        "programming",
+        "winui3-csharp-app",
+        "ux-designer",
+        "skill-creator",
+        "git-workflow"
+      ]
+    },
+    {
+      "repo": "Dimillian/Skills",
+      "skills": [
+        "swift-concurrency-expert",
+        "swiftui-performance-audit",
+        "swiftui-liquid-glass",
+        "swiftui-ui-patterns",
+        "swiftui-view-refactor"
+      ]
+    },
+    {
+      "repo": "AvdLee/SwiftUI-Agent-Skill",
+      "skills": ["swiftui-expert-skill"]
+    },
+    {
+      "repo": "twostraws/swiftui-agent-skill",
+      "skills": ["swiftui-pro"]
+    },
+    {
+      "repo": "haider-nawaz/liquid-glass-skill",
+      "skills": ["liquid-glass"]
+    },
+    {
+      "repo": "conorluddy/ios-simulator-skill",
+      "skills": ["ios-simulator-skill"]
+    },
+    {
+      "repo": "novotnyllc/dotnet-artisan",
+      "skills": [
+        "using-dotnet",
+        "dotnet-advisor",
+        "dotnet-csharp",
+        "dotnet-api",
+        "dotnet-ui",
+        "dotnet-testing",
+        "dotnet-devops",
+        "dotnet-tooling",
+        "dotnet-debugging"
+      ]
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "skills": [
+        "react-best-practices",
+        "web-design-guidelines",
+        "react-view-transitions",
+        "composition-patterns"
+      ]
+    },
+    {
+      "repo": "anthropics/skills",
+      "skills": ["webapp-testing"]
+    },
+    {
+      "repo": "openai/skills",
+      "skills": ["winui-app"]
+    },
+    {
+      "repo": "emilkowalski/skill",
+      "skills": ["emil-design-eng"]
+    },
+    {
+      "repo": "jakubkrehel/make-interfaces-feel-better"
+    },
+    {
+      "repo": "raphaelsalaja/userinterface-wiki"
+    }
   ]
 }

@@ -1,125 +1,89 @@
-# Install/update skills from the skills manifest (Windows).
+# Install/update skills via `npx skills` (vercel-labs/skills) on Windows.
 
-function Resolve-PythonCommand {
-    $candidates = @(
-        @{ Exe = "python3"; Args = @("--version") },
-        @{ Exe = "python";  Args = @("--version") },
-        @{ Exe = "py";      Args = @("-3", "--version") }
-    )
+function Test-SkillsPrereqs {
+    param([string]$ManifestPath)
 
-    foreach ($candidate in $candidates) {
-        $cmd = Get-Command $candidate.Exe -ErrorAction SilentlyContinue
-        if (-not $cmd) { continue }
-
-        & $cmd.Source @($candidate.Args) *> $null
-        if ($LASTEXITCODE -eq 0) {
-            if ($candidate.Exe -eq "py") { return @($cmd.Source, "-3") }
-            return @($cmd.Source)
-        }
+    if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
+        Write-Err "npx (Node.js) is required"
+        return $false
     }
-
-    return $null
+    if (-not (Test-Path $ManifestPath)) {
+        Write-Err "Missing manifest: $ManifestPath"
+        return $false
+    }
+    return $true
 }
 
-function Compare-DirectoriesIgnoringLineEndings {
-    param([string]$Left, [string]$Right)
+function Sync-SkillsLockfile {
+    param([string]$DotfilesDir)
 
-    $git = Get-Command git -ErrorAction SilentlyContinue
-    if (-not $git) { return $false }
+    $repoLock = Join-Path $DotfilesDir ".skill-lock.json"
+    $homeAgents = Join-Path $env:USERPROFILE ".agents"
+    $homeLock = Join-Path $homeAgents ".skill-lock.json"
 
-    & $git.Source diff --no-index --ignore-cr-at-eol --exit-code -- $Left $Right *> $null
-    if ($LASTEXITCODE -eq 0) { return $true }
-    if ($LASTEXITCODE -eq 1) { return $false }
-    return $false
+    if (-not (Test-Path $homeAgents)) {
+        New-Item -ItemType Directory -Path $homeAgents -Force | Out-Null
+    }
+
+    $existingItem = Get-Item $homeLock -Force -ErrorAction SilentlyContinue
+    if ($existingItem -and $existingItem.LinkType -eq "SymbolicLink") {
+        return
+    }
+
+    if ((Test-Path $homeLock) -and -not (Test-Path $repoLock)) {
+        Move-Item $homeLock $repoLock
+    }
+    if (-not (Test-Path $repoLock)) {
+        '{"version":3,"skills":{}}' | Set-Content -Path $repoLock -NoNewline
+    }
+    if ((Test-Path $homeLock) -and (-not $existingItem -or $existingItem.LinkType -ne "SymbolicLink")) {
+        $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        Move-Item $homeLock "$homeLock.backup.$stamp" -Force
+    }
+
+    New-Item -ItemType SymbolicLink -Path $homeLock -Target $repoLock -Force | Out-Null
 }
 
 function Update-Skills {
     param([string]$DotfilesDir)
 
-    $skillsDir = Join-Path $DotfilesDir "skills"
     $manifestPath = Join-Path $DotfilesDir "scripts\skills-manifest.json"
-    $installer = Join-Path $skillsDir ".system\skill-installer\scripts\install-skill-from-github.py"
+    if (-not (Test-SkillsPrereqs -ManifestPath $manifestPath)) { return 1 }
 
-    if (-not (Test-Path $manifestPath)) { Write-Err "Missing manifest: $manifestPath"; return 1 }
-    if (-not (Test-Path $installer)) { Write-Err "Missing installer: $installer"; return 1 }
-
-    $pythonCommand = @(Resolve-PythonCommand)
-    if (-not $pythonCommand) { Write-Err "Python 3 is required"; return 1 }
+    Sync-SkillsLockfile -DotfilesDir $DotfilesDir
 
     $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
-    $skills = @($manifest.skills)
-    $count = $skills.Count
-    $updated = 0
-    $skipped = 0
+    $agentArgs = @()
+    foreach ($a in $manifest.agents) { $agentArgs += @("-a", [string]$a) }
+
+    $sources = @($manifest.sources)
+    Write-Info ("Installing skills from {0} sources via npx skills..." -f $sources.Count)
+
+    $ok = 0
     $failed = 0
-    $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("skills-update-" + [Guid]::NewGuid().ToString("N"))
-
-    New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
-
-    Write-Info "Updating $count skills from manifest..."
-
-    try {
-        foreach ($skill in $skills) {
-            $name = [string]$skill.name
-            $repo = [string]$skill.repo
-            $path = [string]$skill.path
-            $ref = if ($skill.PSObject.Properties.Name -contains "ref" -and $skill.ref) { [string]$skill.ref } else { "main" }
-
-            if (-not $name -or -not $repo -or -not $path) {
-                Write-Host "  [FAIL] Invalid manifest entry" -ForegroundColor Red
-                $failed++
-                continue
-            }
-
-            $dest = Join-Path $skillsDir $name
-            $staged = Join-Path $tempRoot $name
-            if (Test-Path $staged) {
-                Remove-Item $staged -Recurse -Force
-            }
-
-            $args = @()
-            if ($pythonCommand.Count -gt 1) {
-                $args += $pythonCommand[1..($pythonCommand.Count - 1)]
-            }
-            $args += @(
-                $installer
-                "--repo", $repo
-                "--path", $path
-                "--ref", $ref
-                "--dest", $tempRoot
-                "--name", $name
-            )
-
-            & $pythonCommand[0] @args 2>$null
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $staged)) {
-                Write-Host "  [FAIL] $name (from $repo)" -ForegroundColor Red
-                $failed++
-                continue
-            }
-
-            if ((Test-Path $dest) -and (Compare-DirectoriesIgnoringLineEndings $dest $staged)) {
-                Remove-Item $staged -Recurse -Force
-                Write-Host "  [SKIP] $name (unchanged)" -ForegroundColor Yellow
-                $skipped++
-                continue
-            }
-
-            if (Test-Path $dest) {
-                Remove-Item $dest -Recurse -Force
-            }
-            Move-Item $staged $dest
-            Write-Host "  [OK] $name (from $repo)" -ForegroundColor Green
-            $updated++
+    foreach ($src in $sources) {
+        $repo = [string]$src.repo
+        $skillArgs = @()
+        if ($src.PSObject.Properties.Name -contains "skills" -and $src.skills) {
+            foreach ($s in $src.skills) { $skillArgs += @("-s", [string]$s) }
+        } else {
+            $skillArgs += @("-s", "*")
         }
-    }
-    finally {
-        if (Test-Path $tempRoot) {
-            Remove-Item $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
+
+        Write-Host "  [ADD]  $repo" -ForegroundColor Cyan
+        $cmdArgs = @("-y", "skills@latest", "add", $repo, "-g", "-y") + $agentArgs + $skillArgs
+        & npx @cmdArgs *> $null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  [OK]   $repo" -ForegroundColor Green
+            $ok++
+        } else {
+            Write-Host "  [FAIL] $repo" -ForegroundColor Red
+            $failed++
         }
     }
 
     Write-Host ""
-    Write-Info "Updated: $updated, Skipped: $skipped, Failed: $failed"
+    Write-Info "Sources installed: $ok, Failed: $failed"
     if ($failed -gt 0) { return 1 }
     return 0
 }
@@ -127,29 +91,9 @@ function Update-Skills {
 function List-Skills {
     param([string]$DotfilesDir)
 
-    $skillsDir = Join-Path $DotfilesDir "skills"
     $manifestPath = Join-Path $DotfilesDir "scripts\skills-manifest.json"
+    if (-not (Test-SkillsPrereqs -ManifestPath $manifestPath)) { return 1 }
 
-    if (-not (Test-Path $manifestPath)) { Write-Err "Missing manifest: $manifestPath"; return 1 }
-
-    $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
-    $skills = @($manifest.skills)
-    $count = $skills.Count
-
-    Write-Info "Skills manifest ($count skills):"
-    Write-Host ""
-
-    foreach ($skill in $skills) {
-        $name = [string]$skill.name
-        $repo = [string]$skill.repo
-        $dest = Join-Path $skillsDir $name
-
-        if (Test-Path $dest) {
-            Write-Host "  [INSTALLED] $name  ($repo)" -ForegroundColor Green
-        } else {
-            Write-Host "  [MISSING]   $name  ($repo)" -ForegroundColor Red
-        }
-    }
-
-    return 0
+    & npx -y skills@latest list -g
+    return $LASTEXITCODE
 }

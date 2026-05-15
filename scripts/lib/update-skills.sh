@@ -1,86 +1,77 @@
 #!/bin/bash
-# Install/update skills from the skills manifest.
+# Install/update skills via `npx skills` (vercel-labs/skills).
 # Sourced by setup.sh — expects helpers.sh already loaded and DOTFILES_DIR set.
-# Requires: jq, python3, gh
+# Requires: jq, npx (Node.js)
 
-SKILLS_DIR="$DOTFILES_DIR/skills"
 MANIFEST="$DOTFILES_DIR/scripts/skills-manifest.json"
-INSTALLER="$SKILLS_DIR/.system/skill-installer/scripts/install-skill-from-github.py"
+LOCKFILE_REPO="$DOTFILES_DIR/.skill-lock.json"
+LOCKFILE_HOME="$HOME/.agents/.skill-lock.json"
+
+_skills_preflight() {
+  command -v jq  &>/dev/null || { err "jq is required";  return 1; }
+  command -v npx &>/dev/null || { err "npx (Node.js) is required"; return 1; }
+  [[ -f "$MANIFEST" ]] || { err "Missing manifest: $MANIFEST"; return 1; }
+}
+
+# Symlink the global lockfile into the repo so it's tracked.
+_skills_link_lockfile() {
+  mkdir -p "$HOME/.agents"
+  if [[ -L "$LOCKFILE_HOME" ]]; then
+    return 0
+  fi
+  if [[ -f "$LOCKFILE_HOME" && ! -f "$LOCKFILE_REPO" ]]; then
+    mv "$LOCKFILE_HOME" "$LOCKFILE_REPO"
+  fi
+  if [[ ! -f "$LOCKFILE_REPO" ]]; then
+    echo '{"version":3,"skills":{}}' > "$LOCKFILE_REPO"
+  fi
+  if [[ -e "$LOCKFILE_HOME" && ! -L "$LOCKFILE_HOME" ]]; then
+    mv "$LOCKFILE_HOME" "${LOCKFILE_HOME}.backup.$(date +%Y%m%d_%H%M%S)"
+  fi
+  ln -sf "$LOCKFILE_REPO" "$LOCKFILE_HOME"
+}
 
 update_skills() {
-  if ! command -v jq &>/dev/null; then err "jq is required"; return 1; fi
-  if ! command -v git &>/dev/null; then err "git is required"; return 1; fi
-  if ! command -v gh &>/dev/null; then err "gh CLI is required"; return 1; fi
-  if ! command -v python3 &>/dev/null; then err "python3 is required"; return 1; fi
-  if [[ ! -f "$MANIFEST" ]]; then err "Missing manifest: $MANIFEST"; return 1; fi
-  if [[ ! -f "$INSTALLER" ]]; then err "Missing installer: $INSTALLER"; return 1; fi
+  _skills_preflight || return 1
+  _skills_link_lockfile
 
-  local count updated=0 skipped=0 failed=0
-  local temp_root
-  temp_root="$(mktemp -d "${TMPDIR:-/tmp}/skills-update.XXXXXX")"
-  count=$(jq '.skills | length' "$MANIFEST")
+  local agent_args=()
+  while IFS= read -r a; do agent_args+=("-a" "$a"); done < <(jq -r '.agents[]' "$MANIFEST")
 
-  info "Updating $count skills from manifest..."
+  local count
+  count=$(jq '.sources | length' "$MANIFEST")
+  info "Installing skills from $count sources via npx skills..."
 
+  local ok=0 failed=0
   for ((i = 0; i < count; i++)); do
-    local name repo path ref
-    name=$(jq -r ".skills[$i].name" "$MANIFEST")
-    repo=$(jq -r ".skills[$i].repo" "$MANIFEST")
-    path=$(jq -r ".skills[$i].path" "$MANIFEST")
-    ref=$(jq -r ".skills[$i].ref // \"main\"" "$MANIFEST")
+    local repo
+    repo=$(jq -r ".sources[$i].repo" "$MANIFEST")
 
-    local dest="$SKILLS_DIR/$name"
-    local staged="$temp_root/$name"
-
-    rm -rf "$staged"
-
-    if python3 "$INSTALLER" --repo "$repo" --path "$path" --ref "$ref" --dest "$temp_root" --name "$name" 2>/dev/null; then
-      if [[ -d "$dest" ]] && git diff --no-index --ignore-cr-at-eol --exit-code -- "$dest" "$staged" >/dev/null 2>&1; then
-        rm -rf "$staged"
-        echo -e "  ${YELLOW}[SKIP]${NC} $name (unchanged)"
-        ((skipped++))
-        continue
-      fi
-
-      rm -rf "$dest"
-      if mv "$staged" "$dest" 2>/dev/null || { cp -a "$staged" "$dest" && rm -rf "$staged"; }; then
-        echo -e "  ${GREEN}[OK]${NC} $name (from $repo)"
-        ((updated++))
-      else
-        echo -e "  ${RED}[FAIL]${NC} $name (from $repo)"
-        ((failed++))
-      fi
+    local skill_args=()
+    local skill_count
+    skill_count=$(jq -r ".sources[$i].skills // [] | length" "$MANIFEST")
+    if (( skill_count > 0 )); then
+      while IFS= read -r s; do skill_args+=("-s" "$s"); done < <(jq -r ".sources[$i].skills[]" "$MANIFEST")
     else
-      echo -e "  ${RED}[FAIL]${NC} $name (from $repo)"
+      skill_args+=("-s" "*")
+    fi
+
+    echo -e "  ${YELLOW}[ADD]${NC}  $repo"
+    if npx -y skills@latest add "$repo" -g -y "${agent_args[@]}" "${skill_args[@]}" >/dev/null 2>&1; then
+      echo -e "  ${GREEN}[OK]${NC}   $repo"
+      ((ok++))
+    else
+      echo -e "  ${RED}[FAIL]${NC} $repo"
       ((failed++))
     fi
   done
 
-  rm -rf "$temp_root"
   echo ""
-  info "Updated: $updated, Skipped: $skipped, Failed: $failed"
+  info "Sources installed: $ok, Failed: $failed"
   ((failed == 0))
 }
 
 list_skills() {
-  if [[ ! -f "$MANIFEST" ]]; then err "Missing manifest: $MANIFEST"; return 1; fi
-
-  local count
-  count=$(jq '.skills | length' "$MANIFEST")
-
-  info "Skills manifest ($count skills):"
-  echo ""
-
-  for ((i = 0; i < count; i++)); do
-    local name repo
-    name=$(jq -r ".skills[$i].name" "$MANIFEST")
-    repo=$(jq -r ".skills[$i].repo" "$MANIFEST")
-
-    local dest="$SKILLS_DIR/$name"
-    if [[ -d "$dest" ]]; then
-      echo -e "  ${GREEN}[INSTALLED]${NC} $name  ($repo)"
-    else
-      echo -e "  ${RED}[MISSING]${NC}   $name  ($repo)"
-    fi
-  done
+  _skills_preflight || return 1
+  npx -y skills@latest list -g
 }

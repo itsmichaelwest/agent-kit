@@ -93,31 +93,39 @@ See [docs/agents.md](docs/agents.md) for the template schema, model mapping, and
 
 ## Skills
 
-Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files. The repo `skills/` directory is the canonical global source and is linked into both `~/.agents/skills` and tool-specific locations that still need them.
+Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files. The repo `skills/` directory is the canonical global source: it is symlinked into `~/.agents/skills` (the universal location read by GitHub Copilot CLI and Codex) and `~/.claude/skills` for Claude Code.
+
+Skills are managed via [`vercel-labs/skills`](https://github.com/vercel-labs/skills) (`npx skills`). The repo's [`scripts/skills-manifest.json`](scripts/skills-manifest.json) declares the desired set of upstream skills; the lockfile committed at [`.skill-lock.json`](.skill-lock.json) is the symlinked source of truth that `npx skills` reads at `~/.agents/.skill-lock.json`.
 
 ### Managing skills
 
-Skills are sourced from community GitHub repos and tracked in [`scripts/skills-manifest.json`](scripts/skills-manifest.json).
-
 ```bash
-# Install/update all skills from the manifest
+# Install/update all skills declared in the manifest
 ./scripts/setup.sh update-skills
 
-# Show installed vs missing skills
+# Show currently installed skills (delegates to `npx skills list -g`)
 ./scripts/setup.sh list-skills
+
+# Pull latest versions of already-installed skills (no manifest read)
+npx skills update -g -y
 ```
 
 ### Adding a skill
 
-To add a community skill, add an entry to `scripts/skills-manifest.json`:
+Add an entry to `scripts/skills-manifest.json`. Either group with an existing `repo` source or add a new one:
 
-```json
-{ "name": "my-skill", "repo": "owner/repo", "path": "skills/my-skill" }
+```jsonc
+{
+  "repo": "owner/repo",
+  "skills": ["specific-skill-name"]   // omit "skills" to install all skills from the repo
+}
 ```
 
-Then run `./scripts/setup.sh update-skills`.
+Then run `./scripts/setup.sh update-skills`. Skill names follow the upstream package's canonical naming (the CLI may apply a vendor prefix on collision — e.g. `react-best-practices` from `vercel-labs/agent-skills` lands as `vercel-react-best-practices`).
 
-To create a local skill, drop a folder into `skills/` with a `SKILL.md` containing YAML frontmatter.
+### Local skills
+
+To author a local skill, drop a folder into `skills/` with a `SKILL.md` containing YAML frontmatter. Local skills are not tracked in the lockfile and coexist alongside `npx skills`-managed ones.
 
 ## Plugins
 
