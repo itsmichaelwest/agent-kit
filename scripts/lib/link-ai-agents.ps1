@@ -237,6 +237,75 @@ function Link-CopilotSettings {
     }
 }
 
+function Link-CodexConfig {
+    param([string]$DotfilesDir)
+
+    $shared = Join-Path $DotfilesDir ".codex\config.toml"
+    $overlay = Join-Path $DotfilesDir ".codex\config.local.toml"
+    $target = Join-Path $env:USERPROFILE ".codex\config.toml"
+    $merger = Join-Path $DotfilesDir "scripts\lib\merge-codex-config.py"
+
+    if (-not (Test-Path $shared)) {
+        Write-Warn "Missing $shared"
+        return
+    }
+
+    $pythonCommand = @(Resolve-PythonCommand)
+    if (-not $pythonCommand) {
+        Write-Err "python3 (3.11+) required to merge codex config"
+        return
+    }
+
+    if (-not (Test-Path $merger)) {
+        Write-Err "Missing $merger"
+        return
+    }
+
+    $targetDir = Split-Path -Parent $target
+    if (-not (Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    }
+
+    $liveArg = $null
+    if (Test-Path $target) {
+        $item = Get-Item $target -Force
+        if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            $liveArg = $target
+            $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            Copy-Item $target "$target.backup.$stamp" -Force
+            Write-Info "Backed up existing config.toml"
+        } else {
+            Remove-Item $target -Force
+        }
+    }
+
+    $tmp = [System.IO.Path]::GetTempFileName()
+    try {
+        $args = @()
+        if ($pythonCommand.Count -gt 1) {
+            $args += $pythonCommand[1..($pythonCommand.Count - 1)]
+        }
+        $args += @($merger, $shared, $overlay)
+        if ($liveArg) { $args += $liveArg }
+
+        & $pythonCommand[0] @args > $tmp 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Move-Item $tmp $target -Force
+            if (Test-Path $overlay) {
+                Write-Host "  [MERGE] $target (shared + local overlay + preserved [projects])"
+            } else {
+                Write-Host "  [MERGE] $target (shared + preserved [projects] — create .codex\config.local.toml to predeclare trust)"
+            }
+        } else {
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+            Write-Err "Failed to merge codex config"
+        }
+    } catch {
+        Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+        Write-Err "Failed to merge codex config: $_"
+    }
+}
+
 function Link-AiAgents {
     param([string]$DotfilesDir)
 
@@ -255,6 +324,7 @@ function Link-AiAgents {
     Link-ManifestAiTargets $DotfilesDir $manifest
     Link-CopilotAgents $DotfilesDir
     Link-CopilotSettings $DotfilesDir
+    Link-CodexConfig $DotfilesDir
     Write-AiAgentLayoutMarker
 }
 

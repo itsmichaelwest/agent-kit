@@ -71,3 +71,24 @@ function Ensure-Linked {
         }
     }
 }
+
+function Resolve-PythonCommand {
+    $candidates = @(
+        @{ Exe = "python3"; Args = @("--version") },
+        @{ Exe = "python";  Args = @("--version") },
+        @{ Exe = "py";      Args = @("-3", "--version") }
+    )
+
+    foreach ($candidate in $candidates) {
+        $cmd = Get-Command $candidate.Exe -ErrorAction SilentlyContinue
+        if (-not $cmd) { continue }
+
+        & $cmd.Source @($candidate.Args) *> $null
+        if ($LASTEXITCODE -eq 0) {
+            if ($candidate.Exe -eq "py") { return @($cmd.Source, "-3") }
+            return @($cmd.Source)
+        }
+    }
+
+    return $null
+}

@@ -16,6 +16,7 @@ secrets/
 .env.*
 .claude/settings.local.json
 .copilot/settings.local.json
+.codex/config.local.toml
 
 # Claude session data
 .claude/projects/

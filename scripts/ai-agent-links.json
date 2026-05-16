@@ -6,9 +6,7 @@
     "docs": "docs",
     "agents": "agents",
     "claude_settings": ".claude/settings.json",
-    "copilot_settings": ".copilot/settings.json",
     "codex_agents": ".codex/agents",
-    "codex_settings": ".codex/config.toml",
     "mcp_config": "mcp/mcp-config.json"
   },
   "targets": [
@@ -23,7 +21,6 @@
     { "source": "instructions",    "path": "~/.codex/AGENTS.md" },
     { "source": "docs",            "path": "~/.codex/docs" },
     { "source": "skills",          "path": "~/.agents/skills" },
-    { "source": "codex_settings",   "path": "~/.codex/config.toml" },
     { "source": "codex_agents",    "path": "~/.codex/agents" },
 
     { "source": "prompts",         "path": "~/.copilot/prompts" },

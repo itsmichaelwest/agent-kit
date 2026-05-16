@@ -136,6 +136,61 @@ link_copilot_settings() {
   fi
 }
 
+# Generate ~/.codex/config.toml by merging shared declarative config with a
+# gitignored personal overlay, while preserving [projects.*] trust entries
+# Codex has written into the live file at runtime. Written as a real file
+# (not a symlink) so Codex's own writes don't pollute the repo.
+link_codex_config() {
+  local shared="$DOTFILES_DIR/.codex/config.toml"
+  local overlay="$DOTFILES_DIR/.codex/config.local.toml"
+  local target="$HOME/.codex/config.toml"
+  local merger="$DOTFILES_DIR/scripts/lib/merge-codex-config.py"
+
+  if [[ ! -f "$shared" ]]; then
+    warn "Missing $shared"
+    return
+  fi
+
+  if ! command -v python3 &>/dev/null; then
+    err "python3 (3.11+) required to merge codex config"
+    return 1
+  fi
+
+  if [[ ! -f "$merger" ]]; then
+    err "Missing $merger"
+    return 1
+  fi
+
+  mkdir -p "$(dirname "$target")"
+
+  local live_arg=""
+  if [[ -f "$target" && ! -L "$target" ]]; then
+    live_arg="$target"
+  fi
+
+  if [[ -L "$target" ]]; then
+    rm "$target"
+  elif [[ -e "$target" ]]; then
+    cp "$target" "${target}.backup.$(date +%Y%m%d_%H%M%S)"
+    info "Backed up existing config.toml"
+  fi
+
+  local tmp
+  tmp="$(mktemp)"
+  if python3 "$merger" "$shared" "$overlay" $live_arg > "$tmp" 2>/dev/null; then
+    mv "$tmp" "$target"
+    if [[ -f "$overlay" ]]; then
+      echo "  [MERGE] $target (shared + local overlay + preserved [projects])"
+    else
+      echo "  [MERGE] $target (shared + preserved [projects] — create .codex/config.local.toml to predeclare trust)"
+    fi
+  else
+    rm -f "$tmp"
+    err "Failed to merge codex config"
+    return 1
+  fi
+}
+
 unlink_copilot_agents() {
   local source_dir="$DOTFILES_DIR/agents"
   local target_dir="$HOME/.copilot/agents"
@@ -223,6 +278,7 @@ link_ai_agents() {
   link_manifest_targets
   link_copilot_agents
   link_copilot_settings
+  link_codex_config
   write_ai_agent_layout_marker
 }
 

@@ -15,6 +15,10 @@ source "$SCRIPTS_DIR/lib/plugin-status.sh"
 source "$SCRIPTS_DIR/lib/shell-config.sh"
 source "$SCRIPTS_DIR/lib/update-skills.sh"
 
+bootstrap_claude_plugins() {
+  bash "$SCRIPTS_DIR/lib/bootstrap-claude-plugins.sh"
+}
+
 ACTION=""
 PROJECT_AGENTS=""
 SKIP_SUBMODULES=0
@@ -34,6 +38,7 @@ Commands:
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
   list-skills         Show skills and install status
+  bootstrap-claude    Install Claude Code plugins declared in settings.json
   install-mcp         Install user-scope MCP servers from mcp/servers.json
   plugin-status       Show plugin status vs repo config
   status              Show current link status
@@ -47,7 +52,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|install-mcp|plugin-status)
+    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|install-mcp|plugin-status|bootstrap-claude)
       ACTION="$1" ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
@@ -101,7 +106,7 @@ show_status() {
 }
 
 case "$ACTION" in
-  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp ;;
+  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins ;;
   install-mcp)    install_mcp ;;
   compile-agents) compile_agents ;;
   link)           compile_agents; link_dotfiles; link_ai_agents ;;
@@ -112,6 +117,7 @@ case "$ACTION" in
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
   update-skills)  update_skills ;;
   list-skills)    list_skills ;;
+  bootstrap-claude) bootstrap_claude_plugins ;;
   plugin-status)  show_plugin_status ;;
   status)         show_status ;;
   project-agents)

@@ -1,0 +1,13 @@
+# Per-machine Codex overrides — merged on top of .codex/config.toml at link time.
+# Copy to .codex/config.local.toml (gitignored) and edit for your machine.
+#
+# Trust state Codex writes to ~/.codex/config.toml at runtime is preserved
+# automatically by the link merge — you only need to declare projects here
+# if you want them pre-trusted on a freshly-cloned machine.
+
+# Example: pre-declare trusted projects so you don't get prompted on first run
+# [projects."/Users/example/Developer/some-repo"]
+# trust_level = "trusted"
+
+# Example: override model for this machine only
+# model = "gpt-5.4"

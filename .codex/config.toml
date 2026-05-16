@@ -1,3 +1,17 @@
+# Codex CLI declarative user config.
+# This file is the shared, committed source of truth. Per-machine values
+# (trusted projects, model overrides) belong in .codex/config.local.toml,
+# which is gitignored and merged on top at link time.
+#
+# The link step generates ~/.codex/config.toml from:
+#   1. this shared file
+#   2. .codex/config.local.toml overlay (if present)
+#   3. preserved [projects.*] entries Codex writes during runtime
+#
+# Auto-managed sections that Codex regenerates on every startup are NOT
+# committed here (e.g. [marketplaces.openai-bundled], openai-primary-runtime,
+# marketplace last_updated / last_revision timestamps).
+
 commit_attribution = ""
 model = "gpt-5.5"
 model_reasoning_effort = "high"
@@ -54,7 +68,7 @@ description = "Online research - gathering up-to-date information, evaluating li
 
 [agents.reviewer]
 config_file = "agents/reviewer.toml"
-description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs \u2014 does not modify code."
+description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
 
 [agents.security-auditor]
 config_file = "agents/security-auditor.toml"
@@ -76,33 +90,23 @@ description = "Produce implementation-ready UX design documentation with layout,
 multi_agent = true
 prevent_idle_sleep = true
 
-[marketplaces]
-
+# Only declarative marketplace sources are committed.
+# Codex auto-writes last_updated / last_revision into ~/.codex/config.toml
+# at runtime; the [marketplaces.openai-bundled] and openai-primary-runtime
+# entries with absolute paths are regenerated on every startup.
 [marketplaces.claude-plugins-official]
-last_updated = "2026-05-09T14:26:14Z"
-last_revision = "76b35e91d1c99c090b1a08dade53bcc5e352c1b2"
 source_type = "git"
 source = "https://github.com/anthropics/claude-plugins-official.git"
 
-[marketplaces.openai-bundled]
-last_updated = "2026-05-09T09:11:58Z"
-source_type = "local"
-source = "/Users/michael/.codex/.tmp/bundled-marketplaces/openai-bundled"
-
-[marketplaces.openai-primary-runtime]
-last_updated = "2026-05-09T09:20:17Z"
-source_type = "local"
-source = "/Users/michael/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
-
-[plugins]
-
-[plugins."browser-use@openai-bundled"]
-enabled = true
-
+# Declarative plugin enable/disable. Codex's startup background sync installs
+# curated/openai plugins automatically when declared here.
 [plugins."build-ios-apps@openai-curated"]
 enabled = true
 
 [plugins."build-macos-apps@openai-curated"]
+enabled = true
+
+[plugins."browser-use@openai-bundled"]
 enabled = true
 
 [plugins."code-review@claude-plugins-official"]
@@ -124,6 +128,9 @@ enabled = true
 enabled = true
 
 [plugins."figma@openai-curated"]
+enabled = true
+
+[plugins."github@claude-plugins-official"]
 enabled = true
 
 [plugins."github@openai-curated"]
@@ -149,23 +156,6 @@ enabled = true
 
 [plugins."superpowers@openai-curated"]
 enabled = true
-
-[plugins."github@claude-plugins-official"]
-enabled = true
-
-[plugins."browser-use@openai-bundled"]
-enabled = true
-
-[projects]
-
-[projects."/Users/michael/Developer/Range"]
-trust_level = "trusted"
-
-[projects."/Users/michael/Developer/range-site"]
-trust_level = "trusted"
-
-[projects."/Users/michael/agent-kit"]
-trust_level = "trusted"
 
 [shell_environment_policy]
 inherit = "core"

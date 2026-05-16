@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "list-skills", "plugin-status")]
+    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "list-skills", "plugin-status", "bootstrap-claude")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -49,6 +49,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\link-ai-agents.ps1"
 . "$ScriptsDir\lib\plugin-status.ps1"
 . "$ScriptsDir\lib\update-skills.ps1"
+. "$ScriptsDir\lib\bootstrap-claude-plugins.ps1"
 
 if ($Help -or -not $Action) {
     Write-Host @"
@@ -62,6 +63,7 @@ Commands:
   link-ai-agents      Link AI agent configs only
   update-skills       Install/update skills from manifest
   list-skills         Show skills and install status
+  bootstrap-claude    Install Claude Code plugins declared in settings.json
   plugin-status       Show plugin status vs repo config
   reset               Remove all links and uninstall dependencies
   status              Show current link status
@@ -116,13 +118,14 @@ function Show-Status {
 }
 
 switch ($Action) {
-    "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
+    "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $null = Bootstrap-ClaudePlugins }
     "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code } }
     "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
     "link-ai-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-AiAgents $DotfilesDir }
     "update-skills"  { $code = Update-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "list-skills"    { $code = List-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "bootstrap-claude" { $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code } }
     "plugin-status"  { $code = Show-PluginStatus $DotfilesDir; if ($code -ne 0) { exit $code } }
     "reset"          { Unlink-Dotfiles; Unlink-AiAgents $DotfilesDir; Uninstall-Deps }
     "status"         { Show-Status }

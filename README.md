@@ -129,21 +129,33 @@ To author a local skill, drop a folder into `skills/` with a `SKILL.md` containi
 
 ## Plugins
 
-Plugins are managed from the tool-native config files already in the repo.
+Plugins are declared per tool and installed automatically on first launch where the tool supports it.
 
 ```bash
 ./scripts/setup.sh plugin-status
 ```
 
-Plugin payloads are not committed to the repo. Desired plugin declarations live in the repo-owned tool configs:
+| Tool | Declared in | Auto-installs on launch? |
+|------|------------|---------------------------|
+| Copilot | `.copilot/settings.json` `enabledPlugins` | Yes — documented as "Declarative plugin auto-install" |
+| Codex | `.codex/config.toml` `[plugins."x@y"]` | Yes — background curated-marketplace sync at startup |
+| Claude | `.claude/settings.json` `enabledPlugins` | No — requires `./scripts/setup.sh bootstrap-claude` to install (run once per machine) |
 
-- Claude: `.claude/settings.json`
-- Codex: `.codex/config.toml`
-- Copilot: `.copilot/settings.json` (declarative shared bits) + `.copilot/settings.local.json` (gitignored personal overrides)
+### Per-tool layering
 
-For Copilot, `~/.copilot/settings.json` is **generated** at link time by merging the committed `.copilot/settings.json` with an optional `.copilot/settings.local.json` overlay. Copy `.copilot/settings.local.example.json` to `.copilot/settings.local.json` and edit it for per-machine values like `model`, `trustedFolders`, or anything else you don't want shared. Runtime state (installed plugin cache paths, login info, first-launch timestamp) stays in `~/.copilot/config.json`, which Copilot CLI manages itself and is never touched by setup.
+**Copilot** — `~/.copilot/settings.json` is **generated** at link time by jq-merging the committed `.copilot/settings.json` (shared) with an optional `.copilot/settings.local.json` (gitignored, per-machine: `model`, `trustedFolders`). Copy `.copilot/settings.local.example.json` to bootstrap your local file. Runtime state (installed plugin cache paths, login info, first-launch timestamp) stays in `~/.copilot/config.json`, which Copilot CLI manages itself and is never touched by setup.
 
-`link` and `install` link those desired configs into the home-directory tool locations. Copilot's installed plugin inventory remains auto-managed in `~/.copilot/config.json`.
+**Codex** — `~/.codex/config.toml` is **generated** at link time from three sources: the committed `.codex/config.toml` (shared declarative — model, agents, plugins, MCP), an optional `.codex/config.local.toml` (gitignored — pre-declared trust, per-machine overrides), and any `[projects.*]` trust entries Codex has written into the live file during runtime. Copy `.codex/config.local.example.toml` to start your local file. Re-running `setup.sh link` preserves runtime trust; it does not preserve other ad-hoc edits Codex makes to its config.
+
+**Claude** — `~/.claude/settings.json` is a plain symlink to the committed `.claude/settings.json`. Claude stores runtime state (OAuth, MCP user-scope configs, per-project trust) in a separate `~/.claude.json` file, so the symlinked settings file stays clean. Use `.claude/settings.local.json` (gitignored, project-scope per Claude convention) for any per-machine overrides.
+
+### Bootstrapping Claude plugins on a new machine
+
+```bash
+./scripts/setup.sh bootstrap-claude
+```
+
+Reads `enabledPlugins` from `~/.claude/settings.json` and runs `claude plugin install` for each entry. Idempotent — already-installed plugins are skipped. `setup.sh install` runs this automatically.
 
 ## Adding a New AI Tool
 
