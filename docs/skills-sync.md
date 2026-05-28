@@ -185,6 +185,15 @@ echo 'skills/acme-internal/' >> .git/info/exclude   # ignore it, locally, by nam
 ./scripts/setup.sh doctor                 # confirms it's seen as private, not flagged
 ```
 
+On Windows (PowerShell):
+
+```powershell
+git clone <private-skill-repo> skills\acme-internal
+Remove-Item -Recurse -Force skills\acme-internal\.git
+Add-Content .git\info\exclude 'skills/acme-internal/'   # forward slashes; git-relative
+.\scripts\setup.ps1 doctor
+```
+
 `setup.sh doctor` discovers ignored skills via `git check-ignore`, so it never
 needs their names. It also **warns** if a git-ignored skill is found in the
 tracked lockfile (the tell-tale that you installed it with `-g` and its name is
