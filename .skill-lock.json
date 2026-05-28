@@ -299,6 +299,24 @@
       "skillFolderHash": "7b2588047fed29a1e41a08b6287137cc940d6293",
       "installedAt": "2026-05-15T22:04:11.354Z",
       "updatedAt": "2026-05-15T22:04:11.354Z"
+    },
+    "oklch-skill": {
+      "source": "jakubkrehel/oklch-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/jakubkrehel/oklch-skill.git",
+      "skillPath": "skills/oklch-skill/SKILL.md",
+      "skillFolderHash": "9831d14b4bf20f3267370470cc0912ca47798143",
+      "installedAt": "2026-05-15T22:32:05.528Z",
+      "updatedAt": "2026-05-15T22:32:05.528Z"
+    },
+    "humanizer": {
+      "source": "blader/humanizer",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/blader/humanizer.git",
+      "skillPath": "SKILL.md",
+      "skillFolderHash": "a2ace14a88a6746f64f1f53ed8272d6788828038",
+      "installedAt": "2026-05-28T23:39:47.371Z",
+      "updatedAt": "2026-05-28T23:39:47.371Z"
     }
   },
   "dismissed": {

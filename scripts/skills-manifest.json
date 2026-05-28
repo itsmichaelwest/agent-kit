@@ -2,6 +2,14 @@
   "$comment": "Skills installed via `npx skills` (vercel-labs/skills). Each entry maps to one `npx skills add` invocation. Names follow the upstream package's canonical naming (npx may apply a vendor prefix on collision).",
   "agents": ["github-copilot", "codex", "claude-code"],
   "scope": "global",
+  "$local_comment": "Skills authored in this repo (not from an upstream source). Listed so `setup.sh doctor` treats them as intentional and never expects them in the lockfile. Folder names under skills/.",
+  "local": [
+    "codebase-reviewer",
+    "migrate-to-codex",
+    "shader-prototyping",
+    "ui-polisher",
+    "winui-polish"
+  ],
   "sources": [
     {
       "repo": "BumpyClock/dotfiles",
@@ -79,7 +87,13 @@
       "repo": "jakubkrehel/make-interfaces-feel-better"
     },
     {
+      "repo": "jakubkrehel/oklch-skill"
+    },
+    {
       "repo": "raphaelsalaja/userinterface-wiki"
+    },
+    {
+      "repo": "blader/humanizer"
     }
   ]
 }

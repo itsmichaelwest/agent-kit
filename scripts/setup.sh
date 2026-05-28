@@ -14,6 +14,7 @@ source "$SCRIPTS_DIR/lib/link-ai-agents.sh"
 source "$SCRIPTS_DIR/lib/plugin-status.sh"
 source "$SCRIPTS_DIR/lib/shell-config.sh"
 source "$SCRIPTS_DIR/lib/update-skills.sh"
+source "$SCRIPTS_DIR/lib/doctor-skills.sh"
 
 bootstrap_claude_plugins() {
   bash "$SCRIPTS_DIR/lib/bootstrap-claude-plugins.sh"
@@ -22,6 +23,7 @@ bootstrap_claude_plugins() {
 ACTION=""
 PROJECT_AGENTS=""
 SKIP_SUBMODULES=0
+DOCTOR_STRICT=""
 
 usage() {
   cat <<'EOF'
@@ -38,6 +40,7 @@ Commands:
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
   list-skills         Show skills and install status
+  doctor              Check skills manifest/lockfile/disk consistency
   bootstrap-claude    Install Claude Code plugins declared in settings.json
   install-mcp         Install user-scope MCP servers from mcp/servers.json
   plugin-status       Show plugin status vs repo config
@@ -52,11 +55,12 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|install-mcp|plugin-status|bootstrap-claude)
+    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|doctor|install-mcp|plugin-status|bootstrap-claude)
       ACTION="$1" ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
     --skip-submodules) SKIP_SUBMODULES=1 ;;
+    --strict) DOCTOR_STRICT="--strict" ;;
     -h|--help) usage; exit 0 ;;
     *) err "Unknown: $1"; usage; exit 1 ;;
   esac
@@ -117,6 +121,7 @@ case "$ACTION" in
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
   update-skills)  update_skills ;;
   list-skills)    list_skills ;;
+  doctor)         doctor_skills $DOCTOR_STRICT ;;
   bootstrap-claude) bootstrap_claude_plugins ;;
   plugin-status)  show_plugin_status ;;
   status)         show_status ;;
