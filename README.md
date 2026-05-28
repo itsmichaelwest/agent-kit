@@ -97,6 +97,8 @@ Skills are domain-specific knowledge packs that give agents deeper expertise. Ea
 
 Skills are managed via [`vercel-labs/skills`](https://github.com/vercel-labs/skills) (`npx skills`). The repo's [`scripts/skills-manifest.json`](scripts/skills-manifest.json) declares the desired set of upstream skills; the lockfile committed at [`.skill-lock.json`](.skill-lock.json) is the symlinked source of truth that `npx skills` reads at `~/.agents/.skill-lock.json`.
 
+See [docs/skills-sync.md](docs/skills-sync.md) for the sync strategy — why skills are vendored rather than restored from a lockfile, how upstream updates work, and when to revisit this as `npx skills` matures.
+
 ### Managing skills
 
 ```bash
@@ -105,6 +107,9 @@ Skills are managed via [`vercel-labs/skills`](https://github.com/vercel-labs/ski
 
 # Show currently installed skills (delegates to `npx skills list -g`)
 ./scripts/setup.sh list-skills
+
+# Check manifest/lockfile/disk consistency (add --strict to fail on warnings)
+./scripts/setup.sh doctor
 
 # Pull latest versions of already-installed skills (no manifest read)
 npx skills update -g -y
@@ -125,7 +130,11 @@ Then run `./scripts/setup.sh update-skills`. Skill names follow the upstream pac
 
 ### Local skills
 
-To author a local skill, drop a folder into `skills/` with a `SKILL.md` containing YAML frontmatter. Local skills are not tracked in the lockfile and coexist alongside `npx skills`-managed ones.
+To author a local skill, drop a folder into `skills/` with a `SKILL.md` containing YAML frontmatter, then list its folder name under `"local"` in [`scripts/skills-manifest.json`](scripts/skills-manifest.json). Local skills are not tracked in the lockfile and coexist alongside `npx skills`-managed ones; the `local` list tells `setup.sh doctor` they're intentional (otherwise it flags them as undeclared).
+
+### Private skills
+
+For skills that should stay on one machine and never be committed or synced (anything whose name is private), git-ignore the folder — add it to `.git/info/exclude` (per-clone, never pushed). `setup.sh doctor` detects ignored skills via `git check-ignore` and skips them, so their names never appear in any tracked file. Don't install them with `npx skills add -g` (that writes the shared lockfile); the doctor warns if a git-ignored skill leaks into the lockfile. See [docs/skills-sync.md](docs/skills-sync.md#private-skills-machine-local-not-synced).
 
 ## Plugins
 
