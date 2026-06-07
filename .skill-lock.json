@@ -100,15 +100,6 @@
       "installedAt": "2026-05-15T22:03:44.217Z",
       "updatedAt": "2026-05-15T22:03:44.217Z"
     },
-    "winui3-csharp-app": {
-      "source": "BumpyClock/dotfiles",
-      "sourceType": "github",
-      "sourceUrl": "https://github.com/BumpyClock/dotfiles.git",
-      "skillPath": "skills/winui3-csharp-app/SKILL.md",
-      "skillFolderHash": "a423f7dfe08503921cfa0b06119118d0257983e2",
-      "installedAt": "2026-05-15T22:03:44.217Z",
-      "updatedAt": "2026-05-15T22:03:44.217Z"
-    },
     "swift-concurrency-expert": {
       "source": "Dimillian/Skills",
       "sourceType": "github",
