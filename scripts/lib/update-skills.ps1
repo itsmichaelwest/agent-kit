@@ -88,6 +88,50 @@ function Update-Skills {
     return 0
 }
 
+function Test-SkillsArg {
+    param(
+        [string[]]$SkillArgs,
+        [string[]]$Names
+    )
+
+    foreach ($arg in $SkillArgs) {
+        if ($Names -contains $arg) { return $true }
+    }
+    return $false
+}
+
+function Install-Skill {
+    param(
+        [string]$DotfilesDir,
+        [string[]]$SkillArgs
+    )
+
+    $manifestPath = Join-Path $DotfilesDir "scripts\skills-manifest.json"
+    if (-not (Test-SkillsPrereqs -ManifestPath $manifestPath)) { return 1 }
+    if (-not $SkillArgs -or $SkillArgs.Count -eq 0) {
+        Write-Err "Missing skill source. Usage: setup.ps1 install-skill <source> [skills add options]"
+        return 1
+    }
+    if (@("npx", "skills", "add") -contains $SkillArgs[0]) {
+        Write-Err "Pass the skills source, not the full npx command. Example: setup.ps1 install-skill shadcn/improve"
+        return 1
+    }
+
+    Sync-SkillsLockfile -DotfilesDir $DotfilesDir
+
+    $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+    $agentArgs = @()
+    $hasAgentArg = Test-SkillsArg -SkillArgs $SkillArgs -Names @("-a", "--agent", "--all")
+    if (-not $hasAgentArg) {
+        foreach ($a in $manifest.agents) { $agentArgs += @("-a", [string]$a) }
+    }
+
+    Write-Info ("Installing skill source via npx skills: {0}" -f $SkillArgs[0])
+    $cmdArgs = @("-y", "skills@latest", "add") + $SkillArgs + @("-g", "-y") + $agentArgs
+    & npx @cmdArgs
+    return $LASTEXITCODE
+}
+
 function List-Skills {
     param([string]$DotfilesDir)
 

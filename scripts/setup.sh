@@ -14,6 +14,7 @@ source "$SCRIPTS_DIR/lib/link-ai-agents.sh"
 source "$SCRIPTS_DIR/lib/plugin-status.sh"
 source "$SCRIPTS_DIR/lib/shell-config.sh"
 source "$SCRIPTS_DIR/lib/update-skills.sh"
+source "$SCRIPTS_DIR/lib/reconcile-skills.sh"
 source "$SCRIPTS_DIR/lib/doctor-skills.sh"
 
 bootstrap_claude_plugins() {
@@ -24,6 +25,7 @@ ACTION=""
 PROJECT_AGENTS=""
 SKIP_SUBMODULES=0
 DOCTOR_STRICT=""
+SKILL_ARGS=()
 
 usage() {
   cat <<'EOF'
@@ -39,7 +41,9 @@ Commands:
   shell-remove        Remove injected zsh config from ~/.zshrc
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
+  install-skill       Install one source via npx skills, reconcile, then doctor
   list-skills         Show skills and install status
+  reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
   bootstrap-claude    Install Claude Code plugins declared in settings.json
   install-mcp         Install user-scope MCP servers from mcp/servers.json
@@ -55,8 +59,10 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|doctor|install-mcp|plugin-status|bootstrap-claude)
+    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude)
       ACTION="$1" ;;
+    install-skill)
+      ACTION="install-skill"; shift; SKILL_ARGS=("$@"); break ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
     --skip-submodules) SKIP_SUBMODULES=1 ;;
@@ -120,7 +126,9 @@ case "$ACTION" in
   shell-remove)   remove_zsh_config ;;
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
   update-skills)  update_skills ;;
+  install-skill)  install_skill "${SKILL_ARGS[@]}"; reconcile_skills; doctor_skills --strict ;;
   list-skills)    list_skills ;;
+  reconcile-skills) reconcile_skills ;;
   doctor)         doctor_skills $DOCTOR_STRICT ;;
   bootstrap-claude) bootstrap_claude_plugins ;;
   plugin-status)  show_plugin_status ;;

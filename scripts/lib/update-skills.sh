@@ -71,6 +71,37 @@ update_skills() {
   ((failed == 0))
 }
 
+install_skill() {
+  _skills_preflight || return 1
+  if (( $# == 0 )); then
+    err "Missing skill source. Usage: setup.sh install-skill <source> [skills add options]"
+    return 1
+  fi
+  case "$1" in
+    npx|skills|add)
+      err "Pass the skills source, not the full npx command. Example: setup.sh install-skill shadcn/improve"
+      return 1
+      ;;
+  esac
+
+  _skills_link_lockfile
+
+  local agent_args=()
+  local has_agent_arg=0
+  for arg in "$@"; do
+    if [[ "$arg" == "-a" || "$arg" == "--agent" || "$arg" == "--all" ]]; then
+      has_agent_arg=1
+      break
+    fi
+  done
+  if (( has_agent_arg == 0 )); then
+    while IFS= read -r a; do agent_args+=("-a" "$a"); done < <(jq -r '.agents[]' "$MANIFEST")
+  fi
+
+  info "Installing skill source via npx skills: $1"
+  npx -y skills@latest add "$@" -g -y "${agent_args[@]}"
+}
+
 list_skills() {
   _skills_preflight || return 1
   npx -y skills@latest list -g

@@ -1,13 +1,23 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "list-skills", "doctor", "plugin-status", "bootstrap-claude")]
+    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude")]
     [string]$Action,
 
     [string]$ProjectPath,
+    [Alias("s")]
+    [string[]]$Skill,
+    [Alias("a")]
+    [string[]]$Agent,
+    [switch]$All,
+    [switch]$Copy,
+    [string[]]$Subagent,
+    [switch]$FullDepth,
     [switch]$SkipSubmodules,
     [switch]$Strict,
-    [switch]$Help
+    [switch]$Help,
+    [Parameter(ValueFromRemainingArguments=$true)]
+    [string[]]$RemainingArgs
 )
 
 # --- PowerShell 7 bootstrap (runs under PS 5.1) ---
@@ -30,7 +40,8 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     $argList = @('-NoProfile', '-File', $MyInvocation.MyCommand.Path)
     foreach ($key in $PSBoundParameters.Keys) {
         $val = $PSBoundParameters[$key]
-        if ($val -is [switch]) { if ($val) { $argList += "-$key" } }
+        if ($key -eq "RemainingArgs") { $argList += $val }
+        elseif ($val -is [switch]) { if ($val) { $argList += "-$key" } }
         else { $argList += "-$key"; $argList += $val }
     }
     & pwsh @argList
@@ -50,6 +61,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\link-ai-agents.ps1"
 . "$ScriptsDir\lib\plugin-status.ps1"
 . "$ScriptsDir\lib\update-skills.ps1"
+. "$ScriptsDir\lib\reconcile-skills.ps1"
 . "$ScriptsDir\lib\doctor-skills.ps1"
 . "$ScriptsDir\lib\bootstrap-claude-plugins.ps1"
 
@@ -64,7 +76,9 @@ Commands:
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
   update-skills       Install/update skills from manifest
+  install-skill       Install one source via npx skills, reconcile, then doctor
   list-skills         Show skills and install status
+  reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
   bootstrap-claude    Install Claude Code plugins declared in settings.json
   plugin-status       Show plugin status vs repo config
@@ -74,6 +88,8 @@ Commands:
 
 Options:
   -ProjectPath <path>  Project path (for project-agents)
+  -Skill, -s <name>    Skill selector for install-skill
+  -Agent, -a <name>    Agent selector for install-skill
   -SkipSubmodules      Skip git submodule initialization
   -Help                Show this help
 "@
@@ -120,6 +136,17 @@ function Show-Status {
     $null = Show-PluginStatus $DotfilesDir
 }
 
+function Get-InstallSkillArgs {
+    $args = @($RemainingArgs)
+    foreach ($name in $Skill) { $args += @("-s", $name) }
+    foreach ($name in $Agent) { $args += @("-a", $name) }
+    if ($All) { $args += "--all" }
+    if ($Copy) { $args += "--copy" }
+    foreach ($name in $Subagent) { $args += @("--subagent", $name) }
+    if ($FullDepth) { $args += "--full-depth" }
+    return $args
+}
+
 switch ($Action) {
     "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $null = Bootstrap-ClaudePlugins }
     "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code } }
@@ -127,7 +154,9 @@ switch ($Action) {
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
     "link-ai-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-AiAgents $DotfilesDir }
     "update-skills"  { $code = Update-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "install-skill"  { $installArgs = Get-InstallSkillArgs; $code = Install-Skill $DotfilesDir $installArgs; if ($code -ne 0) { exit $code }; $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Invoke-DoctorSkills $DotfilesDir -Strict; if ($code -ne 0) { exit $code } }
     "list-skills"    { $code = List-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "reconcile-skills" { $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "doctor"         { $code = Invoke-DoctorSkills $DotfilesDir -Strict:$Strict; if ($code -ne 0) { exit $code } }
     "bootstrap-claude" { $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code } }
     "plugin-status"  { $code = Show-PluginStatus $DotfilesDir; if ($code -ne 0) { exit $code } }

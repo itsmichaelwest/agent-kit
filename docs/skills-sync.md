@@ -128,6 +128,29 @@ git diff --cached               # review what changed
 git commit -m "chore(skills): refresh upstream skills"
 ```
 
+To add one new upstream skill source, prefer the repo wrapper:
+
+```bash
+./scripts/setup.sh install-skill shadcn/improve
+./scripts/setup.sh install-skill vercel-labs/agent-skills -s react-best-practices
+```
+
+It links `~/.agents/.skill-lock.json` to the repo lockfile, delegates the actual
+install to `npx skills add -g -y`, runs `reconcile-skills` to update the manifest,
+and finishes with strict `doctor`.
+
+On Windows, `setup.ps1 install-skill` supports the common `skills add` selectors
+as script parameters, e.g.
+`.\scripts\setup.ps1 install-skill vercel-labs/agent-skills -s react-best-practices`.
+
+If a skill was installed directly with `npx skills add -g` before the manifest
+was updated, run `./scripts/setup.sh reconcile-skills` (or
+`.\scripts\setup.ps1 reconcile-skills`). It merges recoverable lock entries for
+on-disk skills from the repo/global lockfiles and
+`~/.agents/.skill-lock.json.backup.*`, then adds the upstream source to
+`scripts/skills-manifest.json`. Review the resulting manifest, lockfile, and
+vendored skill diff before committing.
+
 Custom skills (not from an upstream source) are edited in `skills/` directly and
 committed like any other source. List them under `"local"` in
 `scripts/skills-manifest.json` so the doctor treats them as intentional.
