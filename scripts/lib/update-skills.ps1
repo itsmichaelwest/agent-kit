@@ -128,7 +128,7 @@ function Install-Skill {
 
     Write-Info ("Installing skill source via npx skills: {0}" -f $SkillArgs[0])
     $cmdArgs = @("-y", "skills@latest", "add") + $SkillArgs + @("-g", "-y") + $agentArgs
-    & npx @cmdArgs
+    & npx @cmdArgs | Out-Host
     return $LASTEXITCODE
 }
 
@@ -138,6 +138,6 @@ function List-Skills {
     $manifestPath = Join-Path $DotfilesDir "scripts\skills-manifest.json"
     if (-not (Test-SkillsPrereqs -ManifestPath $manifestPath)) { return 1 }
 
-    & npx -y skills@latest list -g
+    & npx -y skills@latest list -g | Out-Host
     return $LASTEXITCODE
 }

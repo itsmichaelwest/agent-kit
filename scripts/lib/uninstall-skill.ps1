@@ -46,7 +46,7 @@ function Uninstall-Skill {
     if ($code -ne 0) { return $code }
 
     Write-Info ("Uninstalling skill via npx skills: {0}" -f $SkillName)
-    & npx -y skills@latest remove $SkillName -g -y
+    & npx -y skills@latest remove $SkillName -g -y | Out-Host
     if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
 
     return Invoke-UninstallSkillManifest $DotfilesDir $SkillName -Apply
