@@ -191,3 +191,4 @@ Some agent/skill designs and conventions in this repo were informed by:
 - [BumpyClock/dotfiles](https://github.com/BumpyClock/dotfiles) — Agent and prompt structure
 - [butter-zone/design-standards](https://github.com/butter-zone/design-standards) — Design standards and conventions
 - [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) — Community subagent catalog
+- [The 2-Minute Claude Code Upgrade You're Probably Missing: LSP](https://karanbansal.in/blog/claude-code-lsp/) — LSP guidance in coding agents
