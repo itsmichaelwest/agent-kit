@@ -4,7 +4,6 @@
   "scope": "global",
   "$local_comment": "Skills authored in this repo (not from an upstream source). Listed so `setup.sh doctor` treats them as intentional and never expects them in the lockfile. Folder names under skills/.",
   "local": [
-    "codebase-reviewer",
     "migrate-to-codex",
     "shader-prototyping",
     "ui-polisher",
@@ -94,6 +93,14 @@
     },
     {
       "repo": "blader/humanizer"
+    },
+    {
+      "repo": "vercel-labs/skills",
+      "skills": ["find-skills"]
+    },
+    {
+      "repo": "shadcn/improve",
+      "skills": ["improve"]
     }
   ]
 }

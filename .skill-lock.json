@@ -8,7 +8,7 @@
       "skillPath": "skills/make-interfaces-feel-better/SKILL.md",
       "skillFolderHash": "320672d06e899682d8923286d864efe3719d9c77",
       "installedAt": "2026-05-13T19:49:40.092Z",
-      "updatedAt": "2026-05-15T22:04:07.428Z"
+      "updatedAt": "2026-06-28T12:06:26.693Z"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
@@ -35,7 +35,7 @@
       "skillPath": "skills/web-design-guidelines/SKILL.md",
       "skillFolderHash": "3116f3e62dbd02b44a598b1aa690d2a8938e8f89",
       "installedAt": "2026-05-15T21:12:22.181Z",
-      "updatedAt": "2026-05-15T22:03:59.805Z"
+      "updatedAt": "2026-06-28T12:06:12.646Z"
     },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",
@@ -51,9 +51,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/BumpyClock/dotfiles.git",
       "skillPath": "skills/git-workflow/SKILL.md",
-      "skillFolderHash": "08323329e227d307032ab1b889c101efeb261723",
+      "skillFolderHash": "42019f8770c11a1fa3fb0b0b90560526eda7dff3",
       "installedAt": "2026-05-15T21:58:30.648Z",
-      "updatedAt": "2026-05-15T22:03:44.215Z"
+      "updatedAt": "2026-06-28T12:05:47.472Z"
     },
     "emil-design-eng": {
       "source": "emilkowalski/skill",
@@ -62,16 +62,16 @@
       "skillPath": "skills/emil-design-eng/SKILL.md",
       "skillFolderHash": "0e6f8d7223a0abe73f81e890b3ec76257029a834",
       "installedAt": "2026-05-15T22:03:31.878Z",
-      "updatedAt": "2026-05-15T22:04:05.521Z"
+      "updatedAt": "2026-06-28T12:06:24.077Z"
     },
     "programming": {
       "source": "BumpyClock/dotfiles",
       "sourceType": "github",
       "sourceUrl": "https://github.com/BumpyClock/dotfiles.git",
       "skillPath": "skills/programming/SKILL.md",
-      "skillFolderHash": "f31133ea35357611b4965e648ac1217c5da86953",
+      "skillFolderHash": "c489b0a1e95e8280dc4f06b8d275b63955fdc99d",
       "installedAt": "2026-05-15T22:03:44.216Z",
-      "updatedAt": "2026-05-15T22:03:44.216Z"
+      "updatedAt": "2026-06-28T12:05:47.491Z"
     },
     "skill-creator": {
       "source": "BumpyClock/dotfiles",
@@ -87,18 +87,18 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/BumpyClock/dotfiles.git",
       "skillPath": "skills/subagent-driven-development/SKILL.md",
-      "skillFolderHash": "5c3d181050e14d86a21298395ae90459beb0dcd1",
+      "skillFolderHash": "ab9d627e05512e655f9c9847cadd03fa7a09f1c2",
       "installedAt": "2026-05-15T22:03:44.217Z",
-      "updatedAt": "2026-05-15T22:03:44.217Z"
+      "updatedAt": "2026-06-28T12:05:47.506Z"
     },
     "ux-designer": {
       "source": "BumpyClock/dotfiles",
       "sourceType": "github",
       "sourceUrl": "https://github.com/BumpyClock/dotfiles.git",
       "skillPath": "skills/ux-designer/SKILL.md",
-      "skillFolderHash": "2fe73b244669206070767f646cd712ab957d70b4",
+      "skillFolderHash": "76da75e346ff5ccece851d0bf252938bcc23ec1f",
       "installedAt": "2026-05-15T22:03:44.217Z",
-      "updatedAt": "2026-05-15T22:03:44.217Z"
+      "updatedAt": "2026-06-28T12:05:47.523Z"
     },
     "swift-concurrency-expert": {
       "source": "Dimillian/Skills",
@@ -107,7 +107,7 @@
       "skillPath": "swift-concurrency-expert/SKILL.md",
       "skillFolderHash": "eedfdd5aa67acc20650cef65687751aa45de526a",
       "installedAt": "2026-05-15T22:03:46.598Z",
-      "updatedAt": "2026-05-15T22:03:46.598Z"
+      "updatedAt": "2026-06-28T12:05:51.587Z"
     },
     "swiftui-liquid-glass": {
       "source": "Dimillian/Skills",
@@ -116,7 +116,7 @@
       "skillPath": "swiftui-liquid-glass/SKILL.md",
       "skillFolderHash": "37d0f2483313cfa1d17222d19713891accd881d7",
       "installedAt": "2026-05-15T22:03:46.601Z",
-      "updatedAt": "2026-05-15T22:03:46.601Z"
+      "updatedAt": "2026-06-28T12:05:51.603Z"
     },
     "swiftui-performance-audit": {
       "source": "Dimillian/Skills",
@@ -125,7 +125,7 @@
       "skillPath": "swiftui-performance-audit/SKILL.md",
       "skillFolderHash": "42390e917faf94ffab98087990bcb1445cd7f7c9",
       "installedAt": "2026-05-15T22:03:46.601Z",
-      "updatedAt": "2026-05-15T22:03:46.601Z"
+      "updatedAt": "2026-06-28T12:05:51.619Z"
     },
     "swiftui-ui-patterns": {
       "source": "Dimillian/Skills",
@@ -134,7 +134,7 @@
       "skillPath": "swiftui-ui-patterns/SKILL.md",
       "skillFolderHash": "c980bf057e992cf8087fcbc9f66c0f83921c15f7",
       "installedAt": "2026-05-15T22:03:46.602Z",
-      "updatedAt": "2026-05-15T22:03:46.602Z"
+      "updatedAt": "2026-06-28T12:05:51.635Z"
     },
     "swiftui-view-refactor": {
       "source": "Dimillian/Skills",
@@ -143,17 +143,17 @@
       "skillPath": "swiftui-view-refactor/SKILL.md",
       "skillFolderHash": "b5f368bd35d7cdb461b00124b122a31b491d97c3",
       "installedAt": "2026-05-15T22:03:46.603Z",
-      "updatedAt": "2026-05-15T22:03:46.603Z"
+      "updatedAt": "2026-06-28T12:05:51.649Z"
     },
     "swiftui-expert-skill": {
       "source": "AvdLee/SwiftUI-Agent-Skill",
       "sourceType": "github",
       "sourceUrl": "https://github.com/AvdLee/SwiftUI-Agent-Skill.git",
       "skillPath": "swiftui-expert-skill/SKILL.md",
-      "skillFolderHash": "15282882f5b6116aaa1fe5e115b4be320a204598",
+      "skillFolderHash": "813404b84a2b3de4f920be8671971bcb014d82ef",
       "pluginName": "swiftui-expert",
       "installedAt": "2026-05-15T22:03:48.318Z",
-      "updatedAt": "2026-05-15T22:03:48.318Z"
+      "updatedAt": "2026-06-28T12:05:55.044Z"
     },
     "swiftui-pro": {
       "source": "twostraws/swiftui-agent-skill",
@@ -162,7 +162,7 @@
       "skillPath": "swiftui-pro/SKILL.md",
       "skillFolderHash": "09b8fff9743cfc94eea3ada3727e3ec369ff10fb",
       "installedAt": "2026-05-15T22:03:49.930Z",
-      "updatedAt": "2026-05-15T22:03:49.930Z"
+      "updatedAt": "2026-06-28T12:05:57.990Z"
     },
     "liquid-glass": {
       "source": "haider-nawaz/liquid-glass-skill",
@@ -171,16 +171,16 @@
       "skillPath": "plugins/liquid-glass/skills/liquid-glass/SKILL.md",
       "skillFolderHash": "8808e5fddd5778cc07a3ae55e3ccc7bc7b2a3b5c",
       "installedAt": "2026-05-15T22:03:51.548Z",
-      "updatedAt": "2026-05-15T22:03:51.548Z"
+      "updatedAt": "2026-06-28T12:06:01.276Z"
     },
     "ios-simulator-skill": {
       "source": "conorluddy/ios-simulator-skill",
       "sourceType": "github",
       "sourceUrl": "https://github.com/conorluddy/ios-simulator-skill.git",
       "skillPath": "ios-simulator-skill/skills/ios-simulator-skill/SKILL.md",
-      "skillFolderHash": "5715caa870c77e5a41042717d6a6583c2a1756ea",
+      "skillFolderHash": "6b0e09522fa027de09d84b86b304a45d3eba475a",
       "installedAt": "2026-05-15T22:03:54.223Z",
-      "updatedAt": "2026-05-15T22:03:54.223Z"
+      "updatedAt": "2026-06-28T12:06:04.378Z"
     },
     "dotnet-advisor": {
       "source": "novotnyllc/dotnet-artisan",
@@ -189,7 +189,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-advisor/SKILL.md",
       "skillFolderHash": "184825b44912a08abe7c199094fe17c371fc2b32",
       "installedAt": "2026-05-15T22:03:57.003Z",
-      "updatedAt": "2026-05-15T22:03:57.003Z"
+      "updatedAt": "2026-06-28T12:06:09.568Z"
     },
     "dotnet-api": {
       "source": "novotnyllc/dotnet-artisan",
@@ -198,7 +198,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-api/SKILL.md",
       "skillFolderHash": "35fd80b765a66ce2692db30b079ca13fc868a6c6",
       "installedAt": "2026-05-15T22:03:57.004Z",
-      "updatedAt": "2026-05-15T22:03:57.004Z"
+      "updatedAt": "2026-06-28T12:06:09.583Z"
     },
     "dotnet-csharp": {
       "source": "novotnyllc/dotnet-artisan",
@@ -207,7 +207,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-csharp/SKILL.md",
       "skillFolderHash": "761ee61b04ca969d42f9efc6eccc00d44164d1d8",
       "installedAt": "2026-05-15T22:03:57.004Z",
-      "updatedAt": "2026-05-15T22:03:57.004Z"
+      "updatedAt": "2026-06-28T12:06:09.597Z"
     },
     "dotnet-debugging": {
       "source": "novotnyllc/dotnet-artisan",
@@ -216,7 +216,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-debugging/SKILL.md",
       "skillFolderHash": "b915a9ca2eec172da15d0d92c9c458f643b45e01",
       "installedAt": "2026-05-15T22:03:57.005Z",
-      "updatedAt": "2026-05-15T22:03:57.005Z"
+      "updatedAt": "2026-06-28T12:06:09.610Z"
     },
     "dotnet-devops": {
       "source": "novotnyllc/dotnet-artisan",
@@ -225,7 +225,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-devops/SKILL.md",
       "skillFolderHash": "da0466724ca88f604ff793934c0abda6bade3774",
       "installedAt": "2026-05-15T22:03:57.006Z",
-      "updatedAt": "2026-05-15T22:03:57.006Z"
+      "updatedAt": "2026-06-28T12:06:09.623Z"
     },
     "dotnet-testing": {
       "source": "novotnyllc/dotnet-artisan",
@@ -234,7 +234,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-testing/SKILL.md",
       "skillFolderHash": "d55144a132e9ee54baf408988a6b3ccd1362ddde",
       "installedAt": "2026-05-15T22:03:57.007Z",
-      "updatedAt": "2026-05-15T22:03:57.007Z"
+      "updatedAt": "2026-06-28T12:06:09.638Z"
     },
     "dotnet-tooling": {
       "source": "novotnyllc/dotnet-artisan",
@@ -243,7 +243,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-tooling/SKILL.md",
       "skillFolderHash": "68b8e2e5f81490f060a9b52d27076fdaa4d6cc84",
       "installedAt": "2026-05-15T22:03:57.008Z",
-      "updatedAt": "2026-05-15T22:03:57.008Z"
+      "updatedAt": "2026-06-28T12:06:09.653Z"
     },
     "dotnet-ui": {
       "source": "novotnyllc/dotnet-artisan",
@@ -252,7 +252,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/dotnet-ui/SKILL.md",
       "skillFolderHash": "81eb1c21d95834266e296229c1d6eb21ee3d9750",
       "installedAt": "2026-05-15T22:03:57.008Z",
-      "updatedAt": "2026-05-15T22:03:57.008Z"
+      "updatedAt": "2026-06-28T12:06:09.665Z"
     },
     "using-dotnet": {
       "source": "novotnyllc/dotnet-artisan",
@@ -261,7 +261,7 @@
       "skillPath": "plugins/dotnet-artisan/skills/using-dotnet/SKILL.md",
       "skillFolderHash": "33ed0a3cf3b4a7bfce0b0a55ba8006258f0a88fa",
       "installedAt": "2026-05-15T22:03:57.008Z",
-      "updatedAt": "2026-05-15T22:03:57.008Z"
+      "updatedAt": "2026-06-28T12:06:09.680Z"
     },
     "webapp-testing": {
       "source": "anthropics/skills",
@@ -271,7 +271,7 @@
       "skillFolderHash": "5ffb7dc66b9fd4c25c3e400a4c00da99a349b714",
       "pluginName": "example-skills",
       "installedAt": "2026-05-15T22:04:01.796Z",
-      "updatedAt": "2026-05-15T22:04:01.796Z"
+      "updatedAt": "2026-06-28T12:06:16.489Z"
     },
     "winui-app": {
       "source": "openai/skills",
@@ -280,7 +280,7 @@
       "skillPath": "skills/.curated/winui-app/SKILL.md",
       "skillFolderHash": "977c395bb7f3e8362e608a3977edaff2247eddac",
       "installedAt": "2026-05-15T22:04:04.241Z",
-      "updatedAt": "2026-05-15T22:04:04.241Z"
+      "updatedAt": "2026-06-28T12:06:21.016Z"
     },
     "userinterface-wiki": {
       "source": "raphaelsalaja/userinterface-wiki",
@@ -289,7 +289,7 @@
       "skillPath": "skills/SKILL.md",
       "skillFolderHash": "7b2588047fed29a1e41a08b6287137cc940d6293",
       "installedAt": "2026-05-15T22:04:11.354Z",
-      "updatedAt": "2026-05-15T22:04:11.354Z"
+      "updatedAt": "2026-06-28T12:06:35.887Z"
     },
     "oklch-skill": {
       "source": "jakubkrehel/oklch-skill",
@@ -298,16 +298,34 @@
       "skillPath": "skills/oklch-skill/SKILL.md",
       "skillFolderHash": "9831d14b4bf20f3267370470cc0912ca47798143",
       "installedAt": "2026-05-15T22:32:05.528Z",
-      "updatedAt": "2026-05-15T22:32:05.528Z"
+      "updatedAt": "2026-06-28T12:06:29.803Z"
     },
     "humanizer": {
       "source": "blader/humanizer",
       "sourceType": "github",
       "sourceUrl": "https://github.com/blader/humanizer.git",
       "skillPath": "SKILL.md",
-      "skillFolderHash": "a2ace14a88a6746f64f1f53ed8272d6788828038",
+      "skillFolderHash": "9600f2b7241cb4eed6ad803abee5ea01d67fe8e4",
       "installedAt": "2026-05-28T23:39:47.371Z",
-      "updatedAt": "2026-05-28T23:39:47.371Z"
+      "updatedAt": "2026-06-28T12:06:38.819Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "eb6a23305aea6e340d14b9de3766e721f9f4861b",
+      "installedAt": "2026-06-11T20:24:14.843Z",
+      "updatedAt": "2026-06-28T12:06:40.817Z"
+    },
+    "improve": {
+      "source": "shadcn/improve",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/shadcn/improve.git",
+      "skillPath": "skills/improve/SKILL.md",
+      "skillFolderHash": "7d77d76815e6deb704427f17f6e393f55e3cb6da",
+      "installedAt": "2026-06-11T20:24:12.167Z",
+      "updatedAt": "2026-06-28T12:06:43.361Z"
     }
   },
   "dismissed": {
