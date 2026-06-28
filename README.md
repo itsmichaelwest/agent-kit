@@ -66,6 +66,7 @@ The setup scripts symlink agents, skills, prompts, and docs into the config dire
 See [docs/linking.md](docs/linking.md) for the full mapping.
 See [docs/agents.md](docs/agents.md) for the agent template and compilation workflow.
 See [docs/plugins.md](docs/plugins.md) for the plugin model and config surfaces.
+See [docs/tool-surfaces.md](docs/tool-surfaces.md) for the per-tool agent and plugin discovery rules.
 
 For existing machines, the supported upgrade path is to pull the latest repo and re-run `./scripts/setup.sh link` or `.\scripts\setup.ps1 link`. The scripts migrate legacy targets in place, back up conflicting non-symlink files or directories, and relink the current global layout.
 
@@ -77,6 +78,7 @@ Agents are specialized personas with distinct roles, models, and instructions. T
 - `.codex/agents/*.toml` for Codex
 
 During setup, Copilot-compatible global agent links are created with the required `*.agent.md` filenames under `~/.copilot/agents/`.
+Those filenames are not committed under `agents/`; keeping both `agents/*.md` and `agents/*.agent.md` in the repo makes VS Code/Copilot show duplicate custom agents.
 
 ### Managing agents
 
@@ -164,7 +166,7 @@ Plugins are declared per tool. Run `install` to link configs and bootstrap plugi
 | Codex | `.codex/config.toml` `[plugins."x@y"]` | Partially — use `./scripts/setup.sh bootstrap-codex` / `.\scripts\setup.ps1 bootstrap-codex` to force convergence |
 | Claude | `.claude/settings.json` `enabledPlugins` | No — requires `./scripts/setup.sh bootstrap-claude` to install (run once per machine) |
 
-Claude and Codex marketplace declarations are intentionally separate. `install` runs both bootstrap commands, but `bootstrap-codex` only reads `.codex/config.toml` and does not import plugin marketplaces or enabled plugins from `.claude/settings.json`. Shared overlap belongs in `.codex/config.toml` only when that is the explicit Codex policy, or in `.codex/config.local.toml` for one machine.
+Claude, Codex, and Copilot marketplace declarations are intentionally separate. `install` runs the available bootstrap commands, but each one reads only that tool's native config. Shared overlap belongs in the target tool's shared config only when that is the explicit policy, or in that tool's local overlay for one machine.
 
 ### Per-tool layering
 

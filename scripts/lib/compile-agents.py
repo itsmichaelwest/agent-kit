@@ -174,6 +174,7 @@ def compile_templates(repo_root: Path) -> int:
 
     for agent_path in markdown_dir.glob("*.md"):
         if agent_path.name.endswith(".agent.md"):
+            agent_path.unlink()
             continue
         if agent_path.stem not in generated_names:
             agent_path.unlink()

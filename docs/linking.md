@@ -6,6 +6,7 @@ When you update this repo on an existing machine, re-running `link` or `install`
 
 Plugin declarations live in the tool-native config files already tracked in this repo. See [plugins.md](./plugins.md).
 Agent definitions are compiled from `agent-templates/` before linking. See [agents.md](./agents.md).
+Tool discovery surfaces differ across Claude, Codex, Copilot CLI, and VS Code. See [tool-surfaces.md](./tool-surfaces.md).
 
 ## Commands
 
@@ -44,14 +45,6 @@ Agent definitions are compiled from `agent-templates/` before linking. See [agen
 
 All base dotfile links are optional — if the source file doesn't exist in the repo, it's silently skipped.
 
-## GitHub / Copilot (VS Code)
-
-| Source | Target |
-|--------|--------|
-| `.github/copilot-instructions.md` | `~/.github/copilot-instructions.md` |
-| `.github/prompts` | `~/.github/prompts` |
-| `agents/` | `~/.github/agents` |
-
 ## AI Agent Configs
 
 ### Claude Code
@@ -84,6 +77,10 @@ All base dotfile links are optional — if the source file doesn't exist in the 
 | `skills/` | `~/.copilot/skills` |
 | `docs/` | `~/.copilot/docs` |
 | `agents/*.md` | `~/.copilot/agents/*.agent.md` |
+
+Copilot-compatible `*.agent.md` filenames are created only in
+`~/.copilot/agents`. Do not commit `agents/*.agent.md` aliases; VS Code can see
+those as additional custom agents when this repo is open.
 
 ## Legacy cleanup
 

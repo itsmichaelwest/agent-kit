@@ -23,6 +23,8 @@ It does three things:
    - `.codex/agents/<name>.toml`
 
 It also removes generated agent files whose template no longer exists.
+It removes repo-local `agents/*.agent.md` aliases as stale compatibility files;
+Copilot aliases are generated only under `~/.copilot/agents` during linking.
 
 ### Commands
 
@@ -152,4 +154,4 @@ Because `link` and `link-ai-agents` compile automatically, step 6 is usually eno
 
 The compiler generates `agents/*.md`. Copilot-compatible `*.agent.md` files are still created as symlinks during the linking step under `~/.copilot/agents/`.
 
-Those symlinked filenames are a runtime compatibility detail, not the source of truth.
+Those symlinked filenames are a runtime compatibility detail, not the source of truth. Keeping `agents/*.agent.md` in the repo creates duplicate custom-agent discoveries in VS Code/Copilot when the same agents are also linked globally.

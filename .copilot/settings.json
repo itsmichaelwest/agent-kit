@@ -14,11 +14,18 @@
         "source": "github",
         "repo": "microsoft/work-iq"
       }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
     }
   },
   "enabledPlugins": {
     "copilot-sdk@awesome-copilot": true,
     "csharp-dotnet-development@awesome-copilot": true,
-    "workiq@work-iq": true
+    "workiq@work-iq": true,
+    "superpowers@superpowers-marketplace": true
   }
 }
