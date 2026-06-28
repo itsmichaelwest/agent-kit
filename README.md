@@ -178,7 +178,7 @@ Plugins are declared per tool and installed automatically on first launch where 
 ./scripts/setup.sh bootstrap-claude
 ```
 
-Reads `enabledPlugins` from `~/.claude/settings.json` and runs `claude plugin install` for each entry. Idempotent — already-installed plugins are skipped. `setup.sh install` runs this automatically.
+Registers `extraKnownMarketplaces` from `~/.claude/settings.json`, refreshes Claude plugin marketplaces, then reads `enabledPlugins`, installs missing plugins, and updates declared plugins. Idempotent — already-registered marketplaces and already-installed/current plugins are skipped. `setup.sh install` runs this automatically.
 
 ## Adding a New AI Tool
 

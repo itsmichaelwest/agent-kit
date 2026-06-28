@@ -42,6 +42,7 @@ The source of truth is the tool-native config already stored in this repo.
 ```
 
 `install` and `link` relink the repo-owned tool config files into the home-directory tool locations.
+`bootstrap-claude` also registers and refreshes Claude Code marketplaces before installing and updating `enabledPlugins`, because a first-run machine may not have the marketplace checkout yet and an existing machine may have stale plugin caches.
 
 ## What the repo controls
 

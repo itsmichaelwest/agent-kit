@@ -6,3 +6,5 @@
 # the same shape as upstream ones; treat them the same to keep the rule simple.
 skills/** linguist-vendored=true
 skills/** linguist-generated=true
+
+*.sh text eol=lf
