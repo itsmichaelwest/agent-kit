@@ -13,7 +13,7 @@ ai_agent_state_file() {
 ensure_directory_target() {
   local target="$1"
 
-  if [[ -L "$target" && ! -d "$target" ]]; then
+  if [[ -L "$target" ]]; then
     rm "$target"
   elif [[ -e "$target" && ! -d "$target" ]]; then
     mv "$target" "${target}.backup.$(date +%Y%m%d_%H%M%S)"
@@ -91,12 +91,18 @@ link_copilot_agents() {
 
   ensure_directory_target "$target_dir"
 
+  find "$target_dir" -maxdepth 1 -type l -name '*.agent.agent.md' -print0 2>/dev/null \
+    | while IFS= read -r -d '' stale_link; do
+      rm "$stale_link"
+      echo "  [MIGRATED] removed stale $stale_link"
+    done
+
   local source_file
   while IFS= read -r -d '' source_file; do
     local base_name
     base_name="$(basename "${source_file%.md}")"
     ensure_linked "$source_file" "$target_dir/$base_name.agent.md"
-  done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
+  done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' ! -name '*.agent.md' -print0 | sort -z)
 }
 
 # Generate ~/.copilot/settings.json by merging the committed shared settings
@@ -202,7 +208,7 @@ unlink_copilot_agents() {
     local base_name
     base_name="$(basename "${source_file%.md}")"
     remove_link "$target_dir/$base_name.agent.md"
-  done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
+  done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' ! -name '*.agent.md' -print0 | sort -z)
 }
 
 show_target_status() {
@@ -345,6 +351,6 @@ show_ai_agent_status() {
       local base_name
       base_name="$(basename "${source_file%.md}")"
       show_target_status "$HOME/.copilot/agents/$base_name.agent.md"
-    done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
+    done < <(find "$source_dir" -maxdepth 1 -type f -name '*.md' ! -name '*.agent.md' -print0 | sort -z)
   fi
 }

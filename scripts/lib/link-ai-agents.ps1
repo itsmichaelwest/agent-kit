@@ -12,7 +12,10 @@ function Ensure-DirectoryTarget {
 
     if (Test-Path $Target) {
         $item = Get-Item $Target -Force
-        if (-not $item.PSIsContainer) {
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            Remove-Item $Target -Force
+            Write-Host "  [MIGRATED] removed directory link $Target"
+        } elseif (-not $item.PSIsContainer) {
             $backup = "$Target.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
             Move-Item $Target $backup
             Write-Info "Backed up: $Target -> $backup"
@@ -88,7 +91,12 @@ function Link-CopilotAgents {
 
     Ensure-DirectoryTarget $targetDir
 
-    Get-ChildItem -Path $sourceDir -Filter "*.md" -File | Sort-Object Name | ForEach-Object {
+    Get-ChildItem -Path $targetDir -Filter "*.agent.agent.md" -File -ErrorAction SilentlyContinue | ForEach-Object {
+        Remove-Item $_.FullName -Force
+        Write-Host "  [MIGRATED] removed stale $($_.FullName)"
+    }
+
+    Get-ChildItem -Path $sourceDir -Filter "*.md" -File | Where-Object { $_.Name -notlike "*.agent.md" } | Sort-Object Name | ForEach-Object {
         $targetPath = Join-Path $targetDir ($_.BaseName + ".agent.md")
         Ensure-Linked $_.FullName $targetPath
     }
@@ -102,7 +110,7 @@ function Unlink-CopilotAgents {
 
     if (-not (Test-Path $sourceDir)) { return }
 
-    Get-ChildItem -Path $sourceDir -Filter "*.md" -File | Sort-Object Name | ForEach-Object {
+    Get-ChildItem -Path $sourceDir -Filter "*.md" -File | Where-Object { $_.Name -notlike "*.agent.md" } | Sort-Object Name | ForEach-Object {
         $targetPath = Join-Path $targetDir ($_.BaseName + ".agent.md")
         Remove-Link $targetPath
     }
@@ -352,7 +360,7 @@ function Show-AiAgentStatus {
 
     $sourceDir = Join-Path $DotfilesDir "agents"
     if (Test-Path $sourceDir) {
-        Get-ChildItem -Path $sourceDir -Filter "*.md" -File | Sort-Object Name | ForEach-Object {
+        Get-ChildItem -Path $sourceDir -Filter "*.md" -File | Where-Object { $_.Name -notlike "*.agent.md" } | Sort-Object Name | ForEach-Object {
             $targetPath = Join-Path $env:USERPROFILE ".copilot\agents\$($_.BaseName).agent.md"
             Show-TargetStatus $targetPath
         }

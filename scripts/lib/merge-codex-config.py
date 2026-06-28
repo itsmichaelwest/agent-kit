@@ -48,7 +48,7 @@ def emit_key(k):
     bare = k.replace("_", "").replace("-", "")
     if bare and bare.isalnum() and not bare[0].isdigit():
         return k
-    return '"' + k.replace('"', '\\"') + '"'
+    return '"' + k.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def emit_table(name, table, lines):

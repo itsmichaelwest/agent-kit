@@ -152,7 +152,7 @@ For skills that should stay on one machine and never be committed or synced (any
 
 ## Plugins
 
-Plugins are declared per tool and installed automatically on first launch where the tool supports it.
+Plugins are declared per tool. Run `install` to link configs and bootstrap plugin managers.
 
 ```bash
 ./scripts/setup.sh plugin-status
@@ -161,8 +161,10 @@ Plugins are declared per tool and installed automatically on first launch where 
 | Tool | Declared in | Auto-installs on launch? |
 |------|------------|---------------------------|
 | Copilot | `.copilot/settings.json` `enabledPlugins` | Yes — documented as "Declarative plugin auto-install" |
-| Codex | `.codex/config.toml` `[plugins."x@y"]` | Yes — background curated-marketplace sync at startup |
+| Codex | `.codex/config.toml` `[plugins."x@y"]` | Partially — use `./scripts/setup.sh bootstrap-codex` / `.\scripts\setup.ps1 bootstrap-codex` to force convergence |
 | Claude | `.claude/settings.json` `enabledPlugins` | No — requires `./scripts/setup.sh bootstrap-claude` to install (run once per machine) |
+
+Claude and Codex marketplace declarations are intentionally separate. `install` runs both bootstrap commands, but `bootstrap-codex` only reads `.codex/config.toml` and does not import plugin marketplaces or enabled plugins from `.claude/settings.json`. Shared overlap belongs in `.codex/config.toml` only when that is the explicit Codex policy, or in `.codex/config.local.toml` for one machine.
 
 ### Per-tool layering
 
@@ -179,6 +181,14 @@ Plugins are declared per tool and installed automatically on first launch where 
 ```
 
 Registers `extraKnownMarketplaces` from `~/.claude/settings.json`, refreshes Claude plugin marketplaces, then reads `enabledPlugins`, installs missing plugins, and updates declared plugins. Idempotent — already-registered marketplaces and already-installed/current plugins are skipped. `setup.sh install` runs this automatically.
+
+### Bootstrapping Codex plugins on a new machine
+
+```bash
+./scripts/setup.sh bootstrap-codex
+```
+
+Registers Codex marketplaces from `.codex/config.toml`, refreshes marketplace snapshots, then installs enabled `[plugins."name@marketplace"]` entries through `codex plugin add`. `setup.sh install` and `setup.ps1 install` run this automatically after linking Codex config.
 
 ## Adding a New AI Tool
 

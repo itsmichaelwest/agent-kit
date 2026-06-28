@@ -17,6 +17,7 @@ source "$SCRIPTS_DIR/lib/update-skills.sh"
 source "$SCRIPTS_DIR/lib/reconcile-skills.sh"
 source "$SCRIPTS_DIR/lib/uninstall-skill.sh"
 source "$SCRIPTS_DIR/lib/doctor-skills.sh"
+source "$SCRIPTS_DIR/lib/bootstrap-codex-plugins.sh"
 
 bootstrap_claude_plugins() {
   bash "$SCRIPTS_DIR/lib/bootstrap-claude-plugins.sh"
@@ -49,6 +50,7 @@ Commands:
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
   bootstrap-claude    Install Claude Code plugins declared in settings.json
+  bootstrap-codex     Install Codex plugins declared in .codex/config.toml
   install-mcp         Install user-scope MCP servers from mcp/servers.json
   plugin-status       Show plugin status vs repo config
   status              Show current link status
@@ -62,7 +64,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude)
+    install|compile-agents|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude|bootstrap-codex)
       ACTION="$1" ;;
     install-skill)
       ACTION="install-skill"; shift; SKILL_ARGS=("$@"); break ;;
@@ -121,7 +123,7 @@ show_status() {
 }
 
 case "$ACTION" in
-  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins ;;
+  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins; bootstrap_codex_plugins ;;
   install-mcp)    install_mcp ;;
   compile-agents) compile_agents ;;
   link)           compile_agents; link_dotfiles; link_ai_agents ;;
@@ -137,6 +139,7 @@ case "$ACTION" in
   reconcile-skills) reconcile_skills ;;
   doctor)         doctor_skills $DOCTOR_STRICT ;;
   bootstrap-claude) bootstrap_claude_plugins ;;
+  bootstrap-codex) bootstrap_codex_plugins ;;
   plugin-status)  show_plugin_status ;;
   status)         show_status ;;
   project-agents)

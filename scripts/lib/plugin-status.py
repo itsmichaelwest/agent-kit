@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -72,6 +75,79 @@ def load_codex_plugins(path: Path) -> dict[str, bool]:
     }
 
 
+def find_codex_candidates(home_dir: Path) -> list[str]:
+    candidates: list[str] = []
+    if os.environ.get("CODEX_CLI_PATH"):
+        candidates.append(os.environ["CODEX_CLI_PATH"])
+
+    live_config = home_dir / ".codex" / "config.toml"
+    if live_config.exists():
+        document = tomllib.loads(live_config.read_text())
+        configured = (
+            document.get("mcp_servers", {})
+            .get("node_repl", {})
+            .get("env", {})
+            .get("CODEX_CLI_PATH")
+        )
+        if configured:
+            candidates.append(str(configured))
+
+    path_candidate = shutil.which("codex")
+    if path_candidate:
+        candidates.append(path_candidate)
+
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        runtime_bins = sorted(
+            Path(local_app_data).glob("OpenAI/Codex/bin/*/codex.exe"),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+        candidates.extend(str(path) for path in runtime_bins)
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        deduped.append(candidate)
+    return deduped
+
+
+def load_codex_installed_plugins(home_dir: Path) -> dict[str, bool] | None:
+    for candidate in find_codex_candidates(home_dir):
+        try:
+            result = subprocess.run(
+                [candidate, "plugin", "list", "--available", "--json"],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        except OSError:
+            continue
+        if result.returncode != 0:
+            continue
+        try:
+            document = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            continue
+
+        installed: dict[str, bool] = {}
+        plugins = document.get("installed", [])
+        if not isinstance(plugins, list):
+            return installed
+        for plugin in plugins:
+            if not isinstance(plugin, dict):
+                continue
+            plugin_id = plugin.get("pluginId")
+            if not plugin_id:
+                continue
+            installed[str(plugin_id)] = bool(plugin.get("enabled", False))
+        return installed
+    return None
+
+
 def load_copilot_declared_plugins(path: Path) -> dict[str, bool]:
     return normalize_enabled_plugins(load_json(path).get("enabledPlugins", {}))
 
@@ -127,13 +203,20 @@ def main() -> int:
             load_claude_plugins(home_dir / ".claude" / "settings.json"),
         )
     )
+    desired_codex = load_codex_plugins(repo_root / ".codex" / "config.toml")
     lines.extend(
         diff_lines(
-            "Codex",
-            load_codex_plugins(repo_root / ".codex" / "config.toml"),
+            "Codex config",
+            desired_codex,
             load_codex_plugins(home_dir / ".codex" / "config.toml"),
         )
     )
+    codex_installed = load_codex_installed_plugins(home_dir)
+    if codex_installed is None:
+        lines.append("Codex installed:")
+        lines.append("  [WARN] codex plugin list unavailable")
+    else:
+        lines.extend(diff_lines("Codex installed", desired_codex, codex_installed))
     desired_copilot = load_copilot_declared_plugins(repo_root / ".copilot" / "settings.json")
     lines.extend(
         diff_lines(

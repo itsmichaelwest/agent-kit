@@ -90,29 +90,22 @@ description = "Produce implementation-ready UX design documentation with layout,
 multi_agent = true
 prevent_idle_sleep = true
 
-# Only declarative marketplace sources are committed.
+# Only Codex marketplace sources are committed here by default.
 # Codex auto-writes last_updated / last_revision into ~/.codex/config.toml
-# at runtime; the [marketplaces.openai-bundled] and openai-primary-runtime
-# entries with absolute paths are regenerated on every startup.
-[marketplaces.claude-plugins-official]
-source_type = "git"
-source = "https://github.com/anthropics/claude-plugins-official.git"
-
-# Declarative plugin enable/disable. Codex's startup background sync installs
-# curated/openai plugins automatically when declared here.
+# at runtime; app-managed openai-bundled and openai-primary-runtime marketplace
+# entries with absolute paths are inferred by the bootstrap command when needed.
+# Third-party marketplace overlap, including Claude plugin marketplaces, must be
+# declared intentionally in this file or in .codex/config.local.toml.
+#
+# Declarative plugin enable/disable. Run setup bootstrap-codex after link/install
+# to register Codex marketplaces and install missing plugin bundles.
 [plugins."build-ios-apps@openai-curated"]
 enabled = true
 
 [plugins."build-macos-apps@openai-curated"]
 enabled = true
 
-[plugins."browser-use@openai-bundled"]
-enabled = true
-
-[plugins."code-review@claude-plugins-official"]
-enabled = true
-
-[plugins."code-simplifier@claude-plugins-official"]
+[plugins."browser@openai-bundled"]
 enabled = true
 
 [plugins."codex-security@openai-curated"]
@@ -121,37 +114,25 @@ enabled = true
 [plugins."documents@openai-primary-runtime"]
 enabled = true
 
-[plugins."feature-dev@claude-plugins-official"]
-enabled = true
-
-[plugins."figma@claude-plugins-official"]
+[plugins."computer-use@openai-bundled"]
 enabled = true
 
 [plugins."figma@openai-curated"]
 enabled = true
 
-[plugins."github@claude-plugins-official"]
-enabled = true
-
 [plugins."github@openai-curated"]
-enabled = true
-
-[plugins."playwright@claude-plugins-official"]
 enabled = true
 
 [plugins."presentations@openai-primary-runtime"]
 enabled = true
 
-[plugins."security-guidance@claude-plugins-official"]
-enabled = true
-
-[plugins."skill-creator@claude-plugins-official"]
+[plugins."pdf@openai-primary-runtime"]
 enabled = true
 
 [plugins."spreadsheets@openai-primary-runtime"]
 enabled = true
 
-[plugins."superpowers@claude-plugins-official"]
+[plugins."template-creator@openai-primary-runtime"]
 enabled = true
 
 [plugins."superpowers@openai-curated"]

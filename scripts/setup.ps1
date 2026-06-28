@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude")]
+    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude", "bootstrap-codex")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -65,6 +65,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\uninstall-skill.ps1"
 . "$ScriptsDir\lib\doctor-skills.ps1"
 . "$ScriptsDir\lib\bootstrap-claude-plugins.ps1"
+. "$ScriptsDir\lib\bootstrap-codex-plugins.ps1"
 
 if ($Help -or -not $Action) {
     Write-Host @"
@@ -83,6 +84,7 @@ Commands:
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
   bootstrap-claude    Install Claude Code plugins declared in settings.json
+  bootstrap-codex     Install Codex plugins declared in .codex/config.toml
   plugin-status       Show plugin status vs repo config
   reset               Remove all links and uninstall dependencies
   status              Show current link status
@@ -150,7 +152,7 @@ function Get-InstallSkillArgs {
 }
 
 switch ($Action) {
-    "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $null = Bootstrap-ClaudePlugins }
+    "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
     "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code } }
     "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
@@ -162,6 +164,7 @@ switch ($Action) {
     "reconcile-skills" { $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "doctor"         { $code = Invoke-DoctorSkills $DotfilesDir -Strict:$Strict; if ($code -ne 0) { exit $code } }
     "bootstrap-claude" { $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code } }
+    "bootstrap-codex" { $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
     "plugin-status"  { $code = Show-PluginStatus $DotfilesDir; if ($code -ne 0) { exit $code } }
     "reset"          { Unlink-Dotfiles; Unlink-AiAgents $DotfilesDir; Uninstall-Deps }
     "status"         { Show-Status }
