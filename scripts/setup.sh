@@ -15,6 +15,7 @@ source "$SCRIPTS_DIR/lib/plugin-status.sh"
 source "$SCRIPTS_DIR/lib/shell-config.sh"
 source "$SCRIPTS_DIR/lib/update-skills.sh"
 source "$SCRIPTS_DIR/lib/reconcile-skills.sh"
+source "$SCRIPTS_DIR/lib/uninstall-skill.sh"
 source "$SCRIPTS_DIR/lib/doctor-skills.sh"
 
 bootstrap_claude_plugins() {
@@ -26,6 +27,7 @@ PROJECT_AGENTS=""
 SKIP_SUBMODULES=0
 DOCTOR_STRICT=""
 SKILL_ARGS=()
+UNINSTALL_SKILL=""
 
 usage() {
   cat <<'EOF'
@@ -42,6 +44,7 @@ Commands:
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
   install-skill       Install one source via npx skills, reconcile, then doctor
+  uninstall-skill     Uninstall one upstream skill, update manifest, then doctor
   list-skills         Show skills and install status
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
@@ -63,6 +66,8 @@ while [[ $# -gt 0 ]]; do
       ACTION="$1" ;;
     install-skill)
       ACTION="install-skill"; shift; SKILL_ARGS=("$@"); break ;;
+    uninstall-skill)
+      ACTION="uninstall-skill"; UNINSTALL_SKILL="${2:-}"; shift ;;
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
     --skip-submodules) SKIP_SUBMODULES=1 ;;
@@ -127,6 +132,7 @@ case "$ACTION" in
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
   update-skills)  update_skills ;;
   install-skill)  install_skill "${SKILL_ARGS[@]}"; reconcile_skills; doctor_skills --strict ;;
+  uninstall-skill) uninstall_skill "$UNINSTALL_SKILL"; doctor_skills --strict ;;
   list-skills)    list_skills ;;
   reconcile-skills) reconcile_skills ;;
   doctor)         doctor_skills $DOCTOR_STRICT ;;

@@ -143,6 +143,19 @@ On Windows, `setup.ps1 install-skill` supports the common `skills add` selectors
 as script parameters, e.g.
 `.\scripts\setup.ps1 install-skill vercel-labs/agent-skills -s react-best-practices`.
 
+To remove one upstream skill, use:
+
+```bash
+./scripts/setup.sh uninstall-skill improve
+```
+
+The uninstall command validates the lockfile and manifest before touching
+anything, delegates removal to `npx skills remove <name> -g -y`, removes the
+matching manifest selector (or the whole source if it was the last selector),
+and finishes with strict `doctor`. It refuses repo-authored local skills and
+manifest sources that omit `"skills"` because those entries mean "install
+everything from this source" and need a manual inventory decision.
+
 If a skill was installed directly with `npx skills add -g` before the manifest
 was updated, run `./scripts/setup.sh reconcile-skills` (or
 `.\scripts\setup.ps1 reconcile-skills`). It merges recoverable lock entries for

@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude")]
+    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -62,6 +62,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\plugin-status.ps1"
 . "$ScriptsDir\lib\update-skills.ps1"
 . "$ScriptsDir\lib\reconcile-skills.ps1"
+. "$ScriptsDir\lib\uninstall-skill.ps1"
 . "$ScriptsDir\lib\doctor-skills.ps1"
 . "$ScriptsDir\lib\bootstrap-claude-plugins.ps1"
 
@@ -77,6 +78,7 @@ Commands:
   link-ai-agents      Link AI agent configs only
   update-skills       Install/update skills from manifest
   install-skill       Install one source via npx skills, reconcile, then doctor
+  uninstall-skill     Uninstall one upstream skill, update manifest, then doctor
   list-skills         Show skills and install status
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
@@ -155,6 +157,7 @@ switch ($Action) {
     "link-ai-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-AiAgents $DotfilesDir }
     "update-skills"  { $code = Update-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "install-skill"  { $installArgs = Get-InstallSkillArgs; $code = Install-Skill $DotfilesDir $installArgs; if ($code -ne 0) { exit $code }; $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Invoke-DoctorSkills $DotfilesDir -Strict; if ($code -ne 0) { exit $code } }
+    "uninstall-skill" { if ($RemainingArgs.Count -gt 1) { Write-Err "Usage: setup.ps1 uninstall-skill <installed-skill-name>"; exit 1 }; $code = Uninstall-Skill $DotfilesDir ($RemainingArgs | Select-Object -First 1); if ($code -ne 0) { exit $code }; $code = Invoke-DoctorSkills $DotfilesDir -Strict; if ($code -ne 0) { exit $code } }
     "list-skills"    { $code = List-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "reconcile-skills" { $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "doctor"         { $code = Invoke-DoctorSkills $DotfilesDir -Strict:$Strict; if ($code -ne 0) { exit $code } }
