@@ -7,6 +7,7 @@ export DOTFILES_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 
 source "$SCRIPTS_DIR/lib/helpers.sh"
 source "$SCRIPTS_DIR/lib/install-deps.sh"
+source "$SCRIPTS_DIR/lib/install-toolchains.sh"
 source "$SCRIPTS_DIR/lib/install-mcp.sh"
 source "$SCRIPTS_DIR/lib/compile-agents.sh"
 source "$SCRIPTS_DIR/lib/link-dotfiles.sh"
@@ -123,7 +124,7 @@ show_status() {
 }
 
 case "$ACTION" in
-  install)        install_deps; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins; bootstrap_codex_plugins ;;
+  install)        install_deps; install_toolchains; compile_agents; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins; bootstrap_codex_plugins ;;
   install-mcp)    install_mcp ;;
   compile-agents) compile_agents ;;
   link)           compile_agents; link_dotfiles; link_ai_agents ;;
@@ -131,7 +132,7 @@ case "$ACTION" in
   link-ai-agents) compile_agents; link_ai_agents ;;
   shell)          inject_zsh_config ;;
   shell-remove)   remove_zsh_config ;;
-  reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; remove_zsh_config ;;
+  reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; uninstall_toolchains; remove_zsh_config ;;
   update-skills)  update_skills ;;
   install-skill)  install_skill "${SKILL_ARGS[@]}"; reconcile_skills; doctor_skills --strict ;;
   uninstall-skill) uninstall_skill "$UNINSTALL_SKILL"; doctor_skills --strict ;;

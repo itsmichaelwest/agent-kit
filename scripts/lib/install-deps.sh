@@ -77,20 +77,6 @@ install_deps() {
       ;;
   esac
 
-  # fnm
-  command -v fnm &>/dev/null || {
-    info "Installing fnm..."
-    curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-  }
-
-  # Node.js LTS via fnm
-  eval "$(fnm env)" 2>/dev/null
-  if command -v fnm &>/dev/null && ! fnm list | grep -q lts-latest; then
-    info "Installing latest Node.js LTS via fnm..."
-    fnm install --lts
-    fnm default lts-latest
-  fi
-
   # Default shell — don't auto-chsh; just hint. The user's login shell is a
   # global change and should be opt-in.
   if [[ "${SHELL##*/}" != "zsh" ]] && command -v zsh &>/dev/null; then
@@ -122,15 +108,6 @@ uninstall_deps() {
         rm -f "$HOME/.zshrc.pre-oh-my-zsh"
       fi
     fi
-  fi
-
-  # fnm
-  if [[ -d "$HOME/.local/share/fnm" ]]; then
-    info "Removing fnm..."
-    rm -rf "$HOME/.local/share/fnm"
-  elif [[ -d "$HOME/.fnm" ]]; then
-    info "Removing fnm..."
-    rm -rf "$HOME/.fnm"
   fi
 
   # Starship (curl-installed binary)

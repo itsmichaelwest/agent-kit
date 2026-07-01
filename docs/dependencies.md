@@ -12,6 +12,7 @@ Tools installed by `scripts/setup.sh install` (macOS/Linux) and `scripts/setup.p
 | [fast-syntax-highlighting](https://github.com/zdharma-continuum/fast-syntax-highlighting) | Command syntax coloring | git clone into OMZ |
 | [Starship](https://starship.rs/) | Cross-shell prompt | install script / brew |
 | [fnm](https://github.com/Schniz/fnm) | Fast Node version manager | install script |
+| [rustup](https://rustup.rs/) | Rust toolchain installer/manager | install script |
 | [eza](https://eza.rocks/) | Modern `ls` replacement | brew / apt / pacman |
 | [fzf](https://github.com/junegunn/fzf) | Fuzzy finder | brew / apt / pacman |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | Fast grep | brew / apt / pacman |
