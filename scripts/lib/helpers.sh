@@ -62,3 +62,41 @@ detect_os() {
   else echo "unknown"
   fi
 }
+
+# Resolve a Python interpreter >= 3.11 (required for the stdlib `tomllib`
+# module used to parse TOML config). Echoes the interpreter on success and
+# returns 0; returns 1 if no suitable interpreter is found.
+#
+# macOS ships an older system python3 (3.9) that usually shadows a Homebrew
+# install on PATH, so we can't just trust `python3`. We probe versioned
+# binaries (python3.14, python3.13, ...) high-to-low first, then fall back to
+# the bare names, and version-check each before accepting it.
+resolve_python() {
+  local candidate minor
+  local candidates=()
+  for minor in $(seq 30 -1 11); do
+    candidates+=("python3.$minor")
+  done
+  candidates+=(python3 python)
+
+  for candidate in "${candidates[@]}"; do
+    command -v "$candidate" &>/dev/null || continue
+    if "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' &>/dev/null; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Set PYTHON to a >= 3.11 interpreter or fail with a clear, actionable error.
+require_python() {
+  if PYTHON="$(resolve_python)"; then
+    return 0
+  fi
+  err "Python 3.11+ is required (stdlib tomllib). Install it, e.g.:"
+  err "  macOS:  brew install python"
+  err "  Ubuntu: sudo apt install python3"
+  err "  Arch:   sudo pacman -S python"
+  return 1
+}

@@ -157,10 +157,7 @@ link_codex_config() {
     return
   fi
 
-  if ! command -v python3 &>/dev/null; then
-    err "python3 (3.11+) required to merge codex config"
-    return 1
-  fi
+  require_python || return 1
 
   if [[ ! -f "$merger" ]]; then
     err "Missing $merger"
@@ -183,7 +180,7 @@ link_codex_config() {
 
   local tmp
   tmp="$(mktemp)"
-  if python3 "$merger" "$shared" "$overlay" $live_arg > "$tmp" 2>/dev/null; then
+  if "$PYTHON" "$merger" "$shared" "$overlay" $live_arg > "$tmp" 2>/dev/null; then
     mv "$tmp" "$target"
     if [[ -f "$overlay" ]]; then
       echo "  [MERGE] $target (shared + local overlay + preserved [projects])"

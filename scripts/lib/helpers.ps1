@@ -73,17 +73,20 @@ function Ensure-Linked {
 }
 
 function Resolve-PythonCommand {
+    # Resolve a Python interpreter >= 3.11 (required for the stdlib `tomllib`
+    # module used to parse TOML config). Returns $null if none qualifies.
+    $versionCheck = 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'
     $candidates = @(
-        @{ Exe = "python3"; Args = @("--version") },
-        @{ Exe = "python";  Args = @("--version") },
-        @{ Exe = "py";      Args = @("-3", "--version") }
+        @{ Exe = "python3"; Args = @() },
+        @{ Exe = "python";  Args = @() },
+        @{ Exe = "py";      Args = @("-3") }
     )
 
     foreach ($candidate in $candidates) {
         $cmd = Get-Command $candidate.Exe -ErrorAction SilentlyContinue
         if (-not $cmd) { continue }
 
-        & $cmd.Source @($candidate.Args) *> $null
+        & $cmd.Source @($candidate.Args + @("-c", $versionCheck)) *> $null
         if ($LASTEXITCODE -eq 0) {
             if ($candidate.Exe -eq "py") { return @($cmd.Source, "-3") }
             return @($cmd.Source)

@@ -14,6 +14,31 @@
 set -u
 
 SETTINGS="${HOME}/.claude/settings.json"
+CACHE_DIR="${HOME}/.claude/plugins/cache"
+
+# Install a plugin, self-healing the known ENOTEMPTY failure: Claude's plugin
+# manager stages a download in a temp dir then atomically renames it onto the
+# final cache path, but POSIX rename() fails with ENOTEMPTY when that path is a
+# leftover non-empty dir from a prior partial install. Clear the stale
+# destination + temp debris and retry once. Result is left in INSTALL_OUTPUT.
+INSTALL_OUTPUT=""
+install_plugin() {
+  local spec="$1"
+  INSTALL_OUTPUT=$(claude plugin install "$spec" 2>&1)
+  local rc=$?
+  if [[ $rc -ne 0 ]] && echo "$INSTALL_OUTPUT" | grep -q "ENOTEMPTY"; then
+    local plugin="${spec%@*}"
+    local market="${spec#*@}"
+    if [[ -n "$plugin" && -n "$market" && -d "$CACHE_DIR/$market/$plugin" ]]; then
+      echo "  [INFO] $spec: clearing stale cache and retrying"
+      rm -rf "${CACHE_DIR:?}/$market/$plugin"
+    fi
+    rm -rf "${CACHE_DIR:?}"/temp_local_* 2>/dev/null
+    INSTALL_OUTPUT=$(claude plugin install "$spec" 2>&1)
+    rc=$?
+  fi
+  return $rc
+}
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "[ERROR] jq is required" >&2
@@ -120,8 +145,8 @@ fail=0
 
 for spec in "${specs[@]}"; do
   [[ -z "$spec" ]] && continue
-  if output=$(claude plugin install "$spec" 2>&1); then
-    if echo "$output" | grep -q "already installed"; then
+  if install_plugin "$spec"; then
+    if echo "$INSTALL_OUTPUT" | grep -q "already installed"; then
       echo "  [SKIP] $spec (already installed)"
       ((skip++))
     else
@@ -130,7 +155,7 @@ for spec in "${specs[@]}"; do
     fi
   else
     echo "  [FAIL] $spec"
-    [[ -n "$output" ]] && echo "$output" | sed 's/^/    /'
+    [[ -n "$INSTALL_OUTPUT" ]] && echo "$INSTALL_OUTPUT" | sed 's/^/    /'
     ((fail++))
   fi
 done

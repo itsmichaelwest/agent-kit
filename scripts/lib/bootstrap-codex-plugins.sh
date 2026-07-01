@@ -11,16 +11,13 @@ set -u
 BOOTSTRAP_CODEX_PLUGINS_SCRIPT="$DOTFILES_DIR/scripts/lib/bootstrap-codex-plugins.py"
 
 bootstrap_codex_plugins() {
-  if ! command -v python3 &>/dev/null; then
-    err "python3 is required"
-    return 1
-  fi
+  require_python || return 1
   if [[ ! -f "$BOOTSTRAP_CODEX_PLUGINS_SCRIPT" ]]; then
     err "Missing Codex bootstrap script: $BOOTSTRAP_CODEX_PLUGINS_SCRIPT"
     return 1
   fi
 
-  python3 "$BOOTSTRAP_CODEX_PLUGINS_SCRIPT" \
+  "$PYTHON" "$BOOTSTRAP_CODEX_PLUGINS_SCRIPT" \
     --repo-root "$DOTFILES_DIR" \
     --home-dir "$HOME"
 }

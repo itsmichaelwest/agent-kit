@@ -56,10 +56,10 @@ install_deps() {
   # CLI tools
   info "Installing CLI tools..."
   case $os in
-    macos)  brew install gh ripgrep fd bat fzf eza starship ast-grep jq ;;
-    arch)   sudo pacman -S --noconfirm git github-cli curl wget ripgrep fd bat fzf eza starship ast-grep jq ;;
+    macos)  brew install python gh ripgrep fd bat fzf eza starship ast-grep jq ;;
+    arch)   sudo pacman -S --noconfirm python git github-cli curl wget ripgrep fd bat fzf eza starship ast-grep jq ;;
     ubuntu)
-      sudo apt install -y git gh curl wget ripgrep fd-find bat fzf jq
+      sudo apt install -y python3 git gh curl wget ripgrep fd-find bat fzf jq
       [[ -f /usr/bin/fdfind && ! -f /usr/bin/fd ]] && sudo ln -s /usr/bin/fdfind /usr/bin/fd
       [[ -f /usr/bin/batcat && ! -f /usr/bin/bat ]] && sudo ln -s /usr/bin/batcat /usr/bin/bat
       if ! command -v eza &>/dev/null; then

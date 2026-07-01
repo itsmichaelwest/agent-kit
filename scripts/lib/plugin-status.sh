@@ -5,17 +5,14 @@
 PLUGIN_STATUS_SCRIPT="$DOTFILES_DIR/scripts/lib/plugin-status.py"
 
 show_plugin_status() {
-  if ! command -v python3 &>/dev/null; then
-    err "python3 is required"
-    return 1
-  fi
+  require_python || return 1
   if [[ ! -f "$PLUGIN_STATUS_SCRIPT" ]]; then
     err "Missing status script: $PLUGIN_STATUS_SCRIPT"
     return 1
   fi
 
   info "Plugin status"
-  python3 "$PLUGIN_STATUS_SCRIPT" \
+  "$PYTHON" "$PLUGIN_STATUS_SCRIPT" \
     --repo-root "$DOTFILES_DIR" \
     --home-dir "$HOME"
 }
