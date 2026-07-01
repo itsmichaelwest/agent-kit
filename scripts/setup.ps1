@@ -56,6 +56,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 
 . "$ScriptsDir\lib\helpers.ps1"
 . "$ScriptsDir\lib\install-deps.ps1"
+. "$ScriptsDir\lib\install-toolchains.ps1"
 . "$ScriptsDir\lib\compile-agents.ps1"
 . "$ScriptsDir\lib\link-dotfiles.ps1"
 . "$ScriptsDir\lib\link-ai-agents.ps1"
@@ -152,7 +153,7 @@ function Get-InstallSkillArgs {
 }
 
 switch ($Action) {
-    "install"        { Install-Deps; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "install"        { Install-Deps; Install-Toolchains; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
     "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code } }
     "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
@@ -166,7 +167,7 @@ switch ($Action) {
     "bootstrap-claude" { $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code } }
     "bootstrap-codex" { $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
     "plugin-status"  { $code = Show-PluginStatus $DotfilesDir; if ($code -ne 0) { exit $code } }
-    "reset"          { Unlink-Dotfiles; Unlink-AiAgents $DotfilesDir; Uninstall-Deps }
+    "reset"          { Unlink-Dotfiles; Unlink-AiAgents $DotfilesDir; Uninstall-Deps; Uninstall-Toolchains }
     "status"         { Show-Status }
     "project-agents" {
         if (-not $ProjectPath) { Write-Err "Missing -ProjectPath"; exit 1 }

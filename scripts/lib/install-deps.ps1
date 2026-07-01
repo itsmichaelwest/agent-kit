@@ -5,7 +5,6 @@ function Install-Deps {
 
     $packages = @(
         "GitHub.cli",
-        "Schniz.fnm",
         "eza-community.eza",
         "junegunn.fzf",
         "BurntSushi.ripgrep.MSVC",
@@ -45,19 +44,6 @@ function Install-Deps {
         }
     }
 
-    # Node.js LTS via fnm
-    if (Get-Command fnm -ErrorAction SilentlyContinue) {
-        fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
-        $ltsInstalled = fnm list 2>$null | Select-String "lts-latest"
-        if ($ltsInstalled) {
-            Write-Host "  [OK] Node.js LTS (fnm)"
-        } else {
-            Write-Info "Installing latest Node.js LTS via fnm..."
-            fnm install --lts
-            fnm default lts-latest
-        }
-    }
-
     Write-Info "Dependencies installed"
 }
 
@@ -66,7 +52,6 @@ function Uninstall-Deps {
 
     # Winget packages
     $packages = @(
-        "Schniz.fnm",
         "eza-community.eza",
         "junegunn.fzf",
         "BurntSushi.ripgrep.MSVC",

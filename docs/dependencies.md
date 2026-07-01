@@ -37,6 +37,7 @@ Tools installed by `scripts/setup.sh install` (macOS/Linux) and `scripts/setup.p
 | [Oh My Posh](https://ohmyposh.dev/) | Prompt theming | winget |
 | [Starship](https://starship.rs/) | Cross-shell prompt | winget |
 | [fnm](https://github.com/Schniz/fnm) | Fast Node version manager | winget |
+| [rustup](https://rustup.rs/) | Rust toolchain installer/manager | winget |
 | [eza](https://eza.rocks/) | Modern `ls` replacement | winget |
 | [fzf](https://github.com/junegunn/fzf) | Fuzzy finder | winget |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | Fast grep | winget |
