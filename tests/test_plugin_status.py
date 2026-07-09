@@ -38,7 +38,8 @@ class PluginStatusTests(unittest.TestCase):
                 enabled = true
                 """
             )
-            repo.joinpath(".codex", "config.toml").write_text(codex_config, encoding="utf-8")
+            repo.joinpath("config", "codex").mkdir(parents=True)
+            repo.joinpath("config", "codex", "global.toml").write_text(codex_config, encoding="utf-8")
             home.joinpath(".codex", "config.toml").write_text(codex_config, encoding="utf-8")
             repo.joinpath(".claude", "settings.json").write_text("{}", encoding="utf-8")
             home.joinpath(".claude", "settings.json").write_text("{}", encoding="utf-8")

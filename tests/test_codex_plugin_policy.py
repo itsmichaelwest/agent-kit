@@ -15,7 +15,7 @@ COPILOT_MARKETPLACES = {"awesome-copilot", "copilot-plugins"}
 
 class CodexPluginPolicyTests(unittest.TestCase):
     def test_default_codex_config_does_not_mirror_claude_marketplaces(self) -> None:
-        config = tomllib.loads((ROOT / ".codex" / "config.toml").read_text(encoding="utf-8"))
+        config = tomllib.loads((ROOT / "config" / "codex" / "global.toml").read_text(encoding="utf-8"))
 
         marketplaces = config.get("marketplaces", {})
         plugins = config.get("plugins", {})
@@ -26,7 +26,7 @@ class CodexPluginPolicyTests(unittest.TestCase):
         )
 
     def test_default_codex_config_does_not_mirror_copilot_marketplaces(self) -> None:
-        config = tomllib.loads((ROOT / ".codex" / "config.toml").read_text(encoding="utf-8"))
+        config = tomllib.loads((ROOT / "config" / "codex" / "global.toml").read_text(encoding="utf-8"))
 
         marketplaces = config.get("marketplaces", {})
         plugins = config.get("plugins", {})

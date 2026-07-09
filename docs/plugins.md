@@ -15,7 +15,7 @@ The source of truth is the tool-native config already stored in this repo.
 
 ### Codex
 
-- Desired plugin state lives in `.codex/config.toml`
+- Desired plugin state lives in `config/codex/global.toml`
 - Repo-managed sections:
   - `[marketplaces.<name>]`
   - `[plugins."<plugin-id>@<marketplace>"]`
@@ -47,7 +47,7 @@ The source of truth is the tool-native config already stored in this repo.
 
 `install` and `link` relink the repo-owned tool config files into the home-directory tool locations.
 `bootstrap-claude` also registers and refreshes Claude Code marketplaces before installing and updating `enabledPlugins`, because a first-run machine may not have the marketplace checkout yet and an existing machine may have stale plugin caches.
-`bootstrap-codex` registers Codex marketplaces from `.codex/config.toml`, refreshes marketplace snapshots, and installs enabled plugins with `codex plugin add`. `install` runs both bootstrap commands after linking config.
+`bootstrap-codex` registers Codex marketplaces from `config/codex/global.toml`, refreshes marketplace snapshots, and installs enabled plugins with `codex plugin add`. `install` runs both bootstrap commands after linking config.
 The bootstrap/status commands read separate desired-state files; `bootstrap-codex` never reads `.claude/settings.json`, and Copilot status never imports Claude or Codex marketplace declarations into `.copilot/settings.json`.
 
 ## What the repo controls
@@ -77,7 +77,7 @@ The repo does not vendor:
 
 Codex app and CLI plugin availability is not just TOML state. The bootstrap command uses `codex plugin marketplace add`, `codex plugin marketplace upgrade`, and `codex plugin add` so the plugin manager converges on the repo-owned declarations. For app-managed local marketplaces such as `openai-bundled` and `openai-primary-runtime`, the bootstrapper infers their local runtime paths when those plugins are declared.
 
-By default, committed Codex config should stay on Codex/OpenAI marketplaces. If you want a Codex install to use a third-party or Claude-origin marketplace, add that marketplace and its `[plugins.*]` entries explicitly to `.codex/config.local.toml` for one machine, or to `.codex/config.toml` when the cross-tool overlap is an intentional shared policy.
+By default, committed Codex config should stay on Codex/OpenAI marketplaces. If you want a Codex install to use a third-party or Claude-origin marketplace, add that marketplace and its `[plugins.*]` entries explicitly to `config/codex/global.toml` when the cross-tool overlap is an intentional shared policy.
 
 The same rule applies to Copilot: keep committed `.copilot/settings.json` on Copilot-native marketplaces unless a cross-tool marketplace is an intentional Copilot policy. Put one-machine experiments in `.copilot/settings.local.json`. `superpowers@superpowers-marketplace` is intentionally declared for Copilot from `obra/superpowers-marketplace`; do not treat it as accidental Claude/Codex bleed.
 

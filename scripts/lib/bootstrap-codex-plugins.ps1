@@ -1,4 +1,4 @@
-# Bootstrap Codex plugins declared in .codex/config.toml (Windows).
+# Bootstrap Codex plugins declared in config/codex/global.toml (Windows).
 
 function Bootstrap-CodexPlugins {
     param([string]$DotfilesDir)

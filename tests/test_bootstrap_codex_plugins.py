@@ -25,7 +25,8 @@ class BootstrapCodexPluginsTests(unittest.TestCase):
             home.mkdir()
             bin_dir.mkdir()
 
-            repo.joinpath(".codex", "config.toml").write_text(
+            repo.joinpath("config", "codex").mkdir(parents=True)
+            repo.joinpath("config", "codex", "global.toml").write_text(
                 textwrap.dedent(
                     """\
                     [marketplaces.example-market]
@@ -159,7 +160,8 @@ class BootstrapCodexPluginsTests(unittest.TestCase):
             bundled.mkdir(parents=True)
             bin_dir.mkdir()
 
-            repo.joinpath(".codex", "config.toml").write_text(
+            repo.joinpath("config", "codex").mkdir(parents=True)
+            repo.joinpath("config", "codex", "global.toml").write_text(
                 textwrap.dedent(
                     """\
                     [plugins."browser@openai-bundled"]
@@ -216,7 +218,7 @@ class BootstrapCodexPluginsTests(unittest.TestCase):
                         echo "$*" >> "$AK_CALLS"
                         case "$*" in
                           "--version") exit 0 ;;
-                          "plugin marketplace add {bundled}") exit 0 ;;
+                          "plugin marketplace add "*) exit 0 ;;
                           "plugin marketplace upgrade") exit 0 ;;
                           "plugin list --available --json") cat '{payload_file}'; exit 0 ;;
                           "plugin add browser@openai-bundled --json") exit 0 ;;
@@ -259,7 +261,7 @@ class BootstrapCodexPluginsTests(unittest.TestCase):
             self.assertEqual(
                 plugin_calls,
                 [
-                    f"plugin marketplace add {bundled}",
+                    f"plugin marketplace add {bundled.resolve()}",
                     "plugin marketplace upgrade",
                     "plugin list --available --json",
                     "plugin add browser@openai-bundled --json",

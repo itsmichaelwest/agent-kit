@@ -12,15 +12,6 @@ from pathlib import Path
 from typing import Any
 
 
-def deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
-    for key, value in overlay.items():
-        if isinstance(value, dict) and isinstance(base.get(key), dict):
-            deep_merge(base[key], value)
-        else:
-            base[key] = value
-    return base
-
-
 def load_toml(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -28,9 +19,7 @@ def load_toml(path: Path) -> dict[str, Any]:
 
 
 def load_desired_config(repo_root: Path) -> dict[str, Any]:
-    shared = load_toml(repo_root / ".codex" / "config.toml")
-    overlay = load_toml(repo_root / ".codex" / "config.local.toml")
-    return deep_merge(shared, overlay)
+    return load_toml(repo_root / "config" / "codex" / "global.toml")
 
 
 def command_exists(command: str) -> bool:
@@ -188,7 +177,7 @@ def bootstrap(repo_root: Path, home_dir: Path, codex_command: str | None) -> int
     )
 
     if not desired_plugins and not desired_marketplaces:
-        print(f"[INFO] No Codex plugins or marketplaces declared in {repo_root / '.codex' / 'config.toml'}")
+        print(f"[INFO] No Codex plugins or marketplaces declared in {repo_root / 'config' / 'codex' / 'global.toml'}")
         return 0
 
     codex = find_codex_command(home_dir, codex_command)
@@ -223,7 +212,7 @@ def bootstrap(repo_root: Path, home_dir: Path, codex_command: str | None) -> int
         return 1
 
     if not desired_plugins:
-        print(f"[INFO] No enabled Codex plugins declared in {repo_root / '.codex' / 'config.toml'}")
+        print(f"[INFO] No enabled Codex plugins declared in {repo_root / 'config' / 'codex' / 'global.toml'}")
         return 0
 
     state = load_plugin_state(codex)
@@ -256,7 +245,7 @@ def bootstrap(repo_root: Path, home_dir: Path, codex_command: str | None) -> int
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Install Codex plugins declared in .codex/config.toml")
+    parser = argparse.ArgumentParser(description="Install Codex plugins declared in config/codex/global.toml")
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--home-dir", required=True)
     parser.add_argument("--codex-command")

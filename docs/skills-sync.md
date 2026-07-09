@@ -68,9 +68,9 @@ Two things the ecosystem has clearly standardized on:
   `AGENTS.md`, Copilot CLI reads `copilot-instructions.md`, Gemini reads
   `GEMINI.md`. This repo already maps one `AGENTS.md` source to all three native
   targets — keep this.
-- **`~/.agents/` and `~/.agents/skills/`** is the emerging universal home that
-  multiple tools read. Codex and Copilot read it natively; **Claude Code does
-  not** (it reads `~/.claude/skills`), so Claude needs its own symlink.
+- **`~/.agents/` and `~/.agents/skills/`** is the documented user-level skills
+  home for Codex and the emerging universal location for multiple tools.
+  **Claude Code does not** read `~/.agents/skills`, so it needs its own link.
 
 ### Two philosophies — and they disagree about vendoring
 

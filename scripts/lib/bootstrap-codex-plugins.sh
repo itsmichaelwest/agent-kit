@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bootstrap Codex plugins declared in .codex/config.toml.
+# Bootstrap Codex plugins declared in config/codex/global.toml.
 #
 # Codex config declares the desired plugin state, but the app/CLI plugin
 # manager still needs marketplace snapshots and plugin installs to converge on

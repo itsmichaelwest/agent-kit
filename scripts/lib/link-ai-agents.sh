@@ -3,7 +3,7 @@
 # Sourced by setup.sh — expects helpers.sh already loaded and DOTFILES_DIR set.
 # Requires: jq
 
-AI_AGENT_LAYOUT_VERSION="2"
+AI_AGENT_LAYOUT_VERSION="4"
 
 ai_agent_state_file() {
   local state_root="${XDG_STATE_HOME:-$HOME/.local/state}"
@@ -25,8 +25,7 @@ ensure_directory_target() {
 
 legacy_ai_agent_targets() {
   printf '%s\n' \
-    "$HOME/.copilot/instructions.md" \
-    "$HOME/.codex/skills"
+    "$HOME/.copilot/instructions.md"
 }
 
 cleanup_legacy_ai_agent_targets() {
@@ -142,56 +141,18 @@ link_copilot_settings() {
   fi
 }
 
-# Generate ~/.codex/config.toml by merging shared declarative config with a
-# gitignored personal overlay, while preserving [projects.*] trust entries
-# Codex has written into the live file at runtime. Written as a real file
-# (not a symlink) so Codex's own writes don't pollute the repo.
+# Link the single shared Codex config. Codex runtime edits are intentionally
+# visible in the working tree so they can be selectively committed or ignored.
 link_codex_config() {
-  local shared="$DOTFILES_DIR/.codex/config.toml"
-  local overlay="$DOTFILES_DIR/.codex/config.local.toml"
+  local shared="$DOTFILES_DIR/config/codex/global.toml"
   local target="$HOME/.codex/config.toml"
-  local merger="$DOTFILES_DIR/scripts/lib/merge-codex-config.py"
 
   if [[ ! -f "$shared" ]]; then
     warn "Missing $shared"
     return
   fi
 
-  require_python || return 1
-
-  if [[ ! -f "$merger" ]]; then
-    err "Missing $merger"
-    return 1
-  fi
-
-  mkdir -p "$(dirname "$target")"
-
-  local live_arg=""
-  if [[ -f "$target" && ! -L "$target" ]]; then
-    live_arg="$target"
-  fi
-
-  if [[ -L "$target" ]]; then
-    rm "$target"
-  elif [[ -e "$target" ]]; then
-    cp "$target" "${target}.backup.$(date +%Y%m%d_%H%M%S)"
-    info "Backed up existing config.toml"
-  fi
-
-  local tmp
-  tmp="$(mktemp)"
-  if "$PYTHON" "$merger" "$shared" "$overlay" $live_arg > "$tmp" 2>/dev/null; then
-    mv "$tmp" "$target"
-    if [[ -f "$overlay" ]]; then
-      echo "  [MERGE] $target (shared + local overlay + preserved [projects])"
-    else
-      echo "  [MERGE] $target (shared + preserved [projects] — create .codex/config.local.toml to predeclare trust)"
-    fi
-  else
-    rm -f "$tmp"
-    err "Failed to merge codex config"
-    return 1
-  fi
+  ensure_linked "$shared" "$target"
 }
 
 unlink_copilot_agents() {

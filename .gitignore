@@ -16,7 +16,6 @@ secrets/
 .env.*
 .claude/settings.local.json
 .copilot/settings.local.json
-.codex/config.local.toml
 
 # Claude session data
 .claude/projects/
@@ -24,9 +23,6 @@ secrets/
 .claude/plans/
 .claude/statsig/
 .claude/todos/
-
-# Codex system skills (bundled with the CLI, not repo content)
-skills/.system/
 
 # Dependencies
 node_modules/

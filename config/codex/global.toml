@@ -1,23 +1,43 @@
-# Codex CLI declarative user config.
-# This file is the shared, committed source of truth. Per-machine values
-# (trusted projects, model overrides) belong in .codex/config.local.toml,
-# which is gitignored and merged on top at link time.
-#
-# The link step generates ~/.codex/config.toml from:
-#   1. this shared file
-#   2. .codex/config.local.toml overlay (if present)
-#   3. preserved [projects.*] entries Codex writes during runtime
-#
-# Auto-managed sections that Codex regenerates on every startup are NOT
-# committed here (e.g. [marketplaces.openai-bundled], openai-primary-runtime,
-# marketplace last_updated / last_revision timestamps).
-
-commit_attribution = ""
-model = "gpt-5.5"
-model_reasoning_effort = "high"
+#:schema https://developers.openai.com/codex/config-schema.json
 personality = "pragmatic"
 sandbox_mode = "danger-full-access"
 web_search = "live"
+
+[features]
+js_repl = false
+memories = true
+multi_agent = true
+prevent_idle_sleep = true
+
+[memories]
+generate_memories = true
+use_memories = true
+
+[shell_environment_policy]
+inherit = "core"
+
+[tui]
+status_line = ["model-with-reasoning", "context-remaining", "current-dir", "git-branch", "five-hour-limit"]
+
+[windows]
+sandbox = "elevated"
+
+[marketplaces.openai-bundled]
+last_updated = "2026-07-09T20:56:21Z"
+source_type = "local"
+source = "/Users/michael/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[mcp_servers.exa]
+url = "https://mcp.exa.ai/mcp"
 
 [agents]
 max_threads = 16
@@ -52,7 +72,7 @@ description = "Simpler coding tasks - implement features, fix bugs, or refactor 
 
 [agents.explore]
 config_file = "agents/explore.toml"
-description = "Navigate and explore codebases - find files, search content, and analyze code structure. Read-only."
+description = "Navigate and explore codebases - find files, search content, and analyze code sections. Read-only."
 
 [agents.performance-engineer]
 config_file = "agents/performance-engineer.toml"
@@ -85,71 +105,3 @@ description = "Captures screenshots of running apps, identifies visual issues, a
 [agents.ux-designer]
 config_file = "agents/ux-designer.toml"
 description = "Produce implementation-ready UX design documentation with layout, components, interactions, and accessibility guidance. Does not write code."
-
-[features]
-multi_agent = true
-prevent_idle_sleep = true
-
-# Only Codex marketplace sources are committed here by default.
-# Codex auto-writes last_updated / last_revision into ~/.codex/config.toml
-# at runtime; app-managed openai-bundled and openai-primary-runtime marketplace
-# entries with absolute paths are inferred by the bootstrap command when needed.
-# Third-party marketplace overlap, including Claude plugin marketplaces, must be
-# declared intentionally in this file or in .codex/config.local.toml.
-#
-# Declarative plugin enable/disable. Run setup bootstrap-codex after link/install
-# to register Codex marketplaces and install missing plugin bundles.
-[plugins."build-ios-apps@openai-curated"]
-enabled = true
-
-[plugins."build-macos-apps@openai-curated"]
-enabled = true
-
-[plugins."browser@openai-bundled"]
-enabled = true
-
-[plugins."codex-security@openai-curated"]
-enabled = true
-
-[plugins."documents@openai-primary-runtime"]
-enabled = true
-
-[plugins."computer-use@openai-bundled"]
-enabled = true
-
-[plugins."figma@openai-curated"]
-enabled = true
-
-[plugins."github@openai-curated"]
-enabled = true
-
-[plugins."presentations@openai-primary-runtime"]
-enabled = true
-
-[plugins."pdf@openai-primary-runtime"]
-enabled = true
-
-[plugins."spreadsheets@openai-primary-runtime"]
-enabled = true
-
-[plugins."template-creator@openai-primary-runtime"]
-enabled = true
-
-[plugins."superpowers@openai-curated"]
-enabled = true
-
-[shell_environment_policy]
-inherit = "core"
-
-[shell_environment_policy.set]
-CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1"
-ENABLE_LSP_TOOL = "1"
-
-[tui]
-status_line = ["model-with-reasoning", "context-remaining", "current-dir", "git-branch", "five-hour-limit"]
-
-[windows]
-sandbox = "elevated"
-
-[mcp_servers.exa]
-url = "https://mcp.exa.ai/mcp"

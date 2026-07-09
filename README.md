@@ -39,8 +39,8 @@ agent-kit/
 ├── agents/                    # Generated Claude/Copilot agent definitions (.md)
 ├── .claude/                   # Claude Code settings
 ├── .codex/
-│   ├── config.toml            # Codex config + agent registry
 │   └── agents/                # Generated Codex agent definitions (.toml)
+├── config/codex/global.toml   # Linked Codex user config + agent registry
 ├── prompts/                   # Slash commands (shared across tools)
 ├── skills/                    # Canonical global skill source
 ├── docs/                      # Reference docs for agents
@@ -95,7 +95,7 @@ See [docs/agents.md](docs/agents.md) for the template schema, model mapping, and
 
 ## Skills
 
-Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files. The repo `skills/` directory is the canonical global source: it is symlinked into `~/.agents/skills` (the universal location read by GitHub Copilot CLI and Codex) and `~/.claude/skills` for Claude Code.
+Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files. The repo `skills/` directory is the canonical global source: it is symlinked into `~/.agents/skills`, `~/.claude/skills`, and `~/.copilot/skills`.
 
 Skills are managed via [`vercel-labs/skills`](https://github.com/vercel-labs/skills) (`npx skills`). The repo's [`scripts/skills-manifest.json`](scripts/skills-manifest.json) declares the desired set of upstream skills; the lockfile committed at [`.skill-lock.json`](.skill-lock.json) is the symlinked source of truth that `npx skills` reads at `~/.agents/.skill-lock.json`.
 
@@ -166,7 +166,7 @@ Plugins are declared per tool. Run `install` to link configs and bootstrap plugi
 | Tool | Declared in | Auto-installs on launch? |
 |------|------------|---------------------------|
 | Copilot | `.copilot/settings.json` `enabledPlugins` | Yes — documented as "Declarative plugin auto-install" |
-| Codex | `.codex/config.toml` `[plugins."x@y"]` | Partially — use `./scripts/setup.sh bootstrap-codex` / `.\scripts\setup.ps1 bootstrap-codex` to force convergence |
+| Codex | `config/codex/global.toml` `[plugins."x@y"]` | Partially — use `./scripts/setup.sh bootstrap-codex` / `.\scripts\setup.ps1 bootstrap-codex` to force convergence |
 | Claude | `.claude/settings.json` `enabledPlugins` | No — requires `./scripts/setup.sh bootstrap-claude` to install (run once per machine) |
 
 Claude, Codex, and Copilot marketplace declarations are intentionally separate. `install` runs the available bootstrap commands, but each one reads only that tool's native config. Shared overlap belongs in the target tool's shared config only when that is the explicit policy, or in that tool's local overlay for one machine.
@@ -175,7 +175,7 @@ Claude, Codex, and Copilot marketplace declarations are intentionally separate. 
 
 **Copilot** — `~/.copilot/settings.json` is **generated** at link time by jq-merging the committed `.copilot/settings.json` (shared) with an optional `.copilot/settings.local.json` (gitignored, per-machine: `model`, `trustedFolders`). Copy `.copilot/settings.local.example.json` to bootstrap your local file. Runtime state (installed plugin cache paths, login info, first-launch timestamp) stays in `~/.copilot/config.json`, which Copilot CLI manages itself and is never touched by setup.
 
-**Codex** — `~/.codex/config.toml` is **generated** at link time from three sources: the committed `.codex/config.toml` (shared declarative — model, agents, plugins, MCP), an optional `.codex/config.local.toml` (gitignored — pre-declared trust, per-machine overrides), and any `[projects.*]` trust entries Codex has written into the live file during runtime. Copy `.codex/config.local.example.toml` to start your local file. Re-running `setup.sh link` preserves runtime trust; it does not preserve other ad-hoc edits Codex makes to its config.
+**Codex** — `~/.codex/config.toml` is a direct symlink to `config/codex/global.toml`. Codex edits therefore appear directly in the repository: selectively stage portable settings, and leave machine-specific sections such as `[projects]`, `[marketplaces]`, `[desktop]`, `notify`, and app-generated MCP servers unstaged.
 
 **Claude** — `~/.claude/settings.json` is a plain symlink to the committed `.claude/settings.json`. Claude stores runtime state (OAuth, MCP user-scope configs, per-project trust) in a separate `~/.claude.json` file, so the symlinked settings file stays clean. Use `.claude/settings.local.json` (gitignored, project-scope per Claude convention) for any per-machine overrides.
 
@@ -193,7 +193,7 @@ Registers `extraKnownMarketplaces` from `~/.claude/settings.json`, refreshes Cla
 ./scripts/setup.sh bootstrap-codex
 ```
 
-Registers Codex marketplaces from `.codex/config.toml`, refreshes marketplace snapshots, then installs enabled `[plugins."name@marketplace"]` entries through `codex plugin add`. `setup.sh install` and `setup.ps1 install` run this automatically after linking Codex config.
+Registers Codex marketplaces from `config/codex/global.toml`, refreshes marketplace snapshots, then installs enabled `[plugins."name@marketplace"]` entries through `codex plugin add`. `setup.sh install` and `setup.ps1 install` run this automatically after linking Codex config.
 
 ## Adding a New AI Tool
 

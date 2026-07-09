@@ -85,7 +85,7 @@ Commands:
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
   doctor              Check skills manifest/lockfile/disk consistency
   bootstrap-claude    Install Claude Code plugins declared in settings.json
-  bootstrap-codex     Install Codex plugins declared in .codex/config.toml
+  bootstrap-codex     Install Codex plugins declared in config/codex/global.toml
   plugin-status       Show plugin status vs repo config
   reset               Remove all links and uninstall dependencies
   status              Show current link status

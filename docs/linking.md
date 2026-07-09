@@ -66,7 +66,7 @@ All base dotfile links are optional — if the source file doesn't exist in the 
 | `skills/` | `~/.agents/skills` |
 | `docs/` | `~/.codex/docs` |
 | `.codex/agents/` | `~/.codex/agents` |
-| `.codex/config.toml` | `~/.codex/config.toml` |
+| `config/codex/global.toml` | `~/.codex/config.toml` |
 
 ### Copilot CLI
 
@@ -88,7 +88,6 @@ The upgrade step removes these older targets after relinking the current layout:
 
 | Legacy target | Current target |
 |--------|--------|
-| `~/.codex/skills` | `~/.agents/skills` |
 | `~/.copilot/instructions.md` | `~/.copilot/copilot-instructions.md` |
 
 ## Shell Config (macOS/Linux)

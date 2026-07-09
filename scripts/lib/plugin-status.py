@@ -203,7 +203,7 @@ def main() -> int:
             load_claude_plugins(home_dir / ".claude" / "settings.json"),
         )
     )
-    desired_codex = load_codex_plugins(repo_root / ".codex" / "config.toml")
+    desired_codex = load_codex_plugins(repo_root / "config" / "codex" / "global.toml")
     lines.extend(
         diff_lines(
             "Codex config",
