@@ -23,7 +23,7 @@ status_line = ["model-with-reasoning", "context-remaining", "current-dir", "git-
 sandbox = "elevated"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-07-09T20:56:21Z"
+last_updated = "2026-07-09T21:47:21Z"
 source_type = "local"
 source = "/Users/michael/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
@@ -35,9 +35,6 @@ enabled = true
 
 [plugins."browser@openai-bundled"]
 enabled = true
-
-[mcp_servers.exa]
-url = "https://mcp.exa.ai/mcp"
 
 [agents]
 max_threads = 16
@@ -105,3 +102,7 @@ description = "Captures screenshots of running apps, identifies visual issues, a
 [agents.ux-designer]
 config_file = "agents/ux-designer.toml"
 description = "Produce implementation-ready UX design documentation with layout, components, interactions, and accessibility guidance. Does not write code."
+
+[desktop]
+followUpQueueMode = "queue"
+show-context-window-usage = true
