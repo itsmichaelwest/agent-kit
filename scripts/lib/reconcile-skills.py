@@ -27,6 +27,7 @@ class ReconcileResult:
     lock_entries_added: list[str]
     manifest_sources_added: list[str]
     manifest_skills_added: list[str]
+    empty_folders_removed: list[str]
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -50,6 +51,33 @@ def disk_skills(skills_dir: Path) -> set[str]:
         for child in skills_dir.iterdir()
         if child.is_dir() and not child.name.startswith(".") and child.name not in IGNORE_DIRS
     }
+
+
+def remove_empty_non_skill_folders(skills_dir: Path) -> list[str]:
+    """Remove empty non-skill folders bottom-up without entering skills."""
+    removed: list[str] = []
+
+    def remove_empty_descendants(folder: Path) -> None:
+        if (
+            folder.is_symlink()
+            or folder.name.startswith(".")
+            or folder.name in IGNORE_DIRS
+            or (folder / "SKILL.md").is_file()
+        ):
+            return
+        for child in sorted(folder.iterdir(), key=lambda path: path.name):
+            if child.is_dir() and not child.is_symlink():
+                remove_empty_descendants(child)
+        try:
+            folder.rmdir()
+        except OSError:
+            return
+        removed.append(folder.relative_to(skills_dir).as_posix())
+
+    for child in sorted(skills_dir.iterdir(), key=lambda path: path.name):
+        if child.is_dir() and not child.is_symlink():
+            remove_empty_descendants(child)
+    return sorted(removed)
 
 
 def git_ignored(root: Path, names: set[str]) -> set[str]:
@@ -173,6 +201,7 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
     if not isinstance(lock_skills, dict):
         raise SystemExit("[ERROR] lockfile has non-object skills")
 
+    empty_folders_removed = remove_empty_non_skill_folders(skills_dir)
     all_on_disk = disk_skills(skills_dir)
     tracked_on_disk = all_on_disk - git_ignored(root, all_on_disk)
     local_skills = set(manifest.get("local", []))
@@ -214,6 +243,7 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
         lock_entries_added=added_lock_entries,
         manifest_sources_added=added_sources,
         manifest_skills_added=added_skills,
+        empty_folders_removed=empty_folders_removed,
     )
 
 
@@ -228,12 +258,15 @@ def main() -> int:
     print(f"  lock entries added:       {len(result.lock_entries_added)}")
     print(f"  manifest sources added:   {len(result.manifest_sources_added)}")
     print(f"  manifest skills appended: {len(result.manifest_skills_added)}")
+    print(f"  empty folders removed:    {len(result.empty_folders_removed)}")
     if result.lock_entries_added:
         print(f"  lock:                     {', '.join(result.lock_entries_added)}")
     if result.manifest_sources_added:
         print(f"  sources:                  {', '.join(result.manifest_sources_added)}")
     if result.manifest_skills_added:
         print(f"  skills:                   {', '.join(result.manifest_skills_added)}")
+    if result.empty_folders_removed:
+        print(f"  removed:                  {', '.join(result.empty_folders_removed)}")
     return 0
 
 

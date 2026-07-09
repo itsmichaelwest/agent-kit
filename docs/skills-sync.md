@@ -161,7 +161,9 @@ was updated, run `./scripts/setup.sh reconcile-skills` (or
 `.\scripts\setup.ps1 reconcile-skills`). It merges recoverable lock entries for
 on-disk skills from the repo/global lockfiles and
 `~/.agents/.skill-lock.json.backup.*`, then adds the upstream source to
-`scripts/skills-manifest.json`. Review the resulting manifest, lockfile, and
+`scripts/skills-manifest.json`. It also removes empty non-skill folders
+bottom-up, while preserving valid skills and any non-empty unknown directory.
+Review the resulting manifest, lockfile, and
 vendored skill diff before committing.
 
 Custom skills (not from an upstream source) are edited in `skills/` directly and

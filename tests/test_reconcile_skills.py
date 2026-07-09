@@ -22,6 +22,43 @@ def load_module():
 
 
 class ReconcileSkillsTests(unittest.TestCase):
+    def test_removes_empty_non_skill_folders_but_preserves_nonempty_folders(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            home = Path(temp) / "home"
+            skills = root / "skills"
+            (root / "scripts").mkdir(parents=True)
+            (skills / "empty-leftover").mkdir(parents=True)
+            (skills / "nested-leftover" / "references").mkdir(parents=True)
+            (skills / "valid-skill").mkdir()
+            (skills / "valid-skill" / "SKILL.md").write_text("---\nname: valid-skill\n---\n", encoding="utf-8")
+            (skills / "valid-skill" / "references").mkdir()
+            (skills / "nonempty-unknown").mkdir()
+            (skills / "nonempty-unknown" / "README.md").write_text("keep me\n", encoding="utf-8")
+            (skills / ".system").mkdir()
+            home.joinpath(".agents").mkdir(parents=True)
+
+            root.joinpath("scripts", "skills-manifest.json").write_text(
+                json.dumps({"agents": ["codex"], "local": ["valid-skill"], "sources": []}, indent=2),
+                encoding="utf-8",
+            )
+            root.joinpath(".skill-lock.json").write_text(json.dumps({"version": 3, "skills": {}}, indent=2), encoding="utf-8")
+
+            result = module.reconcile(root, home)
+
+            self.assertEqual(
+                result.empty_folders_removed,
+                ["empty-leftover", "nested-leftover", "nested-leftover/references"],
+            )
+            self.assertFalse((skills / "empty-leftover").exists())
+            self.assertFalse((skills / "nested-leftover").exists())
+            self.assertTrue((skills / "valid-skill").is_dir())
+            self.assertTrue((skills / "valid-skill" / "references").is_dir())
+            self.assertTrue((skills / "nonempty-unknown").is_dir())
+            self.assertTrue((skills / ".system").is_dir())
+
     def test_merges_recoverable_backup_lock_entries_and_updates_manifest(self) -> None:
         module = load_module()
 
