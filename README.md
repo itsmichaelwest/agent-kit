@@ -107,9 +107,12 @@ See [docs/skills-sync.md](docs/skills-sync.md) for the sync strategy — why ski
 # Install/update all skills declared in the manifest
 ./scripts/setup.sh update-skills
 
-# Add a new upstream skill source, then reconcile and doctor
+# Interactively add skills from a new upstream source, then reconcile and doctor
 ./scripts/setup.sh install-skill shadcn/improve
 .\scripts\setup.ps1 install-skill vercel-labs/agent-skills -s react-best-practices
+
+# Skip prompts for an unattended install
+./scripts/setup.sh install-skill shadcn/improve -y
 
 # Remove one upstream skill, update the manifest, then doctor
 ./scripts/setup.sh uninstall-skill improve
@@ -138,7 +141,7 @@ Add an entry to `scripts/skills-manifest.json`. Either group with an existing `r
 }
 ```
 
-Then run `./scripts/setup.sh update-skills`, or use `./scripts/setup.sh install-skill owner/repo -s skill-name` to install one source and update the lockfile/manifest in one pass. Skill names follow the upstream package's canonical naming (the CLI may apply a vendor prefix on collision — e.g. `react-best-practices` from `vercel-labs/agent-skills` lands as `vercel-react-best-practices`).
+Then run `./scripts/setup.sh update-skills`, or use `./scripts/setup.sh install-skill owner/repo` to select skills interactively and update the lockfile/manifest in one pass. Pass `-s skill-name` to select directly or `-y` for an unattended install. Skill names follow the upstream package's canonical naming (the CLI may apply a vendor prefix on collision — e.g. `react-best-practices` from `vercel-labs/agent-skills` lands as `vercel-react-best-practices`).
 
 If you installed a skill directly with `npx skills add -g`, run `./scripts/setup.sh reconcile-skills` (or `.\scripts\setup.ps1 reconcile-skills` on Windows) before `doctor`. It recovers matching lockfile entries from the repo/global lockfiles and backed-up `~/.agents/.skill-lock.json.backup.*` files, then adds on-disk upstream skills to the manifest for review in git.
 

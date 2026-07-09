@@ -127,7 +127,7 @@ function Install-Skill {
     }
 
     Write-Info ("Installing skill source via npx skills: {0}" -f $SkillArgs[0])
-    $cmdArgs = @("-y", "skills@latest", "add") + $SkillArgs + @("-g", "-y") + $agentArgs
+    $cmdArgs = @("-y", "skills@latest", "add") + $SkillArgs + @("-g") + $agentArgs
     & npx @cmdArgs | Out-Host
     return $LASTEXITCODE
 }

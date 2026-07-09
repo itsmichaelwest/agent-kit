@@ -45,7 +45,7 @@ Commands:
   shell-remove        Remove injected zsh config from ~/.zshrc
   reset               Remove all links and injected shell config
   update-skills       Install/update skills from manifest
-  install-skill       Install one source via npx skills, reconcile, then doctor
+  install-skill       Interactively install one source via npx skills, reconcile, then doctor
   uninstall-skill     Uninstall one upstream skill, update manifest, then doctor
   list-skills         Show skills and install status
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile

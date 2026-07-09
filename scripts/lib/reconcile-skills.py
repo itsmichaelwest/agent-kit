@@ -124,6 +124,24 @@ def manifest_skill_name(entry: dict[str, Any], installed_name: str) -> str:
     return parent if parent else installed_name
 
 
+def remove_stale_manifest_selectors(manifest: dict[str, Any], repo: str, skill_name: str) -> bool:
+    sources = manifest.setdefault("sources", [])
+    changed = False
+    for source in list(sources):
+        if not isinstance(source, dict) or source.get("repo") == repo:
+            continue
+        skills = source.get("skills")
+        if not isinstance(skills, list) or skill_name not in skills:
+            continue
+        remaining_skills = [skill for skill in skills if skill != skill_name]
+        if remaining_skills:
+            source["skills"] = remaining_skills
+        else:
+            sources.remove(source)
+        changed = True
+    return changed
+
+
 def declare_manifest_skill(manifest: dict[str, Any], repo: str, skill_name: str) -> tuple[bool, bool]:
     sources = manifest.setdefault("sources", [])
     by_repo = manifest_source_index(manifest)
@@ -163,6 +181,7 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
     added_lock_entries: list[str] = []
     added_sources: list[str] = []
     added_skills: list[str] = []
+    manifest_changed = False
 
     for name in sorted(tracked_on_disk - local_skills):
         folder = skills_dir / name
@@ -178,7 +197,9 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
             lock_skills[name] = entry
             added_lock_entries.append(name)
         selector = manifest_skill_name(entry, name)
+        manifest_changed |= remove_stale_manifest_selectors(manifest, source, selector)
         added_source, added_skill = declare_manifest_skill(manifest, source, selector)
+        manifest_changed |= added_source or added_skill
         if added_source:
             added_sources.append(source)
         if added_skill:
@@ -186,7 +207,7 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
 
     if added_lock_entries:
         write_json(lock_path, lock)
-    if added_sources or added_skills:
+    if manifest_changed:
         write_json(manifest_path, manifest)
 
     return ReconcileResult(

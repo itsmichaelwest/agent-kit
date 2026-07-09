@@ -167,6 +167,72 @@ class ReconcileSkillsTests(unittest.TestCase):
             self.assertEqual(result.manifest_skills_added, [])
             self.assertEqual(manifest["sources"][0]["skills"], ["react-best-practices"])
 
+    def test_migrates_a_selector_when_its_installed_skill_changes_source(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            home = Path(temp) / "home"
+            (root / "scripts").mkdir(parents=True)
+            skill_dir = root / "skills" / "emil-design-eng"
+            skill_dir.mkdir(parents=True)
+            skill_dir.joinpath("SKILL.md").write_text(
+                "---\nname: emil-design-eng\n---\n",
+                encoding="utf-8",
+            )
+            (home / ".agents").mkdir(parents=True)
+
+            manifest_path = root / "scripts" / "skills-manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "agents": ["codex"],
+                        "local": [],
+                        "sources": [
+                            {
+                                "repo": "emilkowalski/skill",
+                                "skills": ["emil-design-eng"],
+                            },
+                            {
+                                "repo": "emilkowalski/skills",
+                                "skills": ["animation-vocabulary", "emil-design-eng"],
+                            }
+                        ],
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            (root / ".skill-lock.json").write_text(
+                json.dumps(
+                    {
+                        "version": 3,
+                        "skills": {
+                            "emil-design-eng": {
+                                "source": "emilkowalski/skills",
+                                "skillPath": "skills/emil-design-eng/SKILL.md",
+                            }
+                        },
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            result = module.reconcile(root, home)
+
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(result.manifest_sources_added, [])
+            self.assertEqual(
+                manifest["sources"],
+                [
+                    {
+                        "repo": "emilkowalski/skills",
+                        "skills": ["animation-vocabulary", "emil-design-eng"],
+                    }
+                ],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

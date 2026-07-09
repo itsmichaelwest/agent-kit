@@ -99,7 +99,7 @@ install_skill() {
   fi
 
   info "Installing skill source via npx skills: $1"
-  npx -y skills@latest add "$@" -g -y "${agent_args[@]}"
+  npx -y skills@latest add "$@" -g "${agent_args[@]}"
 }
 
 list_skills() {

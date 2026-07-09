@@ -136,7 +136,7 @@ To add one new upstream skill source, prefer the repo wrapper:
 ```
 
 It links `~/.agents/.skill-lock.json` to the repo lockfile, delegates the actual
-install to `npx skills add -g -y`, runs `reconcile-skills` to update the manifest,
+install to the interactive `npx skills add -g` flow, runs `reconcile-skills` to update the manifest,
 and finishes with strict `doctor`.
 
 On Windows, `setup.ps1 install-skill` supports the common `skills add` selectors
