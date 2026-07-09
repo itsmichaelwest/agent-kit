@@ -2,7 +2,8 @@ function Invoke-UninstallSkillManifest {
     param(
         [string]$DotfilesDir,
         [string]$SkillName,
-        [switch]$Apply
+        [string]$PlanFile,
+        [string]$ApplyPlanFile
     )
 
     $scriptPath = Join-Path $DotfilesDir "scripts\lib\uninstall-skill.py"
@@ -21,7 +22,8 @@ function Invoke-UninstallSkillManifest {
     }
 
     $pyArgs = @($scriptPath, "--repo-root", $DotfilesDir, "--skill", $SkillName)
-    if ($Apply) { $pyArgs += "--apply" }
+    if ($PlanFile) { $pyArgs += @("--write-plan", $PlanFile) }
+    if ($ApplyPlanFile) { $pyArgs += @("--apply-plan", $ApplyPlanFile) }
 
     & $python.Source @pyArgs | Out-Host
     return $LASTEXITCODE
@@ -42,12 +44,17 @@ function Uninstall-Skill {
 
     Sync-SkillsLockfile -DotfilesDir $DotfilesDir
 
-    $code = Invoke-UninstallSkillManifest $DotfilesDir $SkillName
-    if ($code -ne 0) { return $code }
+    $planFile = [System.IO.Path]::GetTempFileName()
+    try {
+        $code = Invoke-UninstallSkillManifest $DotfilesDir $SkillName -PlanFile $planFile
+        if ($code -ne 0) { return $code }
 
-    Write-Info ("Uninstalling skill via npx skills: {0}" -f $SkillName)
-    & npx -y skills@latest remove $SkillName -g -y | Out-Host
-    if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+        Write-Info ("Uninstalling skill via npx skills: {0}" -f $SkillName)
+        & npx -y skills@latest remove $SkillName -g -y | Out-Host
+        if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
 
-    return Invoke-UninstallSkillManifest $DotfilesDir $SkillName -Apply
+        return Invoke-UninstallSkillManifest $DotfilesDir $SkillName -ApplyPlanFile $planFile
+    } finally {
+        Remove-Item $planFile -Force -ErrorAction SilentlyContinue
+    }
 }

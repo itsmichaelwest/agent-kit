@@ -38,6 +38,31 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def write_plan(path: Path, plan: UninstallPlan) -> None:
+    write_json(
+        path,
+        {
+            "name": plan.name,
+            "source": plan.source,
+            "selector": plan.selector,
+            "removes_source": plan.removes_source,
+        },
+    )
+
+
+def read_plan(path: Path) -> UninstallPlan:
+    data = load_json(path)
+    name = data.get("name")
+    source = data.get("source")
+    selector = data.get("selector")
+    removes_source = data.get("removes_source")
+    if not all(isinstance(value, str) and value for value in (name, source, selector)):
+        raise SystemExit(f"[ERROR] invalid uninstall plan: {path}")
+    if not isinstance(removes_source, bool):
+        raise SystemExit(f"[ERROR] invalid uninstall plan: {path}")
+    return UninstallPlan(name=name, source=source, selector=selector, removes_source=removes_source)
+
+
 def manifest_skill_name(entry: dict[str, Any], installed_name: str) -> str:
     skill_path = entry.get("skillPath")
     if not isinstance(skill_path, str):
@@ -125,7 +150,23 @@ def main() -> int:
     parser.add_argument("--repo-root", required=True, type=Path)
     parser.add_argument("--skill", required=True)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--write-plan", type=Path)
+    parser.add_argument("--apply-plan", type=Path)
     args = parser.parse_args()
+
+    if args.write_plan and args.apply_plan:
+        parser.error("--write-plan and --apply-plan are mutually exclusive")
+
+    if args.apply_plan:
+        plan = read_plan(args.apply_plan)
+        if plan.name != args.skill:
+            raise SystemExit(f"[ERROR] uninstall plan skill does not match request: {plan.name}")
+        result = apply_manifest_removal(args.repo_root, plan)
+        if result.removed_source:
+            print(f"  removed:     source {result.removed_source}")
+        if result.removed_selector:
+            print(f"  removed:     selector {plan.source}@{result.removed_selector}")
+        return 0
 
     plan = plan_uninstall(args.repo_root, args.skill)
     print("Skills uninstall")
@@ -133,6 +174,10 @@ def main() -> int:
     print(f"  source:      {plan.source}")
     print(f"  selector:    {plan.selector}")
     print(f"  manifest:    {'remove source' if plan.removes_source else 'remove selector'}")
+
+    if args.write_plan:
+        write_plan(args.write_plan, plan)
+        return 0
 
     if args.apply:
         result = apply_manifest_removal(args.repo_root, plan)

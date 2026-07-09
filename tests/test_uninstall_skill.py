@@ -9,6 +9,8 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "lib" / "uninstall-skill.py"
+SHELL_WRAPPER = Path(__file__).resolve().parents[1] / "scripts" / "lib" / "uninstall-skill.sh"
+POWERSHELL_WRAPPER = Path(__file__).resolve().parents[1] / "scripts" / "lib" / "uninstall-skill.ps1"
 
 
 def load_module():
@@ -31,6 +33,50 @@ def write_inventory(root: Path, manifest: dict, lock: dict) -> None:
 
 
 class UninstallSkillTests(unittest.TestCase):
+    def test_wrappers_apply_the_saved_plan_after_npx_removal(self) -> None:
+        shell = SHELL_WRAPPER.read_text(encoding="utf-8")
+        powershell = POWERSHELL_WRAPPER.read_text(encoding="utf-8")
+
+        self.assertIn('--write-plan "$plan_file"', shell)
+        self.assertIn('--apply-plan "$plan_file"', shell)
+        self.assertLess(shell.index('--write-plan "$plan_file"'), shell.index('skills@latest remove'))
+        self.assertGreater(shell.index('--apply-plan "$plan_file"'), shell.index('skills@latest remove'))
+
+        self.assertIn("-PlanFile $planFile", powershell)
+        self.assertIn("-ApplyPlanFile $planFile", powershell)
+
+    def test_applies_a_saved_plan_after_npx_removes_the_lock_entry(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_inventory(
+                root,
+                {"local": [], "sources": [{"repo": "example/repo", "skills": ["one", "two"]}]},
+                {
+                    "version": 3,
+                    "skills": {
+                        "one": {
+                            "source": "example/repo",
+                            "skillPath": "skills/one/SKILL.md",
+                        }
+                    },
+                },
+            )
+            plan_path = root / "uninstall-plan.json"
+
+            module.write_plan(plan_path, module.plan_uninstall(root, "one"))
+            lock_path = root / ".skill-lock.json"
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            del lock["skills"]["one"]
+            lock_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
+
+            result = module.apply_manifest_removal(root, module.read_plan(plan_path))
+            manifest = json.loads((root / "scripts" / "skills-manifest.json").read_text(encoding="utf-8"))
+
+            self.assertEqual(result.removed_selector, "one")
+            self.assertEqual(manifest["sources"][0]["skills"], ["two"])
+
     def test_plans_and_applies_manifest_removal_for_last_skill_in_source(self) -> None:
         module = load_module()
 
