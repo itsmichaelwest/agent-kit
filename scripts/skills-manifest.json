@@ -1,6 +1,10 @@
 {
   "$comment": "Skills installed via `npx skills` (vercel-labs/skills). Each entry maps to one `npx skills add` invocation. Names follow the upstream package's canonical naming (npx may apply a vendor prefix on collision).",
-  "agents": ["github-copilot", "codex", "claude-code"],
+  "agents": [
+    "github-copilot",
+    "codex",
+    "claude-code"
+  ],
   "scope": "global",
   "$local_comment": "Skills authored in this repo (not from an upstream source). Listed so `setup.sh doctor` treats them as intentional and never expects them in the lockfile. Folder names under skills/.",
   "local": [
@@ -33,19 +37,27 @@
     },
     {
       "repo": "AvdLee/SwiftUI-Agent-Skill",
-      "skills": ["swiftui-expert-skill"]
+      "skills": [
+        "swiftui-expert-skill"
+      ]
     },
     {
       "repo": "twostraws/swiftui-agent-skill",
-      "skills": ["swiftui-pro"]
+      "skills": [
+        "swiftui-pro"
+      ]
     },
     {
       "repo": "haider-nawaz/liquid-glass-skill",
-      "skills": ["liquid-glass"]
+      "skills": [
+        "liquid-glass"
+      ]
     },
     {
       "repo": "conorluddy/ios-simulator-skill",
-      "skills": ["ios-simulator-skill"]
+      "skills": [
+        "ios-simulator-skill"
+      ]
     },
     {
       "repo": "novotnyllc/dotnet-artisan",
@@ -72,15 +84,21 @@
     },
     {
       "repo": "anthropics/skills",
-      "skills": ["webapp-testing"]
+      "skills": [
+        "webapp-testing"
+      ]
     },
     {
       "repo": "openai/skills",
-      "skills": ["winui-app"]
+      "skills": [
+        "winui-app"
+      ]
     },
     {
       "repo": "emilkowalski/skill",
-      "skills": ["emil-design-eng"]
+      "skills": [
+        "emil-design-eng"
+      ]
     },
     {
       "repo": "jakubkrehel/make-interfaces-feel-better"
@@ -96,11 +114,24 @@
     },
     {
       "repo": "vercel-labs/skills",
-      "skills": ["find-skills"]
+      "skills": [
+        "find-skills"
+      ]
     },
     {
       "repo": "shadcn/improve",
-      "skills": ["improve"]
+      "skills": [
+        "improve"
+      ]
+    },
+    {
+      "repo": "emilkowalski/skills",
+      "skills": [
+        "animation-vocabulary",
+        "apple-design",
+        "emil-design-eng",
+        "review-animations"
+      ]
     }
   ]
 }
