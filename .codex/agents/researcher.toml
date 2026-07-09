@@ -1,7 +1,7 @@
 name = "researcher"
 description = "Online research - gathering up-to-date information, evaluating libraries/tools, synthesizing findings, and providing actionable recommendations."
 
-model = "gpt-5.5"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
 
 developer_instructions = """

@@ -1,7 +1,7 @@
 name = "technical-writer"
 description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
 
-model = "gpt-5.5"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
 
 developer_instructions = """

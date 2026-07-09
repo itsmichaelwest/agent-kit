@@ -1,7 +1,7 @@
 name = "developer-mini"
 description = "Use this agent for simpler coding tasks - implement features, fix bugs, or refactor with Test-Driven Development. Uses a faster, cheaper model than the full developer agent."
 
-model = "gpt-5.5"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 
 developer_instructions = """

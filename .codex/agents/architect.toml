@@ -1,7 +1,7 @@
 name = "architect"
 description = "Decompose hard problems into buildable pieces - system design, service boundaries, API contracts, and architecture decisions. Does not write code."
 
-model = "gpt-5.5"
+model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 

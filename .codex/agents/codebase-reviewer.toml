@@ -1,7 +1,7 @@
 name = "codebase-reviewer"
 description = "Full codebase audit using multiple AI engines in parallel. Splits by module, reviews from different perspectives, deduplicates into a prioritized report."
 
-model = "gpt-5.5"
+model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
