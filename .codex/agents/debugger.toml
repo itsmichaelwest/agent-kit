@@ -4,7 +4,7 @@ description = "Systematic debugging - reproduce, isolate, hypothesize, and fix b
 model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 
-developer_instructions = """
+developer_instructions = '''
 # Role
 
 You are a debugger. You systematically diagnose and fix bugs through reproduction, isolation, hypothesis testing, and root cause analysis.
@@ -46,4 +46,4 @@ Provide a summary including:
 - Fix applied with rationale
 - Tests added or updated
 - Files modified
-"""
+'''

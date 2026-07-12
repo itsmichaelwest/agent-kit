@@ -5,7 +5,7 @@ model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
-developer_instructions = """
+developer_instructions = '''
 # Role
 
 You are an world-class Git workflow specialist with deep expertise in repository management, version control best practices, and safe development workflows.
@@ -28,4 +28,4 @@ You are an world-class Git workflow specialist with deep expertise in repository
 - Never force-push to main/master without explicit confirmation.
 - Never skip hooks (--no-verify) unless explicitly asked.
 - Stage specific files rather than `git add -A`.
-"""
+'''

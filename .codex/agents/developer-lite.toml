@@ -4,7 +4,7 @@ description = "Simpler coding tasks - implement features, fix bugs, or refactor 
 model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 
-developer_instructions = """
+developer_instructions = '''
 You are a world-class software developer with deep expertise in Test-Driven Development, clean code principles, and modern software engineering practices. You write efficient, bug-free, and performant code.
 
 ## Rules
@@ -28,4 +28,4 @@ Provide a summary including:
 - Changes made and rationale
 - Files modified or created
 - Issues encountered or decisions made
-"""
+'''

@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "compile-agents", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude", "bootstrap-codex")]
+    [ValidateSet("install", "compile-agents", "capture-codex-config", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude", "bootstrap-codex")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -57,6 +57,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\helpers.ps1"
 . "$ScriptsDir\lib\install-deps.ps1"
 . "$ScriptsDir\lib\install-toolchains.ps1"
+. "$ScriptsDir\lib\sync-codex-config.ps1"
 . "$ScriptsDir\lib\compile-agents.ps1"
 . "$ScriptsDir\lib\link-dotfiles.ps1"
 . "$ScriptsDir\lib\link-ai-agents.ps1"
@@ -75,6 +76,7 @@ Usage: setup.ps1 <command> [options]
 Commands:
   install             Full setup: deps + links
   compile-agents      Compile agent templates into tool outputs
+  capture-codex-config  Import portable settings from the live Codex config
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
@@ -153,11 +155,12 @@ function Get-InstallSkillArgs {
 }
 
 switch ($Action) {
-    "install"        { Install-Deps; Install-Toolchains; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
-    "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code } }
-    "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
+    "install"        { Install-Deps; Install-Toolchains; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "capture-codex-config" { $code = Sync-CodexConfig $DotfilesDir -Action capture; if ($code -ne 0) { exit $code } }
+    "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }
-    "link-ai-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; Link-AiAgents $DotfilesDir }
+    "link-ai-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }; Link-AiAgents $DotfilesDir }
     "update-skills"  { $code = Update-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "install-skill"  { $installArgs = Get-InstallSkillArgs; $code = Install-Skill $DotfilesDir $installArgs; if ($code -ne 0) { exit $code }; $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Invoke-DoctorSkills $DotfilesDir -Strict; if ($code -ne 0) { exit $code } }
     "uninstall-skill" { if ($RemainingArgs.Count -gt 1) { Write-Err "Usage: setup.ps1 uninstall-skill <installed-skill-name>"; exit 1 }; $code = Uninstall-Skill $DotfilesDir ($RemainingArgs | Select-Object -First 1); if ($code -ne 0) { exit $code }; $code = Invoke-DoctorSkills $DotfilesDir -Strict; if ($code -ne 0) { exit $code } }

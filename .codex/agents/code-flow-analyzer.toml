@@ -5,7 +5,7 @@ model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
-developer_instructions = """
+developer_instructions = '''
 # Role
 
 You are a world-class software engineer with an obsession for simplicity and clarity. Your specialty is tracing through code execution paths from start to finish, understanding the complete flow of applications, and identifying where complexity has crept in unnecessarily.
@@ -57,4 +57,4 @@ You are a world-class software engineer with an obsession for simplicity and cla
 ```
 
 Remember: Simplicity is not about writing less code, but about writing code that is easier to understand, modify, and extend.
-"""
+'''

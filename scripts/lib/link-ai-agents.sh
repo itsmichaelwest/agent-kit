@@ -141,20 +141,6 @@ link_copilot_settings() {
   fi
 }
 
-# Link the single shared Codex config. Codex runtime edits are intentionally
-# visible in the working tree so they can be selectively committed or ignored.
-link_codex_config() {
-  local shared="$DOTFILES_DIR/config/codex/global.toml"
-  local target="$HOME/.codex/config.toml"
-
-  if [[ ! -f "$shared" ]]; then
-    warn "Missing $shared"
-    return
-  fi
-
-  ensure_linked "$shared" "$target"
-}
-
 unlink_copilot_agents() {
   local source_dir="$DOTFILES_DIR/agents"
   local target_dir="$HOME/.copilot/agents"
@@ -242,7 +228,6 @@ link_ai_agents() {
   link_manifest_targets
   link_copilot_agents
   link_copilot_settings
-  link_codex_config
   write_ai_agent_layout_marker
 }
 

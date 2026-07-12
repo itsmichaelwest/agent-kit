@@ -40,7 +40,8 @@ Out of scope:
 - The generated `.codex/agents/*.toml` files remain compiler outputs and are not
   hand-edited.
 - `~/.codex/config.toml` owns all content outside the Agent Kit block, including
-  trusted projects and Codex runtime state.
+  trusted projects and Codex runtime state. Portable settings such as desktop
+  preferences may be placed in `global.toml` and are then managed.
 
 The portable source must not contain machine-specific paths, trusted project
 entries, runtime timestamps, or generated agent registrations. Agent-level

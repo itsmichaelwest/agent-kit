@@ -244,20 +244,6 @@ function Link-CopilotSettings {
     }
 }
 
-function Link-CodexConfig {
-    param([string]$DotfilesDir)
-
-    $shared = Join-Path $DotfilesDir "config\codex\global.toml"
-    $target = Join-Path $env:USERPROFILE ".codex\config.toml"
-
-    if (-not (Test-Path $shared)) {
-        Write-Warn "Missing $shared"
-        return
-    }
-
-    Ensure-Linked $shared $target
-}
-
 function Link-AiAgents {
     param([string]$DotfilesDir)
 
@@ -276,7 +262,6 @@ function Link-AiAgents {
     Link-ManifestAiTargets $DotfilesDir $manifest
     Link-CopilotAgents $DotfilesDir
     Link-CopilotSettings $DotfilesDir
-    Link-CodexConfig $DotfilesDir
     Write-AiAgentLayoutMarker
 }
 

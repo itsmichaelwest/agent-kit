@@ -123,9 +123,9 @@ def render_codex(template: dict[str, Any], body: str, model: str) -> str:
     lines.extend(
         [
             "",
-            'developer_instructions = """',
+            "developer_instructions = '''",
             body.rstrip(),
-            '"""',
+            "'''",
             "",
         ]
     )

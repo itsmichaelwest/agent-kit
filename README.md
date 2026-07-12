@@ -40,7 +40,7 @@ agent-kit/
 ├── .claude/                   # Claude Code settings
 ├── .codex/
 │   └── agents/                # Generated Codex agent definitions (.toml)
-├── config/codex/global.toml   # Linked Codex user config + agent registry
+├── config/codex/global.toml   # Portable Codex settings source
 ├── prompts/                   # Slash commands (shared across tools)
 ├── skills/                    # Canonical global skill source
 ├── docs/                      # Reference docs for agents
@@ -175,7 +175,12 @@ Claude, Codex, and Copilot marketplace declarations are intentionally separate. 
 
 **Copilot** — `~/.copilot/settings.json` is **generated** at link time by jq-merging the committed `.copilot/settings.json` (shared) with an optional `.copilot/settings.local.json` (gitignored, per-machine: `model`, `trustedFolders`). Copy `.copilot/settings.local.example.json` to bootstrap your local file. Runtime state (installed plugin cache paths, login info, first-launch timestamp) stays in `~/.copilot/config.json`, which Copilot CLI manages itself and is never touched by setup.
 
-**Codex** — `~/.codex/config.toml` is a direct symlink to `config/codex/global.toml`. Codex edits therefore appear directly in the repository: selectively stage portable settings, and leave machine-specific sections such as `[projects]`, `[marketplaces]`, `[desktop]`, `notify`, and app-generated MCP servers unstaged.
+**Codex** — `config/codex/global.toml` is rendered into a marked block inside
+`~/.codex/config.toml`; it is not linked. Re-running `compile-agents`, `link`, or
+`link-ai-agents` updates only that block and preserves machine-specific sections
+such as `[projects]` and app-generated MCP servers. Use
+`./scripts/setup.sh capture-codex-config` (or the PowerShell equivalent) to
+explicitly import portable live edits into the repository.
 
 **Claude** — `~/.claude/settings.json` is a plain symlink to the committed `.claude/settings.json`. Claude stores runtime state (OAuth, MCP user-scope configs, per-project trust) in a separate `~/.claude.json` file, so the symlinked settings file stays clean. Use `.claude/settings.local.json` (gitignored, project-scope per Claude convention) for any per-machine overrides.
 

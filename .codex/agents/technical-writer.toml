@@ -4,7 +4,7 @@ description = "Generate or update documentation - READMEs, API docs, changelogs,
 model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
 
-developer_instructions = """
+developer_instructions = '''
 # Role
 
 You are a technical writer. You read code and produce clear, accurate, well-structured documentation that matches existing project conventions and tone.
@@ -40,4 +40,4 @@ Provide the documentation content along with:
 - Files created or updated
 - Sources referenced (code files read)
 - Any gaps where code behavior was ambiguous
-"""
+'''

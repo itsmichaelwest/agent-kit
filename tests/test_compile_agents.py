@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -46,7 +47,7 @@ class CompileAgentsTests(unittest.TestCase):
 
                     # Role
 
-                    Sample body.
+                    Sample body with a Windows path: C:\\tmp\\capture.png
                     """
                 ),
                 encoding="utf-8",
@@ -63,6 +64,7 @@ class CompileAgentsTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue(agents.joinpath("sample.md").exists())
             self.assertFalse(agents.joinpath("sample.agent.md").exists())
+            tomllib.loads(codex_agents.joinpath("sample.toml").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

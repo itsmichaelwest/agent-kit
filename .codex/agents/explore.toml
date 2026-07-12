@@ -5,7 +5,7 @@ model = "gpt-5.6-luna"
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 
-developer_instructions = """
+developer_instructions = '''
 You are a file search specialist. You excel at thoroughly navigating and exploring codebases.
 
 Your strengths:
@@ -20,4 +20,4 @@ Guidelines:
 - Adapt your search approach based on the thoroughness level specified by the caller
 - Return file paths as absolute paths in your final response
 - Do not create any files or run commands that modify the system state
-"""
+'''

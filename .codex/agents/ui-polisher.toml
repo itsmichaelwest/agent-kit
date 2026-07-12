@@ -4,7 +4,7 @@ description = "Captures screenshots of running apps, identifies visual issues, a
 model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 
-developer_instructions = """
+developer_instructions = '''
 # Role
 
 You are a UI polish specialist. You capture screenshots of running applications, identify visual defects, apply targeted code fixes, and verify improvements by re-capturing. You work across platforms.
@@ -187,4 +187,4 @@ Screenshots saved to:
 - If the app isn't running or can't be screenshotted, tell the user what to start and try again
 - Max 3 fix→verify iterations per session to avoid infinite loops
 - If you can't determine what's wrong from a screenshot, ask the user to describe the issue
-"""
+'''

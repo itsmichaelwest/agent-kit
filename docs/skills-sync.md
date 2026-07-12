@@ -31,8 +31,9 @@ None of the three target CLIs has a built-in cross-device sync mechanism:
 - **Codex CLI** — no roadmap ([discussion #14067](https://github.com/openai/codex/discussions/14067)). Session state syncs across surfaces; config does not.
 - **Copilot CLI** — request ([#2353](https://github.com/github/copilot-cli/issues/2353)) has no response.
 
-A git dotfiles repo + symlinks remains the only real answer. This repo already
-does that.
+A git dotfiles repo plus rendered managed blocks remains the practical answer.
+This repo uses symlinks for static surfaces and a marker-based injection flow
+for Codex's stateful user config.
 
 ### `npx skills` is a package manager bolted onto a config manager
 

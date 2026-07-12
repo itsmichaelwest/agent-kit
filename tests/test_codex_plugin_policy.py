@@ -14,6 +14,14 @@ COPILOT_MARKETPLACES = {"awesome-copilot", "copilot-plugins"}
 
 
 class CodexPluginPolicyTests(unittest.TestCase):
+    def test_portable_codex_source_excludes_machine_local_and_generated_state(self) -> None:
+        config = tomllib.loads((ROOT / "config" / "codex" / "global.toml").read_text(encoding="utf-8"))
+
+        self.assertNotIn("projects", config)
+        self.assertNotIn("mcp_servers", config)
+        self.assertEqual(config["agents"], {"max_threads": 16})
+        self.assertNotIn("marketplaces", config)
+
     def test_default_codex_config_does_not_mirror_claude_marketplaces(self) -> None:
         config = tomllib.loads((ROOT / "config" / "codex" / "global.toml").read_text(encoding="utf-8"))
 

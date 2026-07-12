@@ -1,3 +1,5 @@
+# Portable Codex settings. Machine-local runtime state stays outside the
+# Agent Kit managed block in ~/.codex/config.toml.
 #:schema https://developers.openai.com/codex/config-schema.json
 personality = "pragmatic"
 sandbox_mode = "danger-full-access"
@@ -19,90 +21,8 @@ inherit = "core"
 [tui]
 status_line = ["model-with-reasoning", "context-remaining", "current-dir", "git-branch", "five-hour-limit"]
 
-[windows]
-sandbox = "elevated"
-
-[marketplaces.openai-bundled]
-last_updated = "2026-07-09T21:47:21Z"
-source_type = "local"
-source = "/Users/michael/.codex/.tmp/bundled-marketplaces/openai-bundled"
-
-[plugins."computer-use@openai-bundled"]
-enabled = true
-
-[plugins."visualize@openai-bundled"]
-enabled = true
-
-[plugins."browser@openai-bundled"]
-enabled = true
-
 [agents]
 max_threads = 16
 
-[agents.architect]
-config_file = "agents/architect.toml"
-description = "Decompose hard problems into buildable pieces - system design, service boundaries, API contracts, and architecture decisions. Does not write code."
-
-[agents.code-flow-analyzer]
-config_file = "agents/code-flow-analyzer.toml"
-description = "Analyze execution flow to identify over-engineering, unnecessary complexity, dead code, and simplification opportunities."
-
-[agents.codebase-investigator]
-config_file = "agents/codebase-investigator.toml"
-description = "Locate specific code patterns, understand how features are implemented, trace data flow, or find relevant code sections."
-
-[agents.codebase-reviewer]
-config_file = "agents/codebase-reviewer.toml"
-description = "Full codebase audit using multiple AI engines in parallel. Splits by module, reviews from different perspectives, deduplicates into a prioritized report."
-
-[agents.debugger]
-config_file = "agents/debugger.toml"
-description = "Systematic debugging - reproduce, isolate, hypothesize, and fix bugs including runtime errors, memory issues, concurrency problems, and stack traces."
-
-[agents.developer]
-config_file = "agents/developer.toml"
-description = "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
-
-[agents.developer-lite]
-config_file = "agents/developer-lite.toml"
-description = "Simpler coding tasks - implement features, fix bugs, or refactor with TDD. Uses a faster, cheaper model."
-
-[agents.explore]
-config_file = "agents/explore.toml"
-description = "Navigate and explore codebases - find files, search content, and analyze code sections. Read-only."
-
-[agents.performance-engineer]
-config_file = "agents/performance-engineer.toml"
-description = "Performance analysis - profile interpretation, bottleneck identification, and optimization recommendations for CPU, memory, I/O, and database queries. Read-only."
-
-[agents.planner]
-config_file = "agents/planner.toml"
-description = "Break down complex tasks into structured implementation plans with clear steps and dependencies."
-
-[agents.researcher]
-config_file = "agents/researcher.toml"
-description = "Online research - gathering up-to-date information, evaluating libraries/tools, synthesizing findings, and providing actionable recommendations."
-
-[agents.reviewer]
-config_file = "agents/reviewer.toml"
-description = "Review code changes for bugs, quality issues, and compliance with project conventions. Works on git diffs — does not modify code."
-
-[agents.security-auditor]
-config_file = "agents/security-auditor.toml"
-description = "Code-level security review - OWASP top 10, dependency vulnerabilities, secrets in code, auth/authz patterns, and input validation. Read-only."
-
-[agents.technical-writer]
-config_file = "agents/technical-writer.toml"
-description = "Generate or update documentation - READMEs, API docs, changelogs, ADRs, and architecture docs from code."
-
-[agents.ui-polisher]
-config_file = "agents/ui-polisher.toml"
-description = "Captures screenshots of running apps, identifies visual issues, applies fixes, and re-verifies. Works across web, Windows, macOS, and iOS/watchOS Simulator."
-
-[agents.ux-designer]
-config_file = "agents/ux-designer.toml"
-description = "Produce implementation-ready UX design documentation with layout, components, interactions, and accessibility guidance. Does not write code."
-
 [desktop]
 followUpQueueMode = "queue"
-show-context-window-usage = true

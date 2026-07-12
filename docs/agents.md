@@ -22,6 +22,11 @@ It does three things:
    - `agents/<name>.md`
    - `.codex/agents/<name>.toml`
 
+The setup command also injects the generated Codex agent registrations and
+portable settings into the marked block in `~/.codex/config.toml`. That config
+file is a real machine-local file, not a symlink. Use `capture-codex-config` to
+explicitly import portable live edits back into `config/codex/global.toml`.
+
 It also removes generated agent files whose template no longer exists.
 It removes repo-local `agents/*.agent.md` aliases as stale compatibility files;
 Copilot aliases are generated only under `~/.copilot/agents` during linking.
@@ -140,7 +145,9 @@ Supported optional keys:
 ./scripts/setup.sh link-ai-agents
 ```
 
-Because `link` and `link-ai-agents` compile automatically, step 6 is usually enough on a machine that already has the repo linked.
+Because `compile-agents`, `link`, and `link-ai-agents` update the managed Codex
+block automatically, step 6 is usually enough on a machine that already has the
+repo linked.
 
 ## How to modify an existing agent
 

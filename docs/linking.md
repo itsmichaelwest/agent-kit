@@ -13,6 +13,7 @@ Tool discovery surfaces differ across Claude, Codex, Copilot CLI, and VS Code. S
 ```bash
 # macOS/Linux
 ./scripts/setup.sh compile-agents    # rebuild generated agent outputs
+./scripts/setup.sh capture-codex-config # import portable live Codex settings
 ./scripts/setup.sh link              # link everything
 ./scripts/setup.sh link-dotfiles     # base dotfiles only
 ./scripts/setup.sh link-ai-agents    # AI agent configs only
@@ -25,6 +26,7 @@ Tool discovery surfaces differ across Claude, Codex, Copilot CLI, and VS Code. S
 ```powershell
 # Windows
 .\scripts\setup.ps1 compile-agents
+.\scripts\setup.ps1 capture-codex-config
 .\scripts\setup.ps1 link
 .\scripts\setup.ps1 link-dotfiles
 .\scripts\setup.ps1 link-ai-agents
@@ -66,7 +68,23 @@ All base dotfile links are optional — if the source file doesn't exist in the 
 | `skills/` | `~/.agents/skills` |
 | `docs/` | `~/.codex/docs` |
 | `.codex/agents/` | `~/.codex/agents` |
-| `config/codex/global.toml` | `~/.codex/config.toml` |
+
+`config/codex/global.toml` is not linked. `compile-agents`, `link`, and
+`link-ai-agents` inject its portable settings plus generated agent registrations
+into the real `~/.codex/config.toml` between these markers:
+
+```toml
+# >>> agent-kit managed codex config
+...
+# <<< agent-kit managed codex config
+```
+
+Only that block is replaced. Trusted projects, MCP runtime state, and unknown
+Codex settings outside it remain machine-local; any setting declared in
+`global.toml`, including portable desktop settings, is managed. If the live
+managed block was edited, run `capture-codex-config` to import its portable
+settings into the repository after reviewing the diff. The old Codex symlink
+must be removed manually before using this flow.
 
 ### Copilot CLI
 
