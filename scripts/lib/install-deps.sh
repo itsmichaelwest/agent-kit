@@ -59,7 +59,7 @@ install_deps() {
     macos)  brew install python gh ripgrep fd bat fzf eza starship ast-grep jq ;;
     arch)   sudo pacman -S --noconfirm python git github-cli curl wget ripgrep fd bat fzf eza starship ast-grep jq ;;
     ubuntu)
-      sudo apt install -y python3 git gh curl wget ripgrep fd-find bat fzf jq
+      sudo apt install -y python3 python3-venv git gh curl wget ripgrep fd-find bat fzf jq
       [[ -f /usr/bin/fdfind && ! -f /usr/bin/fd ]] && sudo ln -s /usr/bin/fdfind /usr/bin/fd
       [[ -f /usr/bin/batcat && ! -f /usr/bin/bat ]] && sudo ln -s /usr/bin/batcat /usr/bin/bat
       if ! command -v eza &>/dev/null; then
@@ -76,6 +76,29 @@ install_deps() {
       fi
       ;;
   esac
+
+  # The setup scripts require Python 3.11+ for stdlib tomllib. Ubuntu LTS
+  # images may ship an older default python3, so install the maintained 3.11
+  # runtime explicitly when the first check does not qualify.
+  if ! require_python; then
+    case $os in
+      macos)  brew install python ;;
+      arch)   sudo pacman -S --noconfirm python ;;
+      ubuntu)
+        local latest_python
+        latest_python="$(apt-cache pkgnames | grep -E '^python3\.[1-9][0-9]$' | sort -V | tail -1)"
+        if [[ -z "$latest_python" ]]; then
+          err "Could not find an Ubuntu Python 3.11+ package"
+          exit 1
+        fi
+        sudo apt install -y "$latest_python" "$latest_python-venv"
+        ;;
+    esac
+    require_python || {
+      err "Python 3.11+ is required but could not be installed"
+      exit 1
+    }
+  fi
 
   # Default shell — don't auto-chsh; just hint. The user's login shell is a
   # global change and should be opt-in.

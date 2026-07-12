@@ -74,7 +74,7 @@ detect_os() {
 resolve_python() {
   local candidate minor
   local candidates=()
-  for minor in $(seq 30 -1 11); do
+  for minor in $(seq 99 -1 11); do
     candidates+=("python3.$minor")
   done
   candidates+=(python3 python)

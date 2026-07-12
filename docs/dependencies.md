@@ -10,6 +10,7 @@ Tools installed by `scripts/setup.sh install` (macOS/Linux) and `scripts/setup.p
 | [Oh My Zsh](https://ohmyz.sh/) | Zsh plugin framework | install script |
 | [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions) | History-based command suggestions | git clone into OMZ |
 | [fast-syntax-highlighting](https://github.com/zdharma-continuum/fast-syntax-highlighting) | Command syntax coloring | git clone into OMZ |
+| Python 3.11+ | Runtime for setup/compiler scripts | Homebrew `python` (macOS), apt/pacman (Linux) |
 | [Starship](https://starship.rs/) | Cross-shell prompt | install script / brew |
 | [fnm](https://github.com/Schniz/fnm) | Fast Node version manager | install script |
 | [rustup](https://rustup.rs/) | Rust toolchain installer/manager | install script |
@@ -44,6 +45,7 @@ Tools installed by `scripts/setup.sh install` (macOS/Linux) and `scripts/setup.p
 | [fd](https://github.com/sharkdp/fd) | Fast find | winget |
 | [bat](https://github.com/sharkdp/bat) | `cat` with syntax highlighting | winget |
 | [GitHub CLI](https://cli.github.com/) | GitHub from the terminal | winget |
+| [Python Install Manager](https://apps.microsoft.com/detail/9nq7512cxl7t) + latest stable Python | Runtime for setup/compiler scripts | WinGet Store package, then `py install --update default` |
 | Git | Version control | winget |
 
 ### PowerShell modules

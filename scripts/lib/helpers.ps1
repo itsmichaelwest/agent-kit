@@ -77,9 +77,10 @@ function Resolve-PythonCommand {
     # module used to parse TOML config). Returns $null if none qualifies.
     $versionCheck = 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'
     $candidates = @(
-        @{ Exe = "python3"; Args = @() },
-        @{ Exe = "python";  Args = @() },
-        @{ Exe = "py";      Args = @("-3") }
+        @{ Exe = "pymanager"; Args = @("exec") },
+        @{ Exe = "py";        Args = @() },
+        @{ Exe = "python3";   Args = @() },
+        @{ Exe = "python";    Args = @() }
     )
 
     foreach ($candidate in $candidates) {
@@ -88,8 +89,7 @@ function Resolve-PythonCommand {
 
         & $cmd.Source @($candidate.Args + @("-c", $versionCheck)) *> $null
         if ($LASTEXITCODE -eq 0) {
-            if ($candidate.Exe -eq "py") { return @($cmd.Source, "-3") }
-            return @($cmd.Source)
+            return @($cmd.Source) + @($candidate.Args)
         }
     }
 

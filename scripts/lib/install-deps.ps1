@@ -4,6 +4,7 @@ function Install-Deps {
     Write-Info "Installing dependencies..."
 
     $packages = @(
+        "9NQ7512CXL7T",
         "GitHub.cli",
         "eza-community.eza",
         "junegunn.fzf",
@@ -27,6 +28,24 @@ function Install-Deps {
     # Refresh PATH so newly installed tools are available in this session
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" +
                 [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+
+    $pythonManager = Get-Command pymanager -ErrorAction SilentlyContinue
+    if (-not $pythonManager) { $pythonManager = Get-Command py -ErrorAction SilentlyContinue }
+    if (-not $pythonManager) {
+        Write-Err "Python Install Manager was installed but its command is not available. Restart PowerShell and run install again."
+        return 1
+    }
+
+    Write-Info "Installing/updating the latest stable Python runtime..."
+    & $pythonManager.Source install --update default
+    if ($LASTEXITCODE -ne 0) {
+        Write-Err "Python Install Manager could not install/update the default Python runtime"
+        return $LASTEXITCODE
+    }
+    if (-not (Resolve-PythonCommand)) {
+        Write-Err "Python 3.11+ is not available after installation"
+        return 1
+    }
 
     # Install PowerShell modules via Save-PSResource to a local (non-OneDrive) path.
     # OneDrive sync breaks Install-PSResource -Scope CurrentUser, so we use a path

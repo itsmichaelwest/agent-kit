@@ -10,13 +10,12 @@ function Sync-CodexConfig {
         return 1
     }
 
-    $python = Get-Command python3 -ErrorAction SilentlyContinue
-    if (-not $python) { $python = Get-Command python -ErrorAction SilentlyContinue }
+    $python = Resolve-PythonCommand
     if (-not $python) {
         Write-Err "Python 3.11+ is required"
         return 1
     }
 
-    & $python.Source $scriptPath $Action --repo-root $DotfilesDir --home-dir $env:USERPROFILE
+    & $python[0] @($python | Select-Object -Skip 1) $scriptPath $Action --repo-root $DotfilesDir --home-dir $env:USERPROFILE
     return $LASTEXITCODE
 }

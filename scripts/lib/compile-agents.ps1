@@ -13,16 +13,13 @@ function Compile-Agents {
         return 0
     }
 
-    $python = Get-Command python3 -ErrorAction SilentlyContinue
+    $python = Resolve-PythonCommand
     if (-not $python) {
-        $python = Get-Command python -ErrorAction SilentlyContinue
-    }
-    if (-not $python) {
-        Write-Err "Python 3 is required"
+        Write-Err "Python 3.11+ is required"
         return 1
     }
 
     Write-Info "Compiling agent templates..."
-    & $python.Source $scriptPath --repo-root $DotfilesDir | Out-Host
+    & $python[0] @($python | Select-Object -Skip 1) $scriptPath --repo-root $DotfilesDir | Out-Host
     return $LASTEXITCODE
 }
