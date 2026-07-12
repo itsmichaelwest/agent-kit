@@ -4,6 +4,7 @@
 - Current Codex agent configs should use the GPT-5 family model IDs (`gpt-5.4`, `gpt-5.4-mini`, `gpt-5.5`) rather than older `gpt-5.3-codex*` IDs, which are no longer the right default for new agent configs.
 - Codex user config is stateful: keep portable settings in `config/codex/global.toml`, inject them with generated agents inside a marked block, and use explicit capture for live portable edits; never link the whole file.
 - TOML table scope persists to end-of-file, so managed Codex content must be placed before unmanaged tables; appending a valid-looking block after `[projects]` changes the meaning of root settings.
+- Codex config cleanup must parse quoted TOML key/table components (including `["projects"."/path"]`); bare-name regexes can leave duplicate managed tables or misclassify trusted projects.
 - Agent definitions are now authored in `agent-templates/` and compiled into `agents/*.md` plus `.codex/agents/*.toml`; editing generated outputs directly will drift on the next compile.
 - Keep the simple sync model for global tool configs: link home config files directly to tracked repo files so a `git pull` updates live config without a render step. Codex uses `config/codex/global.toml` (not project-scoped `.codex/config.toml`); selectively stage portable edits and leave Codex runtime state unstaged.
 - Guard `Set-PSReadLineOption` prediction settings behind an interactive console check (`ConsoleHost` + non-redirected stdin/stdout/stderr) to avoid warnings in non-TTY hosts like Codex command runs.

@@ -168,6 +168,30 @@ class CodexConfigSyncTests(unittest.TestCase):
         self.assertEqual(parsed["model"], "machine-preference")
         self.assertIn("projects", parsed)
 
+    def test_apply_deduplicates_quoted_managed_tables_without_touching_quoted_projects(self) -> None:
+        self.live.parent.mkdir(parents=True)
+        self.live.write_text(
+            textwrap.dedent(
+                """\
+                ["features"] # legacy managed table
+                multi_agent = false
+
+                ["projects"."/private/project"]
+                trust_level = "trusted"
+                """
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_sync("apply")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        text = self.live.read_text(encoding="utf-8")
+        parsed = tomllib.loads(text)
+        self.assertEqual(parsed["features"]["multi_agent"], True)
+        self.assertEqual(parsed["projects"]["/private/project"]["trust_level"], "trusted")
+        self.assertEqual(text.count("[features]"), 1)
+
     def test_apply_replaces_only_marked_block(self) -> None:
         self.live.parent.mkdir(parents=True)
         unmanaged = '[projects."/private/project"]\ntrust_level = "trusted"\n\n'

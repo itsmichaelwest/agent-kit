@@ -7,7 +7,6 @@ import argparse
 import hashlib
 import json
 import os
-import re
 import sys
 import tempfile
 import time
@@ -22,9 +21,6 @@ GENERATED_START_MARKER = "# >>> agent-kit generated agents"
 GENERATED_END_MARKER = "# <<< agent-kit generated agents"
 BASELINE_NAME = "agent-kit-config-baseline.json"
 LOCK_NAME = "agent-kit-config-sync.lock"
-TABLE_HEADER_RE = re.compile(r"^\s*\[\[?([A-Za-z0-9_-]+)(?:[.\]]|\]\])")
-TABLE_DETAIL_RE = re.compile(r"^\s*\[\[?([A-Za-z0-9_-]+)(?:\.([^\]]+))?")
-TOP_LEVEL_KEY_RE = re.compile(r"^\s*([A-Za-z0-9_-]+)\s*=")
 MARKERS = {START_MARKER, END_MARKER, GENERATED_START_MARKER, GENERATED_END_MARKER}
 
 Classification = Literal["new", "unchanged", "repo-only", "live-only", "conflict"]
@@ -32,6 +28,97 @@ Classification = Literal["new", "unchanged", "repo-only", "live-only", "conflict
 
 class SyncError(RuntimeError):
     pass
+
+
+def split_toml_key_path(text: str) -> list[str]:
+    """Split a TOML dotted key while respecting quoted key components."""
+    parts: list[str] = []
+    start = 0
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(text):
+        if quote:
+            if quote == '"' and escaped:
+                escaped = False
+            elif quote == '"' and character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = None
+        elif character in {'"', "'"}:
+            quote = character
+        elif character == ".":
+            parts.append(text[start:index].strip())
+            start = index + 1
+    parts.append(text[start:].strip())
+    return [part for part in parts if part]
+
+
+def unquote_toml_key(part: str) -> str:
+    if len(part) >= 2 and part[0] == part[-1] and part[0] in {'"', "'"}:
+        if part[0] == '"':
+            try:
+                return str(json.loads(part))
+            except json.JSONDecodeError:
+                pass
+        return part[1:-1]
+    return part
+
+
+def strip_toml_comment(line: str) -> str:
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(line):
+        if quote:
+            if quote == '"' and escaped:
+                escaped = False
+            elif quote == '"' and character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = None
+        elif character in {'"', "'"}:
+            quote = character
+        elif character == "#":
+            return line[:index]
+    return line
+
+
+def table_parts(line: str) -> list[str] | None:
+    stripped = strip_toml_comment(line).strip()
+    if stripped.startswith("[[") and stripped[-2:] == "]]":
+        body = stripped[2:-2]
+    elif stripped.startswith("[") and stripped.endswith("]"):
+        body = stripped[1:-1]
+    else:
+        return None
+    parts = split_toml_key_path(body)
+    return [unquote_toml_key(part) for part in parts] if parts else None
+
+
+def table_root(line: str) -> str | None:
+    parts = table_parts(line)
+    return parts[0] if parts else None
+
+
+def assignment_root(line: str) -> str | None:
+    stripped = line.lstrip()
+    if not stripped or stripped.startswith("#") or stripped.startswith("["):
+        return None
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(stripped):
+        if quote:
+            if quote == '"' and escaped:
+                escaped = False
+            elif quote == '"' and character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = None
+        elif character in {'"', "'"}:
+            quote = character
+        elif character == "=":
+            parts = split_toml_key_path(stripped[:index])
+            return unquote_toml_key(parts[0]) if parts else None
+    return None
 
 
 def codex_dir(home_dir: Path) -> Path:
@@ -121,32 +208,31 @@ def strip_legacy_managed_content(text: str, roots: set[str], *, drop_comments: b
             continue
         if drop_comments and line.lstrip().startswith("#"):
             continue
-        header = TABLE_DETAIL_RE.match(line)
-        if header:
-            root = header.group(1)
-            nested = header.group(2)
-            skipping = root in roots and not (nested is not None and root != "agents")
+        root = table_root(line)
+        if root is not None:
+            nested = len(table_parts(line) or ()) > 1
+            skipping = root in roots and (not nested or root == "agents")
             if not skipping:
                 output.append(line)
             continue
         if skipping:
             continue
-        key = TOP_LEVEL_KEY_RE.match(line)
-        if key and key.group(1) in roots and not output_has_table(output):
+        key = assignment_root(line)
+        if key in roots and not output_has_table(output):
             continue
         output.append(line)
     return "".join(output)
 
 
 def output_has_table(output: list[str]) -> bool:
-    return any(TABLE_HEADER_RE.match(line) for line in output)
+    return any(table_root(line) is not None for line in output)
 
 
 def split_root_prelude(text: str) -> tuple[str, str]:
     """Separate root assignments/comments from the first TOML table."""
     lines = text.splitlines(keepends=True)
     for index, line in enumerate(lines):
-        if TABLE_HEADER_RE.match(line):
+        if table_root(line) is not None:
             return "".join(lines[:index]), "".join(lines[index:])
     return text, ""
 
@@ -212,12 +298,11 @@ def managed_portable_from_block(block: str, roots: set[str]) -> str:
     for line in body.splitlines(keepends=True):
         if line.strip() in MARKERS:
             continue
-        header = TABLE_DETAIL_RE.match(line)
-        if header:
-            root = header.group(1)
-            nested = header.group(2)
-            include = root in roots and (nested is None or (root == "agents" and nested is None))
-            if root == "agents" and nested is not None:
+        root = table_root(line)
+        if root is not None:
+            nested = len(table_parts(line) or ()) > 1
+            include = root in roots and not nested
+            if root == "agents" and nested:
                 include = False
             if include:
                 lines.append(line)
@@ -225,8 +310,8 @@ def managed_portable_from_block(block: str, roots: set[str]) -> str:
         if include:
             lines.append(line)
         elif not output_has_table(lines):
-            key = TOP_LEVEL_KEY_RE.match(line)
-            if key and key.group(1) in roots:
+            key = assignment_root(line)
+            if key in roots:
                 lines.append(line)
     portable = "".join(lines).strip() + "\n"
     try:
