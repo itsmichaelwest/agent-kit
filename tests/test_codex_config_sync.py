@@ -123,6 +123,51 @@ class CodexConfigSyncTests(unittest.TestCase):
         self.assertNotIn("old-agent", parsed["agents"])
         self.assertIn("projects", parsed)
 
+    def test_apply_moves_unknown_settings_out_of_managed_markers(self) -> None:
+        self.live.parent.mkdir(parents=True)
+        self.live.write_text(
+            textwrap.dedent(
+                """\
+                # >>> agent-kit managed codex config
+                personality = "pragmatic"
+                model = "machine-preference"
+
+                [features]
+                multi_agent = true
+
+                [projects."/private/project"]
+                trust_level = "trusted"
+
+                [tui.machine_runtime]
+                enabled = true
+
+                # >>> agent-kit generated agents
+                [agents.old-agent]
+                config_file = "agents/old-agent.toml"
+                # <<< agent-kit generated agents
+                # <<< agent-kit managed codex config
+                """
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.run_sync("apply")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        text = self.live.read_text(encoding="utf-8")
+        start = text.index("# >>> agent-kit managed codex config")
+        end = text.index("# <<< agent-kit managed codex config")
+        managed = text[start:end]
+        self.assertNotIn("model =", managed)
+        self.assertNotIn("[projects.", managed)
+        self.assertNotIn("[tui.machine_runtime]", managed)
+        self.assertIn('model = "machine-preference"', text[:start] + text[end:])
+        self.assertIn('[projects."/private/project"]', text[end:])
+        self.assertIn("[tui.machine_runtime]", text[end:])
+        parsed = tomllib.loads(text)
+        self.assertEqual(parsed["model"], "machine-preference")
+        self.assertIn("projects", parsed)
+
     def test_apply_replaces_only_marked_block(self) -> None:
         self.live.parent.mkdir(parents=True)
         unmanaged = '[projects."/private/project"]\ntrust_level = "trusted"\n\n'

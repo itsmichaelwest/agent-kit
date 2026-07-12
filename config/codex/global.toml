@@ -6,10 +6,8 @@ sandbox_mode = "danger-full-access"
 web_search = "live"
 
 [features]
-js_repl = false
 memories = true
 multi_agent = true
-prevent_idle_sleep = true
 
 [memories]
 generate_memories = true
@@ -23,6 +21,3 @@ status_line = ["model-with-reasoning", "context-remaining", "current-dir", "git-
 
 [agents]
 max_threads = 16
-
-[desktop]
-followUpQueueMode = "queue"

@@ -23,7 +23,9 @@ GENERATED_END_MARKER = "# <<< agent-kit generated agents"
 BASELINE_NAME = "agent-kit-config-baseline.json"
 LOCK_NAME = "agent-kit-config-sync.lock"
 TABLE_HEADER_RE = re.compile(r"^\s*\[\[?([A-Za-z0-9_-]+)(?:[.\]]|\]\])")
+TABLE_DETAIL_RE = re.compile(r"^\s*\[\[?([A-Za-z0-9_-]+)(?:\.([^\]]+))?")
 TOP_LEVEL_KEY_RE = re.compile(r"^\s*([A-Za-z0-9_-]+)\s*=")
+MARKERS = {START_MARKER, END_MARKER, GENERATED_START_MARKER, GENERATED_END_MARKER}
 
 Classification = Literal["new", "unchanged", "repo-only", "live-only", "conflict"]
 
@@ -110,27 +112,34 @@ def managed_roots(repo_root: Path) -> set[str]:
     return set(source) | {"agents"}
 
 
-def strip_legacy_managed_content(text: str, roots: set[str]) -> str:
+def strip_legacy_managed_content(text: str, roots: set[str], *, drop_comments: bool = False) -> str:
     """Remove unmarked Agent Kit-owned TOML roots while preserving other text."""
     output: list[str] = []
-    current_root: str | None = None
     skipping = False
     for line in text.splitlines(keepends=True):
-        header = TABLE_HEADER_RE.match(line)
+        if line.strip() in MARKERS:
+            continue
+        if drop_comments and line.lstrip().startswith("#"):
+            continue
+        header = TABLE_DETAIL_RE.match(line)
         if header:
-            current_root = header.group(1)
-            skipping = current_root in roots
+            root = header.group(1)
+            nested = header.group(2)
+            skipping = root in roots and not (nested is not None and root != "agents")
             if not skipping:
                 output.append(line)
             continue
         if skipping:
             continue
-        if current_root is None:
-            key = TOP_LEVEL_KEY_RE.match(line)
-            if key and key.group(1) in roots:
-                continue
+        key = TOP_LEVEL_KEY_RE.match(line)
+        if key and key.group(1) in roots and not output_has_table(output):
+            continue
         output.append(line)
     return "".join(output)
+
+
+def output_has_table(output: list[str]) -> bool:
+    return any(TABLE_HEADER_RE.match(line) for line in output)
 
 
 def split_root_prelude(text: str) -> tuple[str, str]:
@@ -189,6 +198,37 @@ def portable_from_block(block: str) -> str:
     if not portable:
         raise SyncError("Managed block has no portable Codex settings")
     portable += "\n"
+    try:
+        tomllib.loads(portable)
+    except tomllib.TOMLDecodeError as exc:
+        raise SyncError(f"Managed portable settings are invalid TOML: {exc}") from exc
+    return portable
+
+
+def managed_portable_from_block(block: str, roots: set[str]) -> str:
+    body = block[len(START_MARKER) : block.find(END_MARKER)]
+    lines: list[str] = []
+    include = False
+    for line in body.splitlines(keepends=True):
+        if line.strip() in MARKERS:
+            continue
+        header = TABLE_DETAIL_RE.match(line)
+        if header:
+            root = header.group(1)
+            nested = header.group(2)
+            include = root in roots and (nested is None or (root == "agents" and nested is None))
+            if root == "agents" and nested is not None:
+                include = False
+            if include:
+                lines.append(line)
+            continue
+        if include:
+            lines.append(line)
+        elif not output_has_table(lines):
+            key = TOP_LEVEL_KEY_RE.match(line)
+            if key and key.group(1) in roots:
+                lines.append(line)
+    portable = "".join(lines).strip() + "\n"
     try:
         tomllib.loads(portable)
     except tomllib.TOMLDecodeError as exc:
@@ -274,11 +314,18 @@ def apply_config(repo_root: Path, home_dir: Path) -> int:
     suffix = strip_legacy_managed_content(suffix, roots)
     baseline = load_baseline(home_dir)
     state = classify(current, desired, baseline)
+    legacy_inside = (
+        strip_legacy_managed_content(current, roots, drop_comments=True) if current is not None else ""
+    )
+    if not legacy_inside.strip():
+        legacy_inside = ""
+    if legacy_inside.strip():
+        state = "repo-only"
     if state == "live-only":
         raise SyncError("Codex managed block has live-only changes; run capture-codex-config")
     if state == "conflict":
         raise SyncError("Codex managed block changed in both repository and live config; resolve before linking")
-    unmanaged = prefix + suffix
+    unmanaged = prefix + legacy_inside + suffix
     updated = canonical_config(unmanaged, desired, roots)
     if state == "unchanged" and updated == existing:
         save_baseline(home_dir, current or desired)
@@ -299,7 +346,8 @@ def capture_config(repo_root: Path, home_dir: Path) -> int:
     _, current, _ = split_managed_block(existing)
     if current is None:
         raise SyncError("Codex config has no Agent Kit managed block to capture")
-    portable = portable_from_block(current)
+    roots = managed_roots(repo_root)
+    portable = managed_portable_from_block(current, roots)
     source_path = repo_root / "config" / "codex" / "global.toml"
     source = load_toml(source_path)
     validate_portable_source(source_path, source)
