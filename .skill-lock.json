@@ -62,7 +62,7 @@
       "skillPath": "skills/emil-design-eng/SKILL.md",
       "skillFolderHash": "0e6f8d7223a0abe73f81e890b3ec76257029a834",
       "installedAt": "2026-05-15T22:03:31.878Z",
-      "updatedAt": "2026-07-09T19:58:46.221Z"
+      "updatedAt": "2026-07-16T17:51:36.303Z"
     },
     "programming": {
       "source": "BumpyClock/dotfiles",
@@ -334,7 +334,7 @@
       "skillPath": "skills/animation-vocabulary/SKILL.md",
       "skillFolderHash": "e6dc24ca1ff1e70c9677df9a1d2d1c80415cbb3c",
       "installedAt": "2026-07-09T19:58:46.217Z",
-      "updatedAt": "2026-07-09T19:58:46.217Z"
+      "updatedAt": "2026-07-16T17:51:36.300Z"
     },
     "apple-design": {
       "source": "emilkowalski/skills",
@@ -343,16 +343,52 @@
       "skillPath": "skills/apple-design/SKILL.md",
       "skillFolderHash": "e9f5b472dfb28d8cf29f64001b6c01ef94b8168b",
       "installedAt": "2026-07-09T19:58:46.220Z",
-      "updatedAt": "2026-07-09T19:58:46.220Z"
+      "updatedAt": "2026-07-16T17:51:36.302Z"
     },
     "review-animations": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/emilkowalski/skills.git",
       "skillPath": "skills/review-animations/SKILL.md",
-      "skillFolderHash": "babe81c1ca0ae3c735fc537486cb120cd6645198",
+      "skillFolderHash": "0012fc43a25cce5df019102ab28bb6a68ad9db3d",
       "installedAt": "2026-07-09T19:58:46.222Z",
-      "updatedAt": "2026-07-09T19:58:46.222Z"
+      "updatedAt": "2026-07-16T17:51:36.305Z"
+    },
+    "wwdc": {
+      "source": "superwall/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/superwall/skills.git",
+      "skillPath": "skills/wwdc/SKILL.md",
+      "skillFolderHash": "c2215c52ca649c891907c49a949378fff36d9468",
+      "installedAt": "2026-07-15T10:41:17.711Z",
+      "updatedAt": "2026-07-15T10:41:17.711Z"
+    },
+    "find-animation-opportunities": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/emilkowalski/skills.git",
+      "skillPath": "skills/find-animation-opportunities/SKILL.md",
+      "skillFolderHash": "4edcac8e6465888285b5607c80adb6c0c151f060",
+      "installedAt": "2026-07-16T17:51:36.304Z",
+      "updatedAt": "2026-07-16T17:51:36.304Z"
+    },
+    "improve-animations": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/emilkowalski/skills.git",
+      "skillPath": "skills/improve-animations/SKILL.md",
+      "skillFolderHash": "ec57cb65ea60a23af278d305d1425ce4f998f510",
+      "installedAt": "2026-07-16T17:51:36.305Z",
+      "updatedAt": "2026-07-16T17:51:36.305Z"
+    },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/pbakaus/impeccable.git",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "skillFolderHash": "6ea3e5f6614e1f9df9c5bde834170bf51f3c09d6",
+      "installedAt": "2026-07-16T17:51:55.975Z",
+      "updatedAt": "2026-07-16T17:51:55.975Z"
     }
   },
   "dismissed": {

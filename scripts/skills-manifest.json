@@ -124,7 +124,21 @@
         "animation-vocabulary",
         "apple-design",
         "emil-design-eng",
+        "find-animation-opportunities",
+        "improve-animations",
         "review-animations"
+      ]
+    },
+    {
+      "repo": "superwall/skills",
+      "skills": [
+        "wwdc"
+      ]
+    },
+    {
+      "repo": "pbakaus/impeccable",
+      "skills": [
+        "impeccable"
       ]
     }
   ]
