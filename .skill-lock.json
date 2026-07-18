@@ -389,6 +389,33 @@
       "skillFolderHash": "6ea3e5f6614e1f9df9c5bde834170bf51f3c09d6",
       "installedAt": "2026-07-16T17:51:55.975Z",
       "updatedAt": "2026-07-16T17:51:55.975Z"
+    },
+    "better-colors": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/jakubkrehel/skills.git",
+      "skillPath": "skills/better-colors/SKILL.md",
+      "skillFolderHash": "78717951629ce065b2bd8357374a7ff2f15bd363",
+      "installedAt": "2026-07-16T18:51:22.570Z",
+      "updatedAt": "2026-07-16T18:51:22.570Z"
+    },
+    "better-typography": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/jakubkrehel/skills.git",
+      "skillPath": "skills/better-typography/SKILL.md",
+      "skillFolderHash": "3c3b20e326e6f95b0e4376acf8369206c43d6d1a",
+      "installedAt": "2026-07-16T18:51:22.572Z",
+      "updatedAt": "2026-07-16T18:51:22.572Z"
+    },
+    "better-ui": {
+      "source": "jakubkrehel/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/jakubkrehel/skills.git",
+      "skillPath": "skills/better-ui/SKILL.md",
+      "skillFolderHash": "c85dfe0d2c5d1fa599c88e54cef7ae9495862a04",
+      "installedAt": "2026-07-16T18:51:22.573Z",
+      "updatedAt": "2026-07-16T18:51:22.573Z"
     }
   },
   "dismissed": {

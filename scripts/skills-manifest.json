@@ -140,6 +140,14 @@
       "skills": [
         "impeccable"
       ]
+    },
+    {
+      "repo": "jakubkrehel/skills",
+      "skills": [
+        "better-colors",
+        "better-typography",
+        "better-ui"
+      ]
     }
   ]
 }
