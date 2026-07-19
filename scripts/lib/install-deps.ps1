@@ -12,7 +12,8 @@ function Install-Deps {
         "sharkdp.bat",
         "sharkdp.fd",
         "JanDeDobbeleer.OhMyPosh",
-        "Starship.Starship"
+        "Starship.Starship",
+        "Microsoft.Coreutils"
     )
 
     foreach ($id in $packages) {
@@ -77,7 +78,8 @@ function Uninstall-Deps {
         "sharkdp.bat",
         "sharkdp.fd",
         "JanDeDobbeleer.OhMyPosh",
-        "Starship.Starship"
+        "Starship.Starship",
+        "Microsoft.Coreutils"
     )
 
     foreach ($id in $packages) {
