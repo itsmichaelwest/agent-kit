@@ -26,3 +26,6 @@ secrets/
 
 # Dependencies
 node_modules/
+
+# System skills
+skills/.system
