@@ -10,7 +10,6 @@
 
 ## Environment
 
-- Always work with parallel subagents where it makes sense.
 - Default workspace: `F:\` (Windows Dev Drive), or `~/Developer` (macOS).
 - Editor: `code <path>`.
 - Commits: Conventional Commits (`feat|fix|refactor|build|ci|chore|docs|style|perf|test`).
@@ -21,6 +20,61 @@
 - Prefer end-to-end verification; if blocked, state what is missing.
 - New deps: quick health check (recent releases/commits, adoption).
 - Before coding: check `docs/` if present, follow links until domain is clear.
+
+## Agent workflow
+
+Use process proportional to task risk and complexity.
+
+### Planning
+
+- Do not run extended brainstorming or specification workflows for small, clear, tightly scoped changes.
+- For substantial or ambigous work, clarify the design and write a plan before implementation.
+- Prefer coherent vertical slices over many artificial microtasks.
+
+### Execution
+
+- Prefer direct execution for ordinary development work.
+- Do not switch to subagent driven development unless:
+  - the task is large enough to benefit from independent agents;
+  - parallel work is genuinely useful; or
+  - I explicitly request it.
+
+### Review proportionality
+
+Classify changes as low, medium, or high risk.
+
+#### Low risk
+
+Examples include exact-content edits, formatting, comments, renames, mechanical configuration changes, and tightly specified local changes.
+
+- Implement directly.
+- Run relevant verification.
+- Do not dispatch separate review agents.
+
+#### Medium risk
+
+Examples include localised features, conventional refactors, and contained UI or behaviour changes.
+
+- Complete a coherent vertical slice.
+- Run focused tests and static checks.
+- Perform one combined specification and code-quality review at the end.
+
+#### High risk
+
+Examples include security, authentication, persistence, migrations, concurrency, destructive operations, public APIs, and broad architectural or cross-platform changes.
+
+- Use separate specification-compliance and code-quality reviews.
+- Re-review blocking fixes when necessary.
+
+### Review-loop limits
+
+- A review must identify all findings in one pass where reasonably possible.
+- Only concrete correctness, security, data-loss, specification, or serious maintainability failures are blocking.
+- Style preferences and optional improvements are non-blocking.
+- Minor findings must not trigger a complete new review cycle.
+- Verification reviews should inspect only the blocking findings that changed.
+- Stop after two review rounds per checkpoint.
+- If disagreement remains, present it to the user rather than continuing autonomously.
 
 ## Code intelligence
 
