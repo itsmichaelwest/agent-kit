@@ -20,6 +20,7 @@ install_deps() {
       brew update
       ;;
     arch)   sudo pacman -Syu --noconfirm ;;
+    fedora) sudo dnf check-update || true ;;
     ubuntu) sudo apt update ;;
   esac
 
@@ -29,6 +30,7 @@ install_deps() {
     case $os in
       macos)  brew install zsh ;;
       arch)   sudo pacman -S --noconfirm zsh ;;
+      fedora) sudo dnf install -y zsh ;;
       ubuntu) sudo apt install -y zsh ;;
     esac
   fi
@@ -58,6 +60,14 @@ install_deps() {
   case $os in
     macos)  brew install python gh ripgrep fd bat fzf eza starship ast-grep jq ;;
     arch)   sudo pacman -S --noconfirm python git github-cli curl wget ripgrep fd bat fzf eza starship ast-grep jq ;;
+    fedora)
+      sudo dnf install -y python3 python3-pip git gh curl wget ripgrep fd-find bat fzf eza jq
+      command -v starship &>/dev/null || curl -sS https://starship.rs/install.sh | sh -s -- -y
+      if ! command -v ast-grep &>/dev/null; then
+        if command -v npm &>/dev/null; then npm install -g @ast-grep/cli
+        else warn "npm not found, skipping ast-grep"; fi
+      fi
+      ;;
     ubuntu)
       sudo apt install -y python3 python3-venv git gh curl wget ripgrep fd-find bat fzf jq
       [[ -f /usr/bin/fdfind && ! -f /usr/bin/fd ]] && sudo ln -s /usr/bin/fdfind /usr/bin/fd
@@ -84,6 +94,7 @@ install_deps() {
     case $os in
       macos)  brew install python ;;
       arch)   sudo pacman -S --noconfirm python ;;
+      fedora) sudo dnf install -y python3 ;;
       ubuntu)
         local latest_python
         latest_python="$(apt-cache pkgnames | grep -E '^python3\.[1-9][0-9]$' | sort -V | tail -1)"
@@ -148,6 +159,12 @@ uninstall_deps() {
       ;;
     arch)
       sudo pacman -Rns --noconfirm github-cli ripgrep fd bat fzf eza starship ast-grep 2>/dev/null || true
+      ;;
+    fedora)
+      sudo dnf remove -y gh ripgrep fd-find bat fzf eza 2>/dev/null || true
+      if command -v npm &>/dev/null; then
+        npm uninstall -g @ast-grep/cli 2>/dev/null || true
+      fi
       ;;
     ubuntu)
       sudo apt remove -y gh ripgrep fd-find bat fzf eza 2>/dev/null || true

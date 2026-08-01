@@ -58,6 +58,7 @@ remove_link() {
 detect_os() {
   if [[ "$OSTYPE" == darwin* ]]; then echo "macos"
   elif [ -f /etc/arch-release ]; then echo "arch"
+  elif [ -f /etc/fedora-release ]; then echo "fedora"
   elif [ -f /etc/lsb-release ] || [ -f /etc/debian_version ]; then echo "ubuntu"
   else echo "unknown"
   fi
