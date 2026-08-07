@@ -35,7 +35,7 @@ cross-cutting invariants.
 
 ## Learnings
 
-- Read `LEARNINGS.md` when relevant. Record only durable conventions, decisions, pitfalls, and useful commands.
+- Read `LEARNINGS.md`, `/docs/LEARNINGS.md`, or similar files when relevant. Record only durable conventions, decisions, pitfalls, and useful commands.
 
 ## Git
 
