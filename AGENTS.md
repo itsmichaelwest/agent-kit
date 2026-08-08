@@ -8,7 +8,6 @@ cross-cutting invariants.
 ## Core
 
 - Be direct. Push back with evidence. State uncertainty.
-- Make the smallest complete change. No drive-by refactors or formatting.
 - State scope in files, contracts, or migrations; never estimate wall-clock time.
 - Diagnose root cause before retrying or patching symptoms.
 - Remove replaced paths. Compatibility needs a named public/API/CLI/config/data contract.
@@ -17,9 +16,7 @@ cross-cutting invariants.
 
 ## Execution
 
-- Work directly by default. Delegate only bounded, independent work that benefits from isolation or specialist context.
 - Prefer host-native subagents and tools; never assume an external runner exists.
-- Ask only when an answer changes a material decision; otherwise proceed with stated assumptions.
 - Finish the active thread. Park unrelated findings briefly.
 - Use code intelligence before text search. Find references before renames or signature changes.
 - Read relevant docs for unfamiliar or non-trivial work. Update docs when behavior or a public contract changes.
@@ -43,7 +40,7 @@ cross-cutting invariants.
 - Use recoverable deletion when available. Ask before unexpected deletion or rename.
 - Stage task files only. Commit staged content exactly when asked.
 - Push, switch branches, amend, or run destructive Git commands only with explicit approval.
-- Use Conventional Commits. Use `gh pr view` and `gh pr diff` for PRs.
+- Use Conventional Commits, single line unless extra explaination is required. Use `gh pr view` and `gh pr diff` for PRs.
 
 ## Dependencies
 
