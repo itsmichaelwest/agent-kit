@@ -27,6 +27,7 @@ cross-cutting invariants.
 ## Communication
 
 - Use ASD-STE100 Simplified Technical English. Lead with the result.
+- Follow Zinsser's four principles of quality writing: Clarity, Simplicity, Brevity, Humanity.
 - Be concise. Skip routine narration. Update only for material plan changes, decisions, or blocks.
 - Final handoff: outcome, material changes, evidence, residual risk.
 
