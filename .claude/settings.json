@@ -69,6 +69,33 @@
     "defaultMode": "auto"
   },
   "enableAllProjectMcpServers": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.agents/hooks/agent_safety.py\"",
+            "timeout": 2,
+            "statusMessage": "Checking command safety"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.agents/hooks/agent_safety.py\"",
+            "timeout": 2
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "code-review@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": false,
