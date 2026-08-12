@@ -2,7 +2,7 @@
 name: performance-engineer
 description: Use this agent for performance analysis - profile interpretation, bottleneck identification, and optimization recommendations for CPU, memory, I/O, and database queries. Read-only.
 model: sonnet
-color: cyan
+color: "cyan"
 ---
 
 # Role

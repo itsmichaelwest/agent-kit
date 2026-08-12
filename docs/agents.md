@@ -1,6 +1,8 @@
 # Agents
 
-Agent definitions are authored once in `agent-templates/` and compiled into the provider-specific files used by the rest of the repo.
+Agent definitions are authored once in `agent-templates/` and compiled into the
+provider-specific files used by the rest of the repo. Agents are isolated runtime
+roles; reusable domain knowledge and operational methods belong in skills.
 
 ## Source of truth
 
@@ -80,6 +82,25 @@ You are a world-class software developer...
 
 These abstract classes are resolved per provider using `agent-templates/config.toml`.
 
+## Current roster
+
+The transitional roster contains eight agents:
+
+| Agent | Responsibility |
+| --- | --- |
+| `developer` | Medium-to-large local implementation |
+| `developer-lite` | Small bounded implementation; inherits `developer` |
+| `investigator` | Read-only location, flow tracing, and diagnosis |
+| `planner` | Read-only architecture and implementation planning |
+| `reviewer` | Read-only spec, quality, and integration review |
+| `researcher` | Current external research and dependency evaluation |
+| `security-auditor` | Read-only security audit pending specialist-skill review |
+| `performance-engineer` | Read-only performance analysis pending specialist-skill review |
+
+The main session owns user communication, scope, decomposition, integration, and
+final evidence. A specialist agent should exist only when it provides a useful
+context, permission, model, or independently delegable output boundary.
+
 ## Model mapping
 
 Current mappings are:
@@ -92,9 +113,9 @@ Current mappings are:
 
 ### Codex
 
-- `fast` -> `gpt-5.4-mini`
-- `balanced` -> `gpt-5.5`
-- `strong` -> `gpt-5.5`
+- `fast` -> `gpt-5.6-luna`
+- `balanced` -> `gpt-5.6-terra`
+- `strong` -> `gpt-5.6-sol`
 
 If you want to change model policy globally, update `agent-templates/config.toml` and re-run `compile-agents`.
 
@@ -108,6 +129,21 @@ Current usage in this repo:
 
 - `color`
 
+The compiler validates these supported Claude subagent fields:
+
+- `background`
+- `color`
+- `disallowedTools`
+- `effort`
+- `initialPrompt`
+- `isolation`
+- `maxTurns`
+- `mcpServers` (named server references only)
+- `memory`
+- `permissionMode`
+- `skills`
+- `tools`
+
 ### `codex`
 
 Supported optional keys:
@@ -120,6 +156,37 @@ Supported optional keys:
 
 `description` defaults to the top-level template description if omitted.
 
+Supported Codex reasoning efforts are `low`, `medium`, `high`, and `xhigh`.
+Supported sandbox modes are `read-only`, `workspace-write`, and
+`danger-full-access`.
+
+The compiler rejects unknown template or provider fields. Provider controls are
+not assumed to have parity: add a field only to the provider block that supports
+it.
+
+## Template inheritance
+
+Use `extends` when agents differ only in model or provider metadata. The child
+inherits its parent's instruction body and recursively merges provider blocks.
+Child values take precedence.
+
+```md
+---
+name: "developer-lite"
+description: "Implement small, bounded local code changes."
+model_class: "balanced"
+extends: "developer"
+claude:
+  color: "yellow"
+codex:
+  model_reasoning_effort: "high"
+---
+```
+
+An empty child body inherits the parent body. A non-empty child body replaces it.
+The compiler rejects missing parents, inheritance cycles, duplicate names, names
+that do not match filenames, missing instruction bodies, and unsupported fields.
+
 ## How to add a new agent
 
 1. Create `agent-templates/<agent-name>.md`
@@ -127,6 +194,7 @@ Supported optional keys:
    - `name`
    - `description`
    - `model_class`
+   - optional `extends`
    - optional `claude` block
    - optional `codex` block
 3. Write the shared instruction body below the frontmatter

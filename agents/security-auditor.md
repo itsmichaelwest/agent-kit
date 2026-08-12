@@ -2,7 +2,7 @@
 name: security-auditor
 description: Use this agent for code-level security review - OWASP top 10, dependency vulnerabilities, secrets in code, auth/authz patterns, and input validation. Read-only.
 model: sonnet
-color: red
+color: "red"
 ---
 
 # Role
