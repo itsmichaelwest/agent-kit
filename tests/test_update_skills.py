@@ -29,6 +29,8 @@ class UpdateSkillsTests(unittest.TestCase):
 
         self.assertIn('add "$repo" -g -y "${agent_args[@]}"', shell)
         self.assertIn('@("-y", "skills@latest", "add", $repo, "-g", "-y")', powershell)
+        self.assertIn("npx -y skills@latest update -g -y", shell)
+        self.assertIn("& npx -y skills@latest update -g -y", powershell)
 
 
 if __name__ == "__main__":

@@ -49,9 +49,14 @@ function Uninstall-Skill {
         $code = Invoke-UninstallSkillManifest $DotfilesDir $SkillName -PlanFile $planFile
         if ($code -ne 0) { return $code }
 
-        Write-Info ("Uninstalling skill via npx skills: {0}" -f $SkillName)
-        & npx -y skills@latest remove $SkillName -g -y | Out-Host
-        if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+        $plan = Get-Content $planFile -Raw | ConvertFrom-Json
+        if (-not $plan.retained) {
+            Write-Info ("Uninstalling skill via npx skills: {0}" -f $SkillName)
+            & npx -y skills@latest remove $SkillName -g -y | Out-Host
+            if ($LASTEXITCODE -ne 0) { return $LASTEXITCODE }
+        } else {
+            Write-Info ("Removing retained audit snapshot: {0}" -f $SkillName)
+        }
 
         return Invoke-UninstallSkillManifest $DotfilesDir $SkillName -ApplyPlanFile $planFile
     } finally {

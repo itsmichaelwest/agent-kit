@@ -68,7 +68,10 @@ update_skills() {
 
   echo ""
   info "Sources installed: $ok, Failed: $failed"
-  ((failed == 0))
+  ((failed == 0)) || return 1
+
+  info "Refreshing installed global skills..."
+  npx -y skills@latest update -g -y
 }
 
 install_skill() {

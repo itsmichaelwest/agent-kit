@@ -85,7 +85,10 @@ function Update-Skills {
     Write-Host ""
     Write-Info "Sources installed: $ok, Failed: $failed"
     if ($failed -gt 0) { return 1 }
-    return 0
+
+    Write-Info "Refreshing installed global skills..."
+    & npx -y skills@latest update -g -y | Out-Host
+    return $LASTEXITCODE
 }
 
 function Test-SkillsArg {

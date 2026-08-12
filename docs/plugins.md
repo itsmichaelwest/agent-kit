@@ -3,6 +3,10 @@
 Plugin state is managed per tool. Plugin payloads are not tracked in this repo.
 
 The source of truth is the tool-native config already stored in this repo.
+This follows OpenAI's marketplace model: track a marketplace source and plugin
+policy, then let the host install its cached package. Vendor a plugin payload
+only when this repo owns or intentionally forks that plugin. Git marketplace
+sources should use a release tag or commit ref when reproducibility matters.
 
 ## Storage model
 

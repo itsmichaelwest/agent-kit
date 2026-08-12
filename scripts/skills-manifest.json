@@ -13,18 +13,16 @@
     "ui-polisher",
     "winui-polish"
   ],
-  "sources": [
+  "$retained_comment": "Frozen upstream snapshots kept only for prompt/skill audits. They are not refreshed by update-skills and may retain historical lockfile provenance.",
+  "retained": [
     {
-      "repo": "BumpyClock/dotfiles",
-      "skills": [
-        "subagent-driven-development",
-        "programming",
-        "winui3-csharp-app",
-        "ux-designer",
-        "skill-creator",
-        "git-workflow"
-      ]
-    },
+      "name": "ux-designer",
+      "source": "BumpyClock/dotfiles",
+      "skillFolderHash": "76da75e346ff5ccece851d0bf252938bcc23ec1f",
+      "reason": "Retained for instruction audit after the upstream skill was removed."
+    }
+  ],
+  "sources": [
     {
       "repo": "Dimillian/Skills",
       "skills": [
@@ -45,12 +43,6 @@
       "repo": "twostraws/swiftui-agent-skill",
       "skills": [
         "swiftui-pro"
-      ]
-    },
-    {
-      "repo": "haider-nawaz/liquid-glass-skill",
-      "skills": [
-        "liquid-glass"
       ]
     },
     {
@@ -89,16 +81,7 @@
       ]
     },
     {
-      "repo": "openai/skills",
-      "skills": [
-        "winui-app"
-      ]
-    },
-    {
       "repo": "jakubkrehel/make-interfaces-feel-better"
-    },
-    {
-      "repo": "jakubkrehel/oklch-skill"
     },
     {
       "repo": "raphaelsalaja/userinterface-wiki"
@@ -176,8 +159,37 @@
         "wait-what",
         "wayfinder",
         "wizard",
-        "writing-for-agents",
-        "writing-great-skills"
+        "writing-for-agents"
+      ]
+    },
+    {
+      "repo": "dotnet/skills",
+      "skills": [
+        "analyzing-dotnet-performance",
+        "binlog-failure-analysis",
+        "dotnet-aot-compat",
+        "dotnet-trace-collect",
+        "msbuild-antipatterns",
+        "optimizing-ef-core-queries",
+        "run-tests"
+      ]
+    },
+    {
+      "repo": "microsoft/win-dev-skills",
+      "skills": [
+        "winui-code-review",
+        "winui-design",
+        "winui-dev-workflow",
+        "winui-packaging",
+        "winui-setup",
+        "winui-ui-testing",
+        "winui-wpf-migration"
+      ]
+    },
+    {
+      "repo": "github/awesome-copilot",
+      "skills": [
+        "git-commit"
       ]
     }
   ]

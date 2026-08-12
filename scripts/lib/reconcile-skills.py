@@ -205,6 +205,10 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
     all_on_disk = disk_skills(skills_dir)
     tracked_on_disk = all_on_disk - git_ignored(root, all_on_disk)
     local_skills = set(manifest.get("local", []))
+    retained_skills = {
+        entry.get("name") for entry in manifest.get("retained", [])
+        if isinstance(entry, dict) and entry.get("name")
+    }
     backup_entries = all_lock_entries(root, home)
 
     added_lock_entries: list[str] = []
@@ -212,7 +216,7 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
     added_skills: list[str] = []
     manifest_changed = False
 
-    for name in sorted(tracked_on_disk - local_skills):
+    for name in sorted(tracked_on_disk - local_skills - retained_skills):
         folder = skills_dir / name
         if not (folder / "SKILL.md").is_file():
             continue

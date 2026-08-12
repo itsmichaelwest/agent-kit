@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Detect drift between the skills manifest, the lockfile, and skills/ on disk.
 
-Three sources should agree:
+Four tracked inventories should agree:
   - scripts/skills-manifest.json  -> declared upstream sources (+ local skills)
   - .skill-lock.json              -> provenance/pin for upstream skills
   - skills/<name>/                -> the committed, vendored output
+  - manifest retained[]           -> frozen upstream snapshots kept for audits
 
 A fourth tier exists: private skills (machine-local, e.g. client-specific
 tooling) that live in skills/ so the tools see them, but are git-ignored so they
@@ -99,6 +100,15 @@ def main() -> int:
     manifest_sources = manifest.get("sources", [])
     manifest_repos = [s.get("repo") for s in manifest_sources if s.get("repo")]
     local_skills = set(manifest.get("local", []))
+    retained_entries = manifest.get("retained", [])
+    retained_skills = {
+        entry.get("name") for entry in retained_entries
+        if isinstance(entry, dict) and entry.get("name")
+    }
+    retained_sources = {
+        entry.get("source") for entry in retained_entries
+        if isinstance(entry, dict) and entry.get("source")
+    }
 
     errors: list[str] = []
     warnings: list[str] = []
@@ -130,13 +140,13 @@ def main() -> int:
         if not (skills_dir / name / "SKILL.md").is_file():
             errors.append(f"skill folder has no SKILL.md: {name}")
 
-    # ERROR 4: on-disk folder neither in lockfile nor declared local (orphan).
-    undeclared = on_disk - lock_names - local_skills
+    # ERROR 4: on-disk folder not declared by any tracked inventory (orphan).
+    undeclared = on_disk - lock_names - local_skills - retained_skills
     for name in sorted(undeclared):
         errors.append(
             f"undeclared skill on disk: {name} "
             f"(add its source to skills-manifest.json + lockfile, list it under "
-            f'"local", or git-ignore it if it is private to this machine)'
+            f'"local"/"retained", or git-ignore it if it is private to this machine)'
         )
 
     # WARN 1: manifest source repo produced no lockfile entry.
@@ -148,21 +158,28 @@ def main() -> int:
     for name in sorted(local_skills - on_disk - private):
         warnings.append(f"local skill declared but missing on disk: {name}")
 
-    # WARN 3: lockfile source has no manifest entry (provenance gap).
-    for src in sorted(s for s in lock_sources if s and s not in set(manifest_repos)):
+    # WARN 3: declared retained audit snapshot not on disk.
+    for name in sorted(retained_skills - on_disk - private):
+        warnings.append(f"retained audit skill declared but missing on disk: {name}")
+
+    # WARN 4: lockfile source has no active or retained manifest entry.
+    declared_sources = set(manifest_repos) | retained_sources
+    for src in sorted(s for s in lock_sources if s and s not in declared_sources):
         warnings.append(f"lockfile source not declared in manifest: {src}")
 
-    # WARN 4: a git-ignored skill is in the tracked lockfile — its name will leak.
+    # WARN 5: a git-ignored skill is in the tracked lockfile — its name will leak.
     for name in sorted(private & lock_names):
         warnings.append(
             f"git-ignored skill present in tracked lockfile (name will be committed): {name} "
             f"(don't install machine-local skills with `npx skills add -g`)"
         )
 
-    upstream_count = len(lock_names & on_disk)
+    retained_count = len(retained_skills & on_disk)
+    upstream_count = len((lock_names - retained_skills) & on_disk)
     local_count = len(local_skills & on_disk)
     print("Skills doctor")
     print(f"  upstream skills (lockfile): {upstream_count}")
+    print(f"  retained audit snapshots:   {retained_count}")
     print(f"  local skills:               {local_count}")
     if private:
         print(f"  private (git-ignored):      {len(private)}")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,6 +18,7 @@ class UninstallPlan:
     source: str
     selector: str
     removes_source: bool
+    retained: bool = False
 
 
 @dataclass(frozen=True)
@@ -46,6 +48,7 @@ def write_plan(path: Path, plan: UninstallPlan) -> None:
             "source": plan.source,
             "selector": plan.selector,
             "removes_source": plan.removes_source,
+            "retained": plan.retained,
         },
     )
 
@@ -56,11 +59,20 @@ def read_plan(path: Path) -> UninstallPlan:
     source = data.get("source")
     selector = data.get("selector")
     removes_source = data.get("removes_source")
+    retained = data.get("retained", False)
     if not all(isinstance(value, str) and value for value in (name, source, selector)):
         raise SystemExit(f"[ERROR] invalid uninstall plan: {path}")
     if not isinstance(removes_source, bool):
         raise SystemExit(f"[ERROR] invalid uninstall plan: {path}")
-    return UninstallPlan(name=name, source=source, selector=selector, removes_source=removes_source)
+    if not isinstance(retained, bool):
+        raise SystemExit(f"[ERROR] invalid uninstall plan: {path}")
+    return UninstallPlan(
+        name=name,
+        source=source,
+        selector=selector,
+        removes_source=removes_source,
+        retained=retained,
+    )
 
 
 def manifest_skill_name(entry: dict[str, Any], installed_name: str) -> str:
@@ -95,6 +107,21 @@ def plan_uninstall(root: Path, name: str) -> UninstallPlan:
             f"(remove the folder and manifest local entry manually)"
         )
 
+    retained = manifest.get("retained", [])
+    if isinstance(retained, list):
+        for item in retained:
+            if isinstance(item, dict) and item.get("name") == name:
+                source = item.get("source")
+                if not isinstance(source, str) or not source:
+                    raise SystemExit(f"[ERROR] retained skill has no source: {name}")
+                return UninstallPlan(
+                    name=name,
+                    source=source,
+                    selector=name,
+                    removes_source=False,
+                    retained=True,
+                )
+
     lock_skills = lock.get("skills", {})
     entry = lock_skills.get(name) if isinstance(lock_skills, dict) else None
     if not isinstance(entry, dict):
@@ -110,8 +137,20 @@ def plan_uninstall(root: Path, name: str) -> UninstallPlan:
 
     skills = source.get("skills")
     if not isinstance(skills, list):
-        raise SystemExit(
-            f"[ERROR] manifest source installs all skills and cannot remove one safely: {repo}"
+        installed_from_source = [
+            installed_name
+            for installed_name, installed_entry in lock_skills.items()
+            if isinstance(installed_entry, dict) and installed_entry.get("source") == repo
+        ]
+        if installed_from_source != [name]:
+            raise SystemExit(
+                f"[ERROR] manifest source installs all skills and cannot remove one safely: {repo}"
+            )
+        return UninstallPlan(
+            name=name,
+            source=repo,
+            selector=manifest_skill_name(entry, name),
+            removes_source=True,
         )
 
     selector = manifest_skill_name(entry, name)
@@ -122,7 +161,28 @@ def plan_uninstall(root: Path, name: str) -> UninstallPlan:
 
 
 def apply_manifest_removal(root: Path, plan: UninstallPlan) -> UninstallResult:
-    manifest_path, manifest, _ = inventory(root)
+    manifest_path, manifest, lock = inventory(root)
+    if plan.retained:
+        retained = manifest.get("retained", [])
+        if not isinstance(retained, list):
+            raise SystemExit("[ERROR] manifest retained is not a list")
+        remaining = [
+            item for item in retained
+            if not (isinstance(item, dict) and item.get("name") == plan.name)
+        ]
+        if len(remaining) == len(retained):
+            raise SystemExit(f"[ERROR] retained skill no longer exists: {plan.name}")
+        manifest["retained"] = remaining
+        write_json(manifest_path, manifest)
+        lock_skills = lock.get("skills", {})
+        if isinstance(lock_skills, dict) and plan.name in lock_skills:
+            del lock_skills[plan.name]
+            write_json(root / ".skill-lock.json", lock)
+        folder = root / "skills" / plan.name
+        if folder.is_dir():
+            shutil.rmtree(folder)
+        return UninstallResult(removed_selector=plan.name, removed_source=None)
+
     sources = manifest.get("sources", [])
     if not isinstance(sources, list):
         raise SystemExit("[ERROR] manifest sources is not a list")
@@ -131,6 +191,10 @@ def apply_manifest_removal(root: Path, plan: UninstallPlan) -> UninstallResult:
         if not isinstance(source, dict) or source.get("repo") != plan.source:
             continue
         skills = source.get("skills")
+        if plan.removes_source and not isinstance(skills, list):
+            del sources[index]
+            write_json(manifest_path, manifest)
+            return UninstallResult(removed_selector=None, removed_source=plan.source)
         if not isinstance(skills, list) or plan.selector not in skills:
             raise SystemExit(f"[ERROR] manifest no longer declares skill selector: {plan.source}@{plan.selector}")
         remaining = [skill for skill in skills if skill != plan.selector]
@@ -173,7 +237,8 @@ def main() -> int:
     print(f"  skill:       {plan.name}")
     print(f"  source:      {plan.source}")
     print(f"  selector:    {plan.selector}")
-    print(f"  manifest:    {'remove source' if plan.removes_source else 'remove selector'}")
+    manifest_action = "remove retained snapshot" if plan.retained else ("remove source" if plan.removes_source else "remove selector")
+    print(f"  manifest:    {manifest_action}")
 
     if args.write_plan:
         write_plan(args.write_plan, plan)

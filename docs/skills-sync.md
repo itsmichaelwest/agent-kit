@@ -106,9 +106,12 @@ commit fully to the dotfiles config-manager philosophy:
 3. **Keep `npx skills` as an optional updater, not required machinery.** It is
    never on the sync path. It is run manually to refresh upstream skills, and its
    output is reviewed as a git diff and committed.
-4. **Distinguish custom from upstream by the manifest.** `scripts/skills-manifest.json`
-   lists upstream sources. Any skill folder in `skills/` that is *not* covered by
-   the manifest is treated as custom/local and is never auto-updated. This is how
+4. **Distinguish active, retained, and custom skills in the manifest.**
+   `scripts/skills-manifest.json` lists active upstream sources under `sources`,
+   frozen audit snapshots under `retained`, and repo-authored skills under
+   `local`. Retained snapshots preserve material for instruction audits without
+   pretending that the source is still supported; `update-skills` never refreshes
+   them. This is how
    "keep non-custom skills updated against upstream" stays safe — updates only
    touch skills with a declared source.
 
@@ -179,7 +182,7 @@ recur. Add `--strict` to fail on warnings too (for CI / pre-commit).
 
 It enforces the model:
 
-- manifest `sources[]` = declared upstream repos; `local[]` = skills authored here
+- manifest `sources[]` = active upstream repos; `retained[]` = frozen audit snapshots; `local[]` = skills authored here
 - `.skill-lock.json` = provenance for upstream skills
 - `skills/<name>/` = the committed vendored output
 
@@ -205,6 +208,7 @@ total:
 | Tier | Declared in | Committed | Synced across your devices |
 |---|---|---|---|
 | Upstream | manifest `sources[]` + lockfile | yes (vendored) | yes |
+| Retained audit snapshot | manifest `retained[]` (+ historical lock entry when available) | yes (vendored) | yes |
 | Custom | manifest `local[]` | yes (vendored) | yes |
 | Private | nowhere tracked (git-ignored) | no | no |
 

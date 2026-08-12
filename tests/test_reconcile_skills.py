@@ -22,6 +22,51 @@ def load_module():
 
 
 class ReconcileSkillsTests(unittest.TestCase):
+    def test_retained_lock_entry_does_not_reactivate_retired_source(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            home = Path(temp) / "home"
+            (root / "scripts").mkdir(parents=True)
+            skill = root / "skills" / "audit-only"
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text("---\nname: audit-only\n---\n", encoding="utf-8")
+            (home / ".agents").mkdir(parents=True)
+            manifest_path = root / "scripts" / "skills-manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "local": [],
+                        "retained": [
+                            {"name": "audit-only", "source": "retired/example"}
+                        ],
+                        "sources": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / ".skill-lock.json").write_text(
+                json.dumps(
+                    {
+                        "version": 3,
+                        "skills": {
+                            "audit-only": {
+                                "source": "retired/example",
+                                "skillPath": "skills/audit-only/SKILL.md",
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = module.reconcile(root, home)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(result.manifest_sources_added, [])
+            self.assertEqual(manifest["sources"], [])
+
     def test_removes_empty_non_skill_folders_but_preserves_nonempty_folders(self) -> None:
         module = load_module()
 

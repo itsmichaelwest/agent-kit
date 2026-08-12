@@ -33,6 +33,32 @@ def write_inventory(root: Path, manifest: dict, lock: dict) -> None:
 
 
 class UninstallSkillTests(unittest.TestCase):
+    def test_removes_retained_snapshot_without_active_source(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skill = root / "skills" / "deprecated"
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text("---\nname: deprecated\n---\n", encoding="utf-8")
+            write_inventory(
+                root,
+                {
+                    "local": [],
+                    "retained": [{"name": "deprecated", "source": "example/retired"}],
+                    "sources": [],
+                },
+                {"version": 3, "skills": {}},
+            )
+
+            plan = module.plan_uninstall(root, "deprecated")
+            self.assertTrue(plan.retained)
+            module.apply_manifest_removal(root, plan)
+
+            manifest = json.loads((root / "scripts" / "skills-manifest.json").read_text())
+            self.assertEqual(manifest["retained"], [])
+            self.assertFalse(skill.exists())
+
     def test_wrappers_apply_the_saved_plan_after_npx_removal(self) -> None:
         shell = SHELL_WRAPPER.read_text(encoding="utf-8")
         powershell = POWERSHELL_WRAPPER.read_text(encoding="utf-8")
@@ -152,7 +178,7 @@ class UninstallSkillTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "local skill"):
                 module.plan_uninstall(root, "custom")
 
-    def test_refuses_source_without_explicit_skills_list(self) -> None:
+    def test_removes_single_skill_source_without_explicit_skills_list(self) -> None:
         module = load_module()
 
         with tempfile.TemporaryDirectory() as temp:
@@ -167,6 +193,28 @@ class UninstallSkillTests(unittest.TestCase):
                             "source": "example/all",
                             "skillPath": "skills/one/SKILL.md",
                         }
+                    },
+                },
+            )
+
+            plan = module.plan_uninstall(root, "one")
+            self.assertTrue(plan.removes_source)
+            result = module.apply_manifest_removal(root, plan)
+            self.assertEqual(result.removed_source, "example/all")
+
+    def test_refuses_multi_skill_source_without_explicit_skills_list(self) -> None:
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_inventory(
+                root,
+                {"local": [], "sources": [{"repo": "example/all"}]},
+                {
+                    "version": 3,
+                    "skills": {
+                        "one": {"source": "example/all", "skillPath": "skills/one/SKILL.md"},
+                        "two": {"source": "example/all", "skillPath": "skills/two/SKILL.md"},
                     },
                 },
             )
