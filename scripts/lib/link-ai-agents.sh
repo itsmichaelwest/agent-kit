@@ -12,8 +12,11 @@ ai_agent_manifest() {
   echo "$DOTFILES_DIR/scripts/ai-agent-links.json"
 }
 
+# Strips CR because the Windows jq build (jq-windows-amd64.exe) opens stdout in
+# text mode and emits CRLF; under Git Bash every jq-derived path would otherwise
+# carry a trailing \r and never match a real target.
 resolve_ai_agent_target_path() {
-  local raw="$1"
+  local raw="${1//$'\r'/}"
   echo "${raw/#\~/$HOME}"
 }
 
@@ -31,20 +34,20 @@ ai_agent_sha256() {
 # Fingerprint the link topology. Document order, not sorted, so doctor-links.py
 # and link-ai-agents.ps1 reproduce it without agreeing on a collation order.
 # Formatting-only edits do not change it; adding, removing, or repointing a
-# target does. Kept byte-identical across all three implementations: the command
-# substitution strips jq's trailing newline so the payload is exactly the lines
-# joined by \n.
+# target does. Kept byte-identical across all three implementations: `tr -d '\r'`
+# normalises the Windows jq build's CRLF output, and the command substitution
+# strips the trailing newline, so the payload is exactly the lines joined by \n.
 ai_agent_manifest_digest() {
   local config payload
   config="$(ai_agent_manifest)"
-  payload="$(jq -r '. as $m | .targets[] | "\(.source)|\($m.sources[.source] // "")|\(.path)"' "$config")"
+  payload="$(jq -r '. as $m | .targets[] | "\(.source)|\($m.sources[.source] // "")|\(.path)"' "$config" | tr -d '\r')"
   printf '%s' "$payload" | ai_agent_sha256 | cut -c1-8
 }
 
 ai_agent_layout_marker_value() {
   local config version
   config="$(ai_agent_manifest)"
-  version="$(jq -r '.layoutVersion // "0"' "$config")"
+  version="$(jq -r '.layoutVersion // "0"' "$config" | tr -d '\r')"
   echo "${version}+$(ai_agent_manifest_digest)"
 }
 
