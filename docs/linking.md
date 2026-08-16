@@ -141,6 +141,16 @@ Use `setup.sh shell-remove` to cleanly remove the injected block.
 
 ## Windows-Specific
 
+Use `scripts\setup.ps1` on Windows. `setup.sh` refuses to run under Git Bash,
+MSYS2, and Cygwin, because it links with `ln -s`, which on those shells silently
+produces a plain copy instead of a reparse point: it prints `[LINK]`, returns
+success, and leaves a file that drifts from the repo with no error. `setup.ps1`
+creates real junctions for directories and symlinks for files, falling back to
+`gsudo` then to a copy when Developer Mode is off.
+
+WSL is genuine Linux and is unaffected by the guard, but it links into the WSL
+home, so it manages a separate WSL-side install rather than the Windows one.
+
 On Windows, `link-dotfiles` also handles:
 - **PowerShell profile** → `~/Documents/PowerShell/` and `~/Documents/WindowsPowerShell/`
 - **Windows Terminal settings** → auto-detected from installed Terminal package (stable + preview)

@@ -6,6 +6,24 @@ SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 export DOTFILES_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
 
 source "$SCRIPTS_DIR/lib/helpers.sh"
+
+# setup.sh manages every target with `ln -s`. Under Git Bash / MSYS2 / Cygwin
+# with the default MSYS setting, `ln -s` silently produces a plain copy instead
+# of a Windows reparse point: it prints [LINK], returns success, and leaves a
+# file that drifts from the repo forever. Windows has its own entry point that
+# creates real junctions. OSTYPE is unreliable here (Git Bash reports `cygwin`
+# on some builds and `msys` on others), so check uname and MSYSTEM too.
+case "${OSTYPE:-}|$(uname -s 2>/dev/null)|${MSYSTEM:-}" in
+  msys*|cygwin*|*MINGW*|*MSYS*|*CYGWIN*)
+    err "setup.sh is the macOS/Linux entry point; it cannot manage links on Windows."
+    err "Under MSYS/Cygwin 'ln -s' creates copies, not junctions, so every link would drift."
+    err "Use the PowerShell entry point instead:"
+    err "  .\\scripts\\setup.ps1 <command>"
+    err "WSL is real Linux and is unaffected, but it manages a separate WSL-side install."
+    exit 1
+    ;;
+esac
+
 source "$SCRIPTS_DIR/lib/install-deps.sh"
 source "$SCRIPTS_DIR/lib/install-toolchains.sh"
 source "$SCRIPTS_DIR/lib/install-mcp.sh"
