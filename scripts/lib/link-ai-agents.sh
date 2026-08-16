@@ -3,11 +3,49 @@
 # Sourced by setup.sh — expects helpers.sh already loaded and DOTFILES_DIR set.
 # Requires: jq
 
-AI_AGENT_LAYOUT_VERSION="4"
-
 ai_agent_state_file() {
   local state_root="${XDG_STATE_HOME:-$HOME/.local/state}"
   echo "$state_root/agent-kit/ai-agent-layout-version"
+}
+
+ai_agent_manifest() {
+  echo "$DOTFILES_DIR/scripts/ai-agent-links.json"
+}
+
+resolve_ai_agent_target_path() {
+  local raw="$1"
+  echo "${raw/#\~/$HOME}"
+}
+
+ai_agent_sha256() {
+  if command -v sha256sum &>/dev/null; then
+    sha256sum | cut -d' ' -f1
+  elif command -v shasum &>/dev/null; then
+    shasum -a 256 | cut -d' ' -f1
+  else
+    cat >/dev/null  # drain stdin so the writer does not take EPIPE under pipefail
+    echo "nodigest"
+  fi
+}
+
+# Fingerprint the link topology. Document order, not sorted, so doctor-links.py
+# and link-ai-agents.ps1 reproduce it without agreeing on a collation order.
+# Formatting-only edits do not change it; adding, removing, or repointing a
+# target does. Kept byte-identical across all three implementations: the command
+# substitution strips jq's trailing newline so the payload is exactly the lines
+# joined by \n.
+ai_agent_manifest_digest() {
+  local config payload
+  config="$(ai_agent_manifest)"
+  payload="$(jq -r '. as $m | .targets[] | "\(.source)|\($m.sources[.source] // "")|\(.path)"' "$config")"
+  printf '%s' "$payload" | ai_agent_sha256 | cut -c1-8
+}
+
+ai_agent_layout_marker_value() {
+  local config version
+  config="$(ai_agent_manifest)"
+  version="$(jq -r '.layoutVersion // "0"' "$config")"
+  echo "${version}+$(ai_agent_manifest_digest)"
 }
 
 ensure_directory_target() {
@@ -47,7 +85,7 @@ write_ai_agent_layout_marker() {
   local marker
   marker="$(ai_agent_state_file)"
   mkdir -p "$(dirname "$marker")"
-  printf '%s\n' "$AI_AGENT_LAYOUT_VERSION" > "$marker"
+  printf '%s\n' "$(ai_agent_layout_marker_value)" > "$marker"
 }
 
 link_manifest_targets() {
@@ -68,7 +106,7 @@ link_manifest_targets() {
     fi
 
     source_abs="$DOTFILES_DIR/$source_rel"
-    target_path="${target_path/#\~/$HOME}"
+    target_path="$(resolve_ai_agent_target_path "$target_path")"
 
     if [[ ! -e "$source_abs" ]]; then
       warn "Missing source: $source_abs, skipping"
@@ -173,14 +211,19 @@ current_ai_agent_layout_status() {
   marker_file="$(ai_agent_state_file)"
   [[ -f "$marker_file" ]] && marker="$(tr -d '\n\r' < "$marker_file")"
 
+  local expected_marker
+  expected_marker="$(ai_agent_layout_marker_value)"
+
+  # Derived from the manifest, never a hand-maintained list: a target added to
+  # ai-agent-links.json without a re-link must show up here.
   local current_ok=1
-  local current_targets=(
-    "$HOME/.claude/skills"
-    "$HOME/.codex/agents"
-    "$HOME/.agents/skills"
-    "$HOME/.copilot/copilot-instructions.md"
-    "$HOME/.copilot/agents"
-  )
+  local current_targets=()
+  local raw_path
+  while IFS= read -r raw_path; do
+    [[ -z "$raw_path" ]] && continue
+    current_targets+=("$(resolve_ai_agent_target_path "$raw_path")")
+  done < <(jq -r '.targets[].path' "$(ai_agent_manifest)")
+  current_targets+=("$HOME/.copilot/agents")
 
   local target
   for target in "${current_targets[@]}"; do
@@ -199,11 +242,11 @@ current_ai_agent_layout_status() {
     fi
   done < <(legacy_ai_agent_targets)
 
-  if [[ "$marker" == "$AI_AGENT_LAYOUT_VERSION" && $current_ok -eq 1 && $legacy_present -eq 0 ]]; then
+  if [[ "$marker" == "$expected_marker" && $current_ok -eq 1 && $legacy_present -eq 0 ]]; then
     echo "current"
   elif [[ $legacy_present -eq 1 && $current_ok -eq 0 ]]; then
     echo "legacy"
-  elif [[ $legacy_present -eq 1 || "$marker" == "$AI_AGENT_LAYOUT_VERSION" || $current_ok -eq 1 ]]; then
+  elif [[ $legacy_present -eq 1 || "$marker" == "$expected_marker" || $current_ok -eq 1 ]]; then
     echo "mixed"
   else
     echo "unknown"
@@ -247,7 +290,7 @@ unlink_ai_agents() {
   for ((i = 0; i < count; i++)); do
     local target_path
     target_path=$(jq -r ".targets[$i].path" "$config")
-    target_path="${target_path/#\~/$HOME}"
+    target_path="$(resolve_ai_agent_target_path "$target_path")"
     remove_link "$target_path"
   done
 
@@ -283,7 +326,7 @@ show_ai_agent_status() {
   for ((i = 0; i < count; i++)); do
     local target_path
     target_path=$(jq -r ".targets[$i].path" "$config")
-    target_path="${target_path/#\~/$HOME}"
+    target_path="$(resolve_ai_agent_target_path "$target_path")"
     show_target_status "$target_path"
   done
 

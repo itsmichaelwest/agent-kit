@@ -19,6 +19,7 @@ source "$SCRIPTS_DIR/lib/update-skills.sh"
 source "$SCRIPTS_DIR/lib/reconcile-skills.sh"
 source "$SCRIPTS_DIR/lib/uninstall-skill.sh"
 source "$SCRIPTS_DIR/lib/doctor-skills.sh"
+source "$SCRIPTS_DIR/lib/doctor-links.sh"
 source "$SCRIPTS_DIR/lib/bootstrap-codex-plugins.sh"
 
 bootstrap_claude_plugins() {
@@ -51,7 +52,8 @@ Commands:
   uninstall-skill     Uninstall one upstream skill, update manifest, then doctor
   list-skills         Show skills and install status
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
-  doctor              Check skills manifest/lockfile/disk consistency
+  doctor              Check skills manifest/lockfile/disk consistency and that
+                      every link in ai-agent-links.json is in place
   bootstrap-claude    Install Claude Code plugins declared in settings.json
   bootstrap-codex     Install Codex plugins declared in config/codex/global.toml
   install-mcp         Install user-scope MCP servers from mcp/servers.json
@@ -141,7 +143,11 @@ case "$ACTION" in
   uninstall-skill) uninstall_skill "$UNINSTALL_SKILL"; doctor_skills --strict ;;
   list-skills)    list_skills ;;
   reconcile-skills) reconcile_skills ;;
-  doctor)         doctor_skills $DOCTOR_STRICT ;;
+  doctor)         doctor_rc=0
+                  doctor_skills $DOCTOR_STRICT || doctor_rc=$?
+                  doctor_links $DOCTOR_STRICT || doctor_rc=$?
+                  if [[ $doctor_rc -ne 0 ]]; then exit $doctor_rc; fi
+                  ;;
   bootstrap-claude) bootstrap_claude_plugins ;;
   bootstrap-codex) bootstrap_codex_plugins ;;
   plugin-status)  show_plugin_status ;;

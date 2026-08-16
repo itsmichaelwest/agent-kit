@@ -38,8 +38,19 @@ Repository secret scanning still belongs in pre-commit and CI.
   Review or trust a changed command hook with `/hooks` before expecting it to
   run. Matching hooks from other active sources are additive.
 
+The hook is deliberately fail-closed: both configs invoke it by absolute path,
+and a `PreToolUse` hook that exits non-zero denies the call. If
+`~/.agents/hooks/agent_safety.py` is missing, the interpreter exits non-zero
+before reading the payload, so every shell call in every session is blocked
+until the link is restored. Adding a hook to either config without running
+`setup.sh link` / `setup.ps1 link` therefore takes the shell offline rather than
+degrading quietly.
+
+`setup.sh doctor` / `setup.ps1 doctor` checks that both targets are linked. Run
+it after changing `scripts/ai-agent-links.json`; see `docs/linking.md`.
+
 Run the local checks with:
 
 ```bash
-python3 -m unittest tests.test_agent_safety_hook
+python3 -m unittest tests.test_agent_safety_hook tests.test_doctor_links
 ```

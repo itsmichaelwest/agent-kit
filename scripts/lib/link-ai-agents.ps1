@@ -1,10 +1,51 @@
 # Link/unlink AI agent configs using the JSON manifest (Windows).
 
-$script:AiAgentLayoutVersion = "4"
-
 function Get-AiAgentStateFile {
     $stateRoot = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { $env:USERPROFILE }
     return Join-Path $stateRoot "agent-kit\ai-agent-layout-version"
+}
+
+function Get-AiAgentManifest {
+    param([string]$DotfilesDir)
+
+    $config = Join-Path $DotfilesDir "scripts\ai-agent-links.json"
+    if (-not (Test-Path $config)) { return $null }
+    return Get-Content $config -Raw | ConvertFrom-Json
+}
+
+function Resolve-AiAgentTargetPath {
+    param([string]$RawPath)
+
+    return ($RawPath -replace '^~', $env:USERPROFILE) -replace '/', '\'
+}
+
+# Fingerprint the link topology. Document order, not sorted, so doctor-links.py
+# and link-ai-agents.sh reproduce it without agreeing on a collation order.
+# Formatting-only edits do not change it; adding, removing, or repointing a
+# target does. Kept byte-identical across all three implementations.
+function Get-AiAgentManifestDigest {
+    param([object]$Manifest)
+
+    $lines = foreach ($target in $Manifest.targets) {
+        "{0}|{1}|{2}" -f $target.source, $Manifest.sources.($target.source), $target.path
+    }
+
+    $bytes = [Text.Encoding]::UTF8.GetBytes(($lines -join "`n"))
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = $sha.ComputeHash($bytes)
+    } finally {
+        $sha.Dispose()
+    }
+
+    return ([BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant().Substring(0, 8)
+}
+
+function Get-AiAgentLayoutMarkerValue {
+    param([object]$Manifest)
+
+    $version = if ($Manifest.layoutVersion) { $Manifest.layoutVersion } else { "0" }
+    return "{0}+{1}" -f $version, (Get-AiAgentManifestDigest $Manifest)
 }
 
 function Ensure-DirectoryTarget {
@@ -50,9 +91,11 @@ function Cleanup-LegacyAiAgentTargets {
 }
 
 function Write-AiAgentLayoutMarker {
+    param([object]$Manifest)
+
     $marker = Get-AiAgentStateFile
     [System.IO.Directory]::CreateDirectory((Split-Path -Parent $marker)) | Out-Null
-    Set-Content -Path $marker -Value $script:AiAgentLayoutVersion -NoNewline
+    Set-Content -Path $marker -Value (Get-AiAgentLayoutMarkerValue $Manifest) -NoNewline
 }
 
 function Link-ManifestAiTargets {
@@ -66,7 +109,7 @@ function Link-ManifestAiTargets {
         }
 
         $sourceAbs = Join-Path $DotfilesDir $sourceRel
-        $targetPath = ($target.path -replace '^~', $env:USERPROFILE) -replace '/', '\'
+        $targetPath = Resolve-AiAgentTargetPath $target.path
 
         if (-not (Test-Path $sourceAbs)) {
             Write-Warn "Missing source: $sourceAbs, skipping"
@@ -131,19 +174,23 @@ function Show-TargetStatus {
 }
 
 function Get-AiAgentLayoutStatus {
+    param([string]$DotfilesDir)
+
     $marker = ""
     $markerFile = Get-AiAgentStateFile
     if (Test-Path $markerFile) {
         $marker = (Get-Content $markerFile -Raw).Trim()
     }
 
-    $currentTargets = @(
-        (Join-Path $env:USERPROFILE ".claude\skills")
-        (Join-Path $env:USERPROFILE ".codex\agents")
-        (Join-Path $env:USERPROFILE ".agents\skills")
-        (Join-Path $env:USERPROFILE ".copilot\copilot-instructions.md")
-        (Join-Path $env:USERPROFILE ".copilot\agents")
-    )
+    $manifest = Get-AiAgentManifest $DotfilesDir
+    if (-not $manifest) { return "unknown" }
+
+    # Derived from the manifest, never a hand-maintained list: a target added to
+    # ai-agent-links.json without a re-link must show up here.
+    $currentTargets = @($manifest.targets | ForEach-Object { Resolve-AiAgentTargetPath $_.path })
+    $currentTargets += (Join-Path $env:USERPROFILE ".copilot\agents")
+
+    $expectedMarker = Get-AiAgentLayoutMarkerValue $manifest
 
     $currentOk = $true
     foreach ($target in $currentTargets) {
@@ -161,13 +208,13 @@ function Get-AiAgentLayoutStatus {
         }
     }
 
-    if ($marker -eq $script:AiAgentLayoutVersion -and $currentOk -and -not $legacyPresent) {
+    if ($marker -eq $expectedMarker -and $currentOk -and -not $legacyPresent) {
         return "current"
     }
     if ($legacyPresent -and -not $currentOk) {
         return "legacy"
     }
-    if ($legacyPresent -or $currentOk -or $marker -eq $script:AiAgentLayoutVersion) {
+    if ($legacyPresent -or $currentOk -or $marker -eq $expectedMarker) {
         return "mixed"
     }
 
@@ -189,7 +236,7 @@ function Unlink-AiAgents {
     $manifest = Get-Content $config -Raw | ConvertFrom-Json
 
     foreach ($target in $manifest.targets) {
-        $targetPath = ($target.path -replace '^~', $env:USERPROFILE) -replace '/', '\'
+        $targetPath = Resolve-AiAgentTargetPath $target.path
         Remove-Link $targetPath
     }
 
@@ -262,7 +309,7 @@ function Link-AiAgents {
     Link-ManifestAiTargets $DotfilesDir $manifest
     Link-CopilotAgents $DotfilesDir
     Link-CopilotSettings $DotfilesDir
-    Write-AiAgentLayoutMarker
+    Write-AiAgentLayoutMarker $manifest
 }
 
 function Show-AiAgentStatus {
@@ -279,11 +326,11 @@ function Show-AiAgentStatus {
 
     $markerFile = Get-AiAgentStateFile
     $layoutVersion = if (Test-Path $markerFile) { (Get-Content $markerFile -Raw).Trim() } else { "none" }
-    Write-Host "  Layout: $(Get-AiAgentLayoutStatus)"
+    Write-Host "  Layout: $(Get-AiAgentLayoutStatus $DotfilesDir)"
     Write-Host "  Layout version marker: $layoutVersion"
 
     foreach ($target in $manifest.targets) {
-        $targetPath = ($target.path -replace '^~', $env:USERPROFILE) -replace '/', '\'
+        $targetPath = Resolve-AiAgentTargetPath $target.path
         Show-TargetStatus $targetPath
     }
 

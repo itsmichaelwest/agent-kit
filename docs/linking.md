@@ -68,6 +68,8 @@ All base dotfile links are optional — if the source file doesn't exist in the 
 | `skills/` | `~/.agents/skills` |
 | `docs/` | `~/.codex/docs` |
 | `.codex/agents/` | `~/.codex/agents` |
+| `hooks/` | `~/.agents/hooks` |
+| `config/codex/hooks.json` | `~/.codex/hooks.json` |
 
 `config/codex/global.toml` is not linked. `compile-agents`, `link`, and
 `link-ai-agents` inject its portable settings plus generated agent registrations
@@ -99,6 +101,21 @@ must be removed manually before using this flow.
 Copilot-compatible `*.agent.md` filenames are created only in
 `~/.copilot/agents`. Do not commit `agents/*.agent.md` aliases; VS Code can see
 those as additional custom agents when this repo is open.
+
+## Verifying
+
+`scripts/ai-agent-links.json` is the single source of truth for every target
+above, including the layout version. `setup.sh doctor` / `setup.ps1 doctor`
+reads it and checks that each target exists, is a link rather than a copy, and
+resolves to the declared source. It also compares a digest of the manifest
+against the layout marker, so a manifest that changed since the last
+`setup link` is reported as stale.
+
+Re-run `setup.sh link` / `setup.ps1 link` after any commit that touches the
+manifest. A missing link is not always visible: `.claude/settings.json` runs the
+safety hook from `~/.agents/hooks`, and a `PreToolUse` hook that exits non-zero
+denies the call, so a missing link there blocks every shell call in every
+session.
 
 ## Legacy cleanup
 

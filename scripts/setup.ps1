@@ -66,6 +66,7 @@ $DotfilesDir = Split-Path -Parent $ScriptsDir
 . "$ScriptsDir\lib\reconcile-skills.ps1"
 . "$ScriptsDir\lib\uninstall-skill.ps1"
 . "$ScriptsDir\lib\doctor-skills.ps1"
+. "$ScriptsDir\lib\doctor-links.ps1"
 . "$ScriptsDir\lib\bootstrap-claude-plugins.ps1"
 . "$ScriptsDir\lib\bootstrap-codex-plugins.ps1"
 
@@ -85,7 +86,8 @@ Commands:
   uninstall-skill     Uninstall one upstream skill, update manifest, then doctor
   list-skills         Show skills and install status
   reconcile-skills    Add out-of-band npx skills installs to manifest + lockfile
-  doctor              Check skills manifest/lockfile/disk consistency
+  doctor              Check skills manifest/lockfile/disk consistency and that
+                      every link in ai-agent-links.json is in place
   bootstrap-claude    Install Claude Code plugins declared in settings.json
   bootstrap-codex     Install Codex plugins declared in config/codex/global.toml
   plugin-status       Show plugin status vs repo config
@@ -166,7 +168,7 @@ switch ($Action) {
     "uninstall-skill" { if ($RemainingArgs.Count -gt 1) { Write-Err "Usage: setup.ps1 uninstall-skill <installed-skill-name>"; exit 1 }; $code = Uninstall-Skill $DotfilesDir ($RemainingArgs | Select-Object -First 1); if ($code -ne 0) { exit $code }; $code = Invoke-DoctorSkills $DotfilesDir -Strict; if ($code -ne 0) { exit $code } }
     "list-skills"    { $code = List-Skills $DotfilesDir; if ($code -ne 0) { exit $code } }
     "reconcile-skills" { $code = Invoke-ReconcileSkills $DotfilesDir; if ($code -ne 0) { exit $code } }
-    "doctor"         { $code = Invoke-DoctorSkills $DotfilesDir -Strict:$Strict; if ($code -ne 0) { exit $code } }
+    "doctor"         { $code = Invoke-DoctorSkills $DotfilesDir -Strict:$Strict; $linkCode = Invoke-DoctorLinks $DotfilesDir -Strict:$Strict; if ($code -ne 0) { exit $code }; if ($linkCode -ne 0) { exit $linkCode } }
     "bootstrap-claude" { $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code } }
     "bootstrap-codex" { $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
     "plugin-status"  { $code = Show-PluginStatus $DotfilesDir; if ($code -ne 0) { exit $code } }

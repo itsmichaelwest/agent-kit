@@ -1,4 +1,5 @@
 {
+  "layoutVersion": "4",
   "sources": {
     "instructions": "AGENTS.md",
     "prompts": "prompts",
