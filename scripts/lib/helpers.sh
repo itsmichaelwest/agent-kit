@@ -10,6 +10,20 @@ info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 err()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
+# jq read whose output feeds shell logic.
+#
+# The Windows jq build (jq-windows-amd64.exe) opens stdout in text mode and
+# emits CRLF, so under Git Bash every captured value carries a trailing \r.
+# That silently breaks key lookups (.sources["hooks\r"] -> empty), path tests,
+# and numeric comparisons, with no error to show for it. This wrapper is a
+# no-op on macOS and Linux.
+#
+# Use it for every jq call whose result is captured or read. jq output
+# redirected straight into a file does not need it.
+jqr() {
+  jq "$@" | tr -d '\r'
+}
+
 ensure_linked() {
   local source="$1"
   local target="$2"

@@ -45,6 +45,13 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+# Local copy of the helpers.sh wrapper: this script runs as its own bash
+# process and does not source helpers. The Windows jq build emits CRLF, which
+# would leave a trailing \r on every plugin spec and marketplace name.
+jqr() {
+  jq "$@" | tr -d '\r'
+}
+
 if ! command -v claude >/dev/null 2>&1; then
   echo "[WARN] claude CLI not found on PATH; skipping plugin bootstrap"
   exit 0
@@ -58,13 +65,13 @@ fi
 specs=()
 while IFS= read -r spec; do
   [[ -n "$spec" ]] && specs+=("$spec")
-done < <(jq -r '.enabledPlugins // {} | to_entries[] | select(.value == true) | .key' "$SETTINGS")
+done < <(jqr -r '.enabledPlugins // {} | to_entries[] | select(.value == true) | .key' "$SETTINGS")
 
 marketplaces=()
 while IFS=$'\t' read -r name source_arg; do
   [[ -n "$name" ]] && marketplaces+=("$name"$'\t'"$source_arg")
 done < <(
-  jq -r '
+  jqr -r '
     .extraKnownMarketplaces // {}
     | to_entries[]
     | .key as $name

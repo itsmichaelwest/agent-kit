@@ -12,9 +12,8 @@ ai_agent_manifest() {
   echo "$DOTFILES_DIR/scripts/ai-agent-links.json"
 }
 
-# Strips CR because the Windows jq build (jq-windows-amd64.exe) opens stdout in
-# text mode and emits CRLF; under Git Bash every jq-derived path would otherwise
-# carry a trailing \r and never match a real target.
+# The CR strip is belt-and-braces: jqr already normalises the Windows jq build's
+# CRLF, but a stray \r here would produce a path that never matches a target.
 resolve_ai_agent_target_path() {
   local raw="${1//$'\r'/}"
   echo "${raw/#\~/$HOME}"
@@ -34,20 +33,20 @@ ai_agent_sha256() {
 # Fingerprint the link topology. Document order, not sorted, so doctor-links.py
 # and link-ai-agents.ps1 reproduce it without agreeing on a collation order.
 # Formatting-only edits do not change it; adding, removing, or repointing a
-# target does. Kept byte-identical across all three implementations: `tr -d '\r'`
-# normalises the Windows jq build's CRLF output, and the command substitution
-# strips the trailing newline, so the payload is exactly the lines joined by \n.
+# target does. Kept byte-identical across all three implementations: jqr strips
+# the Windows jq build's CR, and the command substitution strips the trailing
+# newline, so the payload is exactly the lines joined by \n.
 ai_agent_manifest_digest() {
   local config payload
   config="$(ai_agent_manifest)"
-  payload="$(jq -r '. as $m | .targets[] | "\(.source)|\($m.sources[.source] // "")|\(.path)"' "$config" | tr -d '\r')"
+  payload="$(jqr -r '. as $m | .targets[] | "\(.source)|\($m.sources[.source] // "")|\(.path)"' "$config")"
   printf '%s' "$payload" | ai_agent_sha256 | cut -c1-8
 }
 
 ai_agent_layout_marker_value() {
   local config version
   config="$(ai_agent_manifest)"
-  version="$(jq -r '.layoutVersion // "0"' "$config" | tr -d '\r')"
+  version="$(jqr -r '.layoutVersion // "0"' "$config")"
   echo "${version}+$(ai_agent_manifest_digest)"
 }
 
@@ -94,14 +93,14 @@ write_ai_agent_layout_marker() {
 link_manifest_targets() {
   local config="$DOTFILES_DIR/scripts/ai-agent-links.json"
   local count
-  count=$(jq '.targets | length' "$config")
+  count=$(jqr '.targets | length' "$config")
 
   for ((i = 0; i < count; i++)); do
     local source_key target_path source_rel source_abs
 
-    source_key=$(jq -r ".targets[$i].source" "$config")
-    target_path=$(jq -r ".targets[$i].path" "$config")
-    source_rel=$(jq -r ".sources[\"$source_key\"] // empty" "$config")
+    source_key=$(jqr -r ".targets[$i].source" "$config")
+    target_path=$(jqr -r ".targets[$i].path" "$config")
+    source_rel=$(jqr -r ".sources[\"$source_key\"] // empty" "$config")
 
     if [[ -z "$source_rel" ]]; then
       warn "Unknown source key '$source_key', skipping"
@@ -225,7 +224,7 @@ current_ai_agent_layout_status() {
   while IFS= read -r raw_path; do
     [[ -z "$raw_path" ]] && continue
     current_targets+=("$(resolve_ai_agent_target_path "$raw_path")")
-  done < <(jq -r '.targets[].path' "$(ai_agent_manifest)")
+  done < <(jqr -r '.targets[].path' "$(ai_agent_manifest)")
   current_targets+=("$HOME/.copilot/agents")
 
   local target
@@ -288,11 +287,11 @@ unlink_ai_agents() {
   info "Removing AI agent links..."
 
   local count
-  count=$(jq '.targets | length' "$config")
+  count=$(jqr '.targets | length' "$config")
 
   for ((i = 0; i < count; i++)); do
     local target_path
-    target_path=$(jq -r ".targets[$i].path" "$config")
+    target_path=$(jqr -r ".targets[$i].path" "$config")
     target_path="$(resolve_ai_agent_target_path "$target_path")"
     remove_link "$target_path"
   done
@@ -324,11 +323,11 @@ show_ai_agent_status() {
   echo "  Layout version marker: $layout_version"
 
   local count
-  count=$(jq '.targets | length' "$config")
+  count=$(jqr '.targets | length' "$config")
 
   for ((i = 0; i < count; i++)); do
     local target_path
-    target_path=$(jq -r ".targets[$i].path" "$config")
+    target_path=$(jqr -r ".targets[$i].path" "$config")
     target_path="$(resolve_ai_agent_target_path "$target_path")"
     show_target_status "$target_path"
   done
