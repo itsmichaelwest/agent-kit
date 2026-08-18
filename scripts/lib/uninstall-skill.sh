@@ -44,7 +44,7 @@ uninstall_skill() {
   fi
 
   local status=0
-  if [[ "$(jqr -r'.retained // false' "$plan_file")" != "true" ]]; then
+  if [[ "$(jqr -r '.retained // false' "$plan_file")" != "true" ]]; then
     info "Uninstalling skill via npx skills: $skill_name"
     npx -y skills@latest remove "$skill_name" -g -y
     status=$?

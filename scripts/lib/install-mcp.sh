@@ -29,7 +29,7 @@ install_mcp() {
   info "Installing Claude Code user-scope MCP servers from $manifest"
 
   local names
-  names=$(jqr -r'.mcpServers | keys[]' "$manifest")
+  names=$(jqr -r '.mcpServers | keys[]' "$manifest")
 
   while IFS= read -r name; do
     [[ -z "$name" ]] && continue
@@ -42,9 +42,9 @@ _install_mcp_server() {
   local manifest="$2"
 
   local type url command
-  type=$(jqr -r--arg n "$name" '.mcpServers[$n].type // "stdio"' "$manifest")
-  url=$(jqr -r--arg n "$name" '.mcpServers[$n].url // ""' "$manifest")
-  command=$(jqr -r--arg n "$name" '.mcpServers[$n].command // ""' "$manifest")
+  type=$(jqr -r --arg n "$name" '.mcpServers[$n].type // "stdio"' "$manifest")
+  url=$(jqr -r --arg n "$name" '.mcpServers[$n].url // ""' "$manifest")
+  command=$(jqr -r --arg n "$name" '.mcpServers[$n].command // ""' "$manifest")
 
   url=$(_expand_env "$url") || { warn "  [SKIP] $name (missing env vars in url)"; return 0; }
 
@@ -53,7 +53,7 @@ _install_mcp_server() {
   # Headers — accept object form {"Name":"Value"} or array form ["Name: Value"]
   if [[ "$type" == "http" || "$type" == "sse" ]]; then
     local header_kind
-    header_kind=$(jqr -r--arg n "$name" '.mcpServers[$n].headers | type' "$manifest")
+    header_kind=$(jqr -r --arg n "$name" '.mcpServers[$n].headers | type' "$manifest")
     case "$header_kind" in
       object)
         while IFS= read -r line; do
@@ -61,7 +61,7 @@ _install_mcp_server() {
           local expanded
           expanded=$(_expand_env "$line") || { warn "  [SKIP] $name (missing env in header)"; return 0; }
           cmd+=(--header "$expanded")
-        done < <(jqr -r--arg n "$name" '.mcpServers[$n].headers | to_entries[] | "\(.key): \(.value)"' "$manifest")
+        done < <(jqr -r --arg n "$name" '.mcpServers[$n].headers | to_entries[] | "\(.key): \(.value)"' "$manifest")
         ;;
       array)
         while IFS= read -r line; do
@@ -69,7 +69,7 @@ _install_mcp_server() {
           local expanded
           expanded=$(_expand_env "$line") || { warn "  [SKIP] $name (missing env in header)"; return 0; }
           cmd+=(--header "$expanded")
-        done < <(jqr -r--arg n "$name" '.mcpServers[$n].headers[]' "$manifest")
+        done < <(jqr -r --arg n "$name" '.mcpServers[$n].headers[]' "$manifest")
         ;;
     esac
   fi
@@ -81,7 +81,7 @@ _install_mcp_server() {
       local expanded
       expanded=$(_expand_env "$kv") || { warn "  [SKIP] $name (missing env)"; return 0; }
       cmd+=(-e "$expanded")
-    done < <(jqr -r--arg n "$name" '.mcpServers[$n].env // {} | to_entries[] | "\(.key)=\(.value)"' "$manifest")
+    done < <(jqr -r --arg n "$name" '.mcpServers[$n].env // {} | to_entries[] | "\(.key)=\(.value)"' "$manifest")
   fi
 
   claude mcp remove "$name" -s user >/dev/null 2>&1 || true
@@ -95,7 +95,7 @@ _install_mcp_server() {
     while IFS= read -r arg; do
       [[ -z "$arg" ]] && continue
       cmd+=("$arg")
-    done < <(jqr -r--arg n "$name" '.mcpServers[$n].args // [] | .[]' "$manifest")
+    done < <(jqr -r --arg n "$name" '.mcpServers[$n].args // [] | .[]' "$manifest")
   fi
 
   if "${cmd[@]}" >/dev/null 2>&1; then

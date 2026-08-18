@@ -191,6 +191,12 @@
       "skills": [
         "git-commit"
       ]
+    },
+    {
+      "repo": "LukeberryPi/skills",
+      "skills": [
+        "remove-dumb-comments"
+      ]
     }
   ]
 }

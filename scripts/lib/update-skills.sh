@@ -36,22 +36,22 @@ update_skills() {
   _skills_link_lockfile
 
   local agent_args=()
-  while IFS= read -r a; do agent_args+=("-a" "$a"); done < <(jqr -r'.agents[]' "$MANIFEST")
+  while IFS= read -r a; do agent_args+=("-a" "$a"); done < <(jqr -r '.agents[]' "$MANIFEST")
 
   local count
-  count=$(jqr'.sources | length' "$MANIFEST")
+  count=$(jqr '.sources | length' "$MANIFEST")
   info "Installing skills from $count sources via npx skills..."
 
   local ok=0 failed=0
   for ((i = 0; i < count; i++)); do
     local repo
-    repo=$(jqr-r ".sources[$i].repo" "$MANIFEST")
+    repo=$(jqr -r ".sources[$i].repo" "$MANIFEST")
 
     local skill_args=()
     local skill_count
-    skill_count=$(jqr-r ".sources[$i].skills // [] | length" "$MANIFEST")
+    skill_count=$(jqr -r ".sources[$i].skills // [] | length" "$MANIFEST")
     if (( skill_count > 0 )); then
-      while IFS= read -r s; do skill_args+=("-s" "$s"); done < <(jqr -r".sources[$i].skills[]" "$MANIFEST")
+      while IFS= read -r s; do skill_args+=("-s" "$s"); done < <(jqr -r ".sources[$i].skills[]" "$MANIFEST")
     else
       skill_args+=("-s" "*")
     fi
@@ -98,7 +98,7 @@ install_skill() {
     fi
   done
   if (( has_agent_arg == 0 )); then
-    while IFS= read -r a; do agent_args+=("-a" "$a"); done < <(jqr -r'.agents[]' "$MANIFEST")
+    while IFS= read -r a; do agent_args+=("-a" "$a"); done < <(jqr -r '.agents[]' "$MANIFEST")
   fi
 
   info "Installing skill source via npx skills: $1"
