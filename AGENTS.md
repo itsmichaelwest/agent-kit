@@ -26,9 +26,12 @@ cross-cutting invariants.
 
 ## Communication
 
-- Use ASD-STE100 Simplified Technical English. Lead with the result.
-- Follow Zinsser's four principles of quality writing: Clarity, Simplicity, Brevity, Humanity.
-- Be concise. Skip routine narration. Update only for material plan changes, decisions, or blocks.
+- Lead with the result. Use clear, concise, natural ASD-STE100 English for a global audience.
+- Prefer active voice, present tense, and second person. State conditions before actions.
+- Use consistent terms. Avoid idiom, jargon, hype, blame, and claims of ease.
+- Use descriptive sentence-case headings and links, with parallel list items.
+- Preserve exact repository terms, templates, UI text, code, commands, and public contracts.
+- Skip routine narration. Update only for material decisions, changes, or blocks.
 - Final handoff: outcome, material changes, evidence, residual risk.
 
 ## Learnings
@@ -41,7 +44,9 @@ cross-cutting invariants.
 - Use recoverable deletion when available. Ask before unexpected deletion or rename.
 - Stage task files only. Commit staged content exactly when asked.
 - Push, switch branches, amend, or run destructive Git commands only with explicit approval.
-- Use Conventional Commits, single line unless extra explaination is required. Use `gh pr view` and `gh pr diff` for PRs.
+- Follow the repository's commit convention. Use structured prefixes only when policy or tooling requires them.
+- Prefer small logical commits with concise imperative subjects. Add a body when the reason, impact, or trade-offs are not obvious; explain why instead of restating the diff.
+- Use `gh pr view` and `gh pr diff` for PRs.
 
 ## Dependencies
 
