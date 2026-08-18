@@ -729,6 +729,16 @@
       "skillFolderHash": "883a6a7466f55a9cd9f22cf1cce2d9333fc9b998",
       "installedAt": "2026-08-12T09:44:06.942Z",
       "updatedAt": "2026-08-12T11:33:58.174Z"
+    },
+    "remove-dumb-comments": {
+      "source": "LukeberryPi/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/LukeberryPi/skills.git",
+      "skillPath": "skills/remove-dumb-comments/SKILL.md",
+      "skillFolderHash": "4f0002f6f16119f751b2118b2d1b1ee7cdf63eaf",
+      "pluginName": "lukeberry-skills",
+      "installedAt": "2026-08-18T07:59:02.135Z",
+      "updatedAt": "2026-08-18T08:01:08.386Z"
     }
   },
   "dismissed": {
