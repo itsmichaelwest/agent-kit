@@ -739,6 +739,24 @@
       "pluginName": "lukeberry-skills",
       "installedAt": "2026-08-18T07:59:02.135Z",
       "updatedAt": "2026-08-18T08:01:08.386Z"
+    },
+    "designing-gnome-ui": {
+      "source": "mhagrelius/dotfiles",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mhagrelius/dotfiles.git",
+      "skillPath": ".claude/skills/designing-gnome-ui/SKILL.md",
+      "skillFolderHash": "82c42ead8e265656133feda0c27aee060f96b02b",
+      "installedAt": "2026-08-23T09:35:45.873Z",
+      "updatedAt": "2026-08-23T09:35:45.873Z"
+    },
+    "developing-gtk-apps": {
+      "source": "mhagrelius/dotfiles",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mhagrelius/dotfiles.git",
+      "skillPath": ".claude/skills/developing-gtk-apps/SKILL.md",
+      "skillFolderHash": "ad99e8e3061531e39538e4030dcae318f5d2bca2",
+      "installedAt": "2026-08-23T09:35:45.875Z",
+      "updatedAt": "2026-08-23T09:35:45.875Z"
     }
   },
   "dismissed": {
