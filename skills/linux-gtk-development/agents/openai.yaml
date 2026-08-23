@@ -1,0 +1,3 @@
+interface:
+  display_name: "Linux GTK Development"
+  short_description: "Build polished Rust GTK and GNOME apps"
