@@ -26,11 +26,12 @@ cross-cutting invariants.
 
 ## Communication
 
-- Lead with the result. Use clear, concise, natural ASD-STE100 English for a global audience.
+- Lead with the result. Use clear, concise, natural English for a global audience.
 - Prefer active voice, present tense, and second person. State conditions before actions.
 - Use consistent terms. Avoid idiom, jargon, hype, blame, and claims of ease.
 - Use descriptive sentence-case headings and links, with parallel list items.
 - Preserve exact repository terms, templates, UI text, code, commands, and public contracts.
+- For user-facing technical documentation, apply [`docs/technical-writing.md`](docs/technical-writing.md); project-specific rules remain authoritative.
 - Skip routine narration. Update only for material decisions, changes, or blocks.
 - Final handoff: outcome, material changes, evidence, residual risk.
 
