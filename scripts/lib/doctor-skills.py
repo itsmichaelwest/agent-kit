@@ -113,6 +113,19 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
+    # A plugin wrapper may ship a second entrypoint inside the installed skill.
+    # Preserve upstream content, but expose duplicate discovery to the operator.
+    for name in sorted(on_disk):
+        folder = skills_dir / name
+        if not (folder / "SKILL.md").is_file():
+            continue
+        for entrypoint in sorted(folder.rglob("SKILL.md")):
+            if entrypoint.parent != folder:
+                warnings.append(
+                    f"nested skill entrypoint: {entrypoint.relative_to(root)} "
+                    "(check upstream packaging; agents may discover duplicate skills)"
+                )
+
     # ERROR 1: nested .git anywhere under a tracked skill (the npx clone-in footgun).
     # Private (git-ignored) skills may legitimately keep a .git to pull updates from source.
     for p in skills_dir.rglob(".git"):

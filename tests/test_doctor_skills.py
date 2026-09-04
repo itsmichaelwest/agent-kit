@@ -12,6 +12,31 @@ SCRIPT = ROOT / "scripts" / "lib" / "doctor-skills.py"
 
 
 class DoctorSkillsTests(unittest.TestCase):
+    def test_nested_entrypoint_warns_and_fails_strict_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "scripts").mkdir()
+            skill = root / "skills" / "example"
+            nested = skill / "skills" / "example"
+            nested.mkdir(parents=True)
+            for folder in (skill, nested):
+                (folder / "SKILL.md").write_text("---\nname: example\n---\n", encoding="utf-8")
+            (root / "scripts" / "skills-manifest.json").write_text(
+                json.dumps({"local": ["example"], "sources": []}), encoding="utf-8"
+            )
+            (root / ".skill-lock.json").write_text(
+                json.dumps({"version": 3, "skills": {}}), encoding="utf-8"
+            )
+            for strict in (False, True):
+                with self.subTest(strict=strict):
+                    result = subprocess.run(
+                        ["python3", str(SCRIPT), "--repo-root", str(root)]
+                        + (["--strict"] if strict else []),
+                        capture_output=True, text=True,
+                    )
+                    self.assertEqual(result.returncode, 1 if strict else 0, result.stdout + result.stderr)
+                    self.assertIn("nested skill entrypoint:", result.stdout)
+
     def test_retained_skill_is_declared_without_active_upstream_source(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
