@@ -55,6 +55,9 @@ update_skills() {
     else
       skill_args+=("-s" "*")
     fi
+    if [[ $(jqr -r ".sources[$i].fullDepth // false" "$MANIFEST") == true ]]; then
+      skill_args+=("--full-depth")
+    fi
 
     echo -e "  ${YELLOW}[ADD]${NC}  $repo"
     if npx -y skills@latest add "$repo" -g -y "${agent_args[@]}" "${skill_args[@]}" >/dev/null 2>&1; then

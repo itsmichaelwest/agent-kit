@@ -14,8 +14,22 @@
     "ui-polisher",
     "winui-polish"
   ],
-  "$retained_comment": "Frozen upstream snapshots kept only for prompt/skill audits. They are not refreshed by update-skills and may retain historical lockfile provenance.",
+  "$retained_comment": "Preserved skills outside active upstream refresh, including audit snapshots and skills with unverified provenance. They are not self-owned and may retain historical lockfile provenance.",
   "retained": [
+    {
+      "name": "designing-gnome-ui",
+      "source": "mhagrelius/dotfiles",
+      "skillPath": ".claude/skills/designing-gnome-ui/SKILL.md",
+      "skillFolderHash": "82c42ead8e265656133feda0c27aee060f96b02b",
+      "reason": "Upstream inaccessible on 2026-09-04; user confirmed no access or replacement. Preserve the installed snapshot outside active updates."
+    },
+    {
+      "name": "developing-gtk-apps",
+      "source": "mhagrelius/dotfiles",
+      "skillPath": ".claude/skills/developing-gtk-apps/SKILL.md",
+      "skillFolderHash": "ad99e8e3061531e39538e4030dcae318f5d2bca2",
+      "reason": "Upstream inaccessible on 2026-09-04; user confirmed no access or replacement. Preserve the installed snapshot outside active updates."
+    },
     {
       "name": "ux-designer",
       "source": "BumpyClock/dotfiles",
@@ -177,6 +191,7 @@
     },
     {
       "repo": "microsoft/win-dev-skills",
+      "fullDepth": true,
       "skills": [
         "winui-code-review",
         "winui-design",
@@ -197,13 +212,6 @@
       "repo": "LukeberryPi/skills",
       "skills": [
         "remove-dumb-comments"
-      ]
-    },
-    {
-      "repo": "mhagrelius/dotfiles",
-      "skills": [
-        "designing-gnome-ui",
-        "developing-gtk-apps"
       ]
     }
   ]

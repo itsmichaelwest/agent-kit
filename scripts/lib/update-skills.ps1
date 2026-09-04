@@ -69,6 +69,9 @@ function Update-Skills {
         } else {
             $skillArgs += @("-s", "*")
         }
+        if (($src.PSObject.Properties.Name -contains "fullDepth") -and $src.fullDepth -eq $true) {
+            $skillArgs += "--full-depth"
+        }
 
         Write-Host "  [ADD]  $repo" -ForegroundColor Cyan
         $cmdArgs = @("-y", "skills@latest", "add", $repo, "-g", "-y") + $agentArgs + $skillArgs
