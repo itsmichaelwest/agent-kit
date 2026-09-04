@@ -88,7 +88,7 @@ Displacement only affects vertices. If the geometry has too few vertices, the ef
 // PlaneGeometry(width, height, widthSegments, heightSegments)
 new THREE.PlaneGeometry(10, 10, 1, 1);     // 4 vertices — useless for displacement
 new THREE.PlaneGeometry(10, 10, 32, 32);   // 1,089 vertices — low quality ripple
-new THREE.PlaneGeometry(10, 10, 64, 64);   // 4,225 vertices — minimum for smooth ripple
+new THREE.PlaneGeometry(10, 10, 64, 64);   // 4,225 vertices — example ripple starting point
 new THREE.PlaneGeometry(10, 10, 128, 128); // 16,641 vertices — good quality
 new THREE.PlaneGeometry(10, 10, 256, 256); // 66,049 vertices — high quality, heavy
 ```

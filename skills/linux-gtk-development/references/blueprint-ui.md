@@ -211,10 +211,10 @@ Run the Blueprint linter. It catches some HIG and accessibility problems, but it
 
 ## Validation
 
-For every changed Blueprint view:
+For a changed Blueprint view, compile it and inspect the affected behavior. Select additional checks from the affected contracts below; use the full set for resource-pipeline changes or release validation:
 
 - compile or lint every `.blp` file in the same environment as the application build;
-- rebuild resources from a clean build directory;
+- rebuild resources; use a clean build when generated-input tracking or stale output is in question;
 - confirm no generated file needs a manual edit;
 - start the application through its installed or Flatpak entry point;
 - exercise every referenced action and template child;

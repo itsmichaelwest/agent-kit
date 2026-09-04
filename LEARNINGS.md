@@ -1,4 +1,3 @@
-- `skills/migrate-to-codex` only reports Claude plugins when `.claude/plugins` or plugin marketplace files exist; plugin enablement that lives only in `.claude/settings*.json` still needs a manual check against `.codex/config.toml`.
 - Global cross-tool skills are safest when authored once in the repo and linked into `~/.agents/skills`; Claude still needs its own `~/.claude/skills` link, while Copilot global agents must be exposed as `*.agent.md` files.
 - Current Copilot CLI stores desired plugin declarations in repo-owned `.copilot/settings.json` linked to `~/.copilot/settings.json`, but keeps the installed plugin inventory in the auto-managed `~/.copilot/config.json`.
 - Current Codex agent configs should use the GPT-5 family model IDs (`gpt-5.4`, `gpt-5.4-mini`, `gpt-5.5`) rather than older `gpt-5.3-codex*` IDs, which are no longer the right default for new agent configs.

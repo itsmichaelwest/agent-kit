@@ -9,10 +9,10 @@
   "$local_comment": "Skills authored in this repo (not from an upstream source). Listed so `setup.sh doctor` treats them as intentional and never expects them in the lockfile. Folder names under skills/.",
   "local": [
     "linux-gtk-development",
-    "migrate-to-codex",
+    "optimizing-winui-performance",
+    "polishing-winui",
     "shader-prototyping",
-    "ui-polisher",
-    "winui-polish"
+    "ui-polisher"
   ],
   "$retained_comment": "Preserved skills outside active upstream refresh, including audit snapshots and skills with unverified provenance. They are not self-owned and may retain historical lockfile provenance.",
   "retained": [

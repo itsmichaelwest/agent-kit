@@ -4,8 +4,10 @@ Workflow and fix patterns for verifying Light, Dark, and HighContrast theme corr
 
 ## Verification Workflow
 
-1. **Launch the app in Light theme.** Inspect all pages and controls.
-2. **Switch to Dark theme.** Verify every surface, text element, and icon adapts correctly.
+Choose the affected surfaces and shared resource consumers. Cover all pages for a comprehensive audit or changes to application-wide theme resources. For an audit, inspect existing behavior without editing source.
+
+1. **Launch the app in Light theme.** Inspect the selected surfaces and controls.
+2. **Switch to Dark theme.** Verify the selected surfaces, text, and icons adapt correctly.
 3. **Switch to HighContrast.** Verify readability and that no elements disappear.
 4. **Switch back to Light.** Confirm the round-trip works without artifacts.
 

@@ -1,42 +1,36 @@
 ---
-name: winui-polish
-description: Audit and fix WinUI 3 visual polish issues — materials, theming, corner radius, spacing, visual states, typography, and icons. Use when asked to "polish", "visual audit", "dark mode fix", "Mica missing", "corner radius", "visual states", or "theme switch" for a WinUI app.
+name: polishing-winui
+description: Audit or fix visual polish in existing WinUI 3 apps, including materials, themes, spacing, typography, icons, and interaction states. Use for visual reviews or requested polish; app scaffolding and performance profiling belong to other skills.
 ---
 
-# WinUI Polish
+# Polishing WinUI
 
-Audit and fix visual polish defects in WinUI 3 desktop applications. This skill focuses on the **audit-and-fix loop** — it complements the `winui-app` skill (which handles app creation, structure, and development) by providing a structured workflow for finding and resolving visual issues.
+Review visual defects or implement requested polish within the named surfaces and shared resources.
 
-## Polish Flow
+## Scope and workflow
 
-1. **Capture current state.** Delegate to the `ui-polisher` skill's `capture-window.ps1` to screenshot the running app. Capture both light and dark themes.
-2. **Run defect audit.** Walk through `references/issue-taxonomy.md` against the captured screenshots and XAML source. Record every defect.
-3. **Classify each defect** by category (Materials, Theme, Corner Radius, Spacing, Visual States, Typography, Icons) and severity (Critical, Major, Minor).
-4. **Load the matching reference file** for each defect category. See the reference index below.
-5. **Apply fix patterns** from the reference. Make the smallest change that resolves the defect.
-6. **Rebuild and re-capture.** Build the app, launch it, and take new screenshots in both themes.
-7. **Verify fixes and check for regressions.** Compare before/after captures. Confirm no new defects were introduced.
-8. **Generate polish report.** Summarize what was found, what was fixed, and what remains.
+- For an audit or review, inspect and report findings without editing source. A request to fix or polish authorizes relevant edits; continue within that scope without asking again.
+- Identify the affected views, controls, and shared resource consumers. Use [the issue taxonomy](references/issue-taxonomy.md) to classify supported findings; read only the matching references below.
+- Capture and inspect the running UI when available. Use `ui-polisher` if installed, or discover an available capture tool and its actual arguments. If runtime access is unavailable, provide a source review and name the visual checks that remain unverified. Build success or UI Automation state alone does not prove visual correctness.
+- For requested fixes, diagnose the cause and change the relevant XAML, styles, resources, or minimal backdrop/theme setup code. Keep business logic and data flow outside a visual-only task.
+- Verify the affected surface and shared consumers after changes. Check light and dark themes for theme-sensitive changes, contrast themes for affected colors or accessibility, and relevant interaction states for changed controls. Broaden coverage for shared theme resources or an explicitly comprehensive audit.
+- After an unsuccessful check, revise the diagnosis using its evidence. Continue while a concrete check or repair can advance the task. Finish when the requested fixes and relevant checks pass, or report the unresolved defect and unavailable input or capability. Repeat passed checks only when new changes or evidence justify it.
+- Report findings or changes with locations, observed evidence, and remaining limitations. Distinguish screenshot observations from source-based inferences.
 
-## Reference Index
+## Reference index
 
-| Reference file | Topic |
+| When investigating | Read |
 | --- | --- |
-| `references/issue-taxonomy.md` | 7-category defect classification and audit worksheet |
-| `references/material-and-backdrop-fixes.md` | Mica, MicaAlt, Acrylic setup and fallback logic |
-| `references/theme-verification.md` | Light/Dark/HighContrast switching, system brushes, ThemeResource patterns |
-| `references/geometry-and-spacing.md` | Spacing ramp, corner radius resources, type ramp resources |
-| `references/visual-states.md` | PointerOver/Pressed/Focused/Disabled states, VisualStateManager patterns |
-| `references/iconography-polish.md` | Segoe Fluent Icons, icon sizing ramp, color inheritance |
+| Classifying visual defects | [Issue taxonomy](references/issue-taxonomy.md) |
+| Mica, MicaAlt, Acrylic, and fallback behavior | [Materials and backdrops](references/material-and-backdrop-fixes.md) |
+| Theme switching, system brushes, and theme resources | [Theme verification](references/theme-verification.md) |
+| Spacing, corner radius, and typography | [Geometry and spacing](references/geometry-and-spacing.md) |
+| Hover, press, focus, and disabled states | [Visual states](references/visual-states.md) |
+| Fluent icons, sizing, and color inheritance | [Iconography](references/iconography-polish.md) |
 
-## Rules
+## Resource and API choices
 
-- **Visual-only changes.** Never modify app logic, data flow, or business rules. Only touch XAML, styles, resources, and the minimal C# needed for backdrop/theme setup.
-- **Always verify both light and dark themes.** A fix that works in one theme but breaks the other is not a fix.
-- **Use ThemeResource over hardcoded colors.** Every color value in XAML should come from a `{ThemeResource ...}` or `{StaticResource ...}` that resolves correctly in all themes.
-- **Prefer WinUI system resources over custom values.** Use the platform spacing ramp, corner radius tokens, type ramp styles, and system brushes before inventing custom numbers.
-- **Max 3 fix-then-verify iterations.** If defects persist after 3 rounds, stop and report remaining issues with clear descriptions.
-- **Canonical theming authority.** For any theming rule ambiguity, defer to `winui-app/references/styling-theming-materials-and-icons.md` as the single source of truth.
+Prefer WinUI system resources and the project's established design tokens. Use theme-aware resources for colors that vary by theme. Confirm uncertain or version-sensitive API behavior against current Microsoft documentation for the project's Windows App SDK version; the links below are starting points. Project requirements govern the intended design, and installed SDK APIs govern implementation availability.
 
 ## Documentation Sources
 

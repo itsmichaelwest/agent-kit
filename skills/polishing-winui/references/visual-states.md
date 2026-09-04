@@ -16,12 +16,14 @@ Every interactive control should have distinct visual treatment for each state.
 
 ## Verification Process
 
-1. Launch the app and navigate to each page.
-2. For every interactive control (Button, ToggleButton, CheckBox, RadioButton, ComboBox, ListView items, etc.):
+Choose affected controls and consumers of changed styles. Cover all pages only for a comprehensive audit or application-wide style changes.
+
+1. Launch the app and navigate to the selected surfaces.
+2. For each selected interactive control (Button, ToggleButton, CheckBox, RadioButton, ComboBox, ListView items, etc.):
    - Hover the mouse over it. Confirm a visual change.
    - Click/press it. Confirm a distinct pressed appearance.
    - Tab to it with the keyboard. Confirm a focus rectangle appears.
-   - Set `IsEnabled="False"` (or verify naturally disabled controls). Confirm a visually distinct disabled state.
+   - Inspect naturally disabled controls or an existing test harness. When edits are authorized, a temporary test fixture may set `IsEnabled="False"`; remove temporary changes afterward. Confirm a visually distinct disabled state.
 3. Repeat in both Light and Dark themes.
 
 ## VisualStateManager Patterns

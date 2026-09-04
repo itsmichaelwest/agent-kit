@@ -15,6 +15,8 @@ Rapid prototyping workflow for WebGL shader effects using Three.js, React Three 
 
 ### 1. Clarify the Effect Goal
 
+Infer these choices from the request and existing UI. Ask only when a missing choice materially changes the result; use a stated default for routine details.
+
 - What visual result is expected (ripple, distortion, glow, morph, noise field)?
 - Which surface or geometry receives the effect (plane, sphere, custom mesh)?
 - What triggers the effect (time, scroll, mouse hover, click, page load)?
@@ -44,6 +46,8 @@ Write vertex and fragment shaders using patterns from the reference files. Start
 - Profile on mobile devices — reduce segment count or disable effect if GPU budget is exceeded
 - Check for WebGL context loss handling
 
+Complete when the requested effect renders on the intended surface, responds to its trigger, and preserves the surrounding interaction. Report the environments tested and any missing device evidence.
+
 ## Reference Index
 
 | Reference | Covers |
@@ -57,7 +61,7 @@ Write vertex and fragment shaders using patterns from the reference files. Start
 
 ### Uniform Naming
 
-Always use the `u_` prefix for uniforms: `u_time`, `u_resolution`, `u_mouse`, `u_texture`, `u_amplitude`, etc. This distinguishes uniforms from varyings and locals at a glance.
+Preserve the project's uniform convention. For new uniforms without an established convention, use the `u_` prefix: `u_time`, `u_resolution`, `u_mouse`, `u_texture`, `u_amplitude`, etc.
 
 ### Resource Disposal
 
@@ -65,11 +69,11 @@ Always dispose geometry, material, and textures in cleanup. In R3F, return a cle
 
 ### Geometry Subdivision
 
-Displacement shaders require adequate geometry subdivision to produce visible results. A `PlaneGeometry` with only 1x1 segments has 4 vertices — no amount of shader math will create a smooth ripple. Use a minimum of 64x64 segments for visible ripple/wave effects. Higher counts (128x128, 256x256) produce smoother results but cost more.
+Displacement shaders need enough vertices for the intended shape. A `PlaneGeometry` with 1x1 segments has only 4 vertices. Treat 64x64 as an example starting point for a ripple, then choose the lowest subdivision that meets the rendered quality and GPU budget. Higher counts cost more.
 
 ### Mobile Performance
 
-Test on actual mobile hardware. Strategies for mobile:
+When mobile is a target, profile on available representative hardware and state which devices were tested. Emulation does not establish device performance. Strategies for mobile:
 - Reduce segment count (32x32 instead of 128x128)
 - Lower the rendering resolution with `dpr={[1, 1.5]}` on the R3F Canvas
 - Disable the effect entirely behind a `matchMedia` or GPU capability check
@@ -92,7 +96,7 @@ Key references backing this skill's patterns:
 - [Three.js Texture](https://threejs.org/docs/#api/en/textures/Texture) — needsUpdate, dispose, filter modes
 - [React Three Fiber](https://r3f.docs.pmnd.rs/getting-started/introduction) — R3F core docs
 - [@react-three/drei shaderMaterial](https://drei.docs.pmnd.rs/shaders/shader-material) — declarative custom shaders in R3F
-- [Motion for React Three Fiber](https://motion.dev/docs/react-three-fiber) — framer-motion-3d (now part of main motion package)
+- [Motion for React Three Fiber](https://motion.dev/docs/react-three-fiber) — deprecated integration; check the project's versions and exports before using it
 - [Motion docs](https://motion.dev/docs) — useMotionValue, useSpring, animation API
 - [@react-spring/three](https://react-spring.dev/docs/guides/react-three-fiber) — spring physics for 3D
 - [html2canvas](https://html2canvas.hertzen.com/) — DOM-to-canvas capture

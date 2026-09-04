@@ -7,14 +7,18 @@ description: Capture screenshots of running applications for visual review and c
 
 Capture and compare screenshots of running applications across platforms. All scripts live in `scripts/` relative to this skill.
 
+For capture, audit, or comparison requests, inspect and report without changing application source. Apply fixes only when requested, then capture the affected state again. Use supplied images directly when they provide the evidence needed.
+
+Resolve script paths from this `SKILL.md` directory, not the project working directory. Use the host's shell and a writable output directory; examples below use skill-relative paths. Discover the available browser or capture tool and follow its documented interface. Playwright MCP names below apply only when that tool is available.
+
 ## Scripts
 
 ### List Windows
 
-Always list available windows first to get exact identifiers for capture.
+For a new capture, identify the intended window or tab. List available targets when its identity is not already established.
 
 **Web:**
-Use Playwright MCP `browser_tabs` to see open pages.
+Use the available browser tool's tab inventory (for example, Playwright MCP `browser_tabs`).
 
 **Windows:**
 ```powershell
@@ -74,10 +78,12 @@ bash scripts/capture-window.sh --simulator --device <UDID> --output ./before.png
 
 ## Before/After Comparison
 
-1. Capture "before": `--output /tmp/ui-polish/before.png`
-2. Make changes
-3. Capture "after": `--output /tmp/ui-polish/after.png`
-4. Read both images to compare visually
+1. Use supplied before/after images, or capture the baseline in the selected output directory.
+2. When fixes are requested, make the scoped changes and capture the same window, theme, scale, and state again.
+3. Open both images and compare the affected region. Use crop or zoom when available for small details.
+4. Report visible differences and any missing evidence. A saved file alone does not prove a useful capture; inspect for black frames, occlusion, incorrect bounds, or scaling artifacts. UI Automation can verify exposed content but does not replace pixel inspection.
+
+Complete when the requested captures or comparison are delivered and their limits are stated. If capture is unavailable, continue any useful source or supplied-image review and name the missing capability.
 
 ## Platform Detection
 

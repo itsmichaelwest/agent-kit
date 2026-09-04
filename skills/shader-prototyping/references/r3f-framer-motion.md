@@ -104,9 +104,9 @@ When only the shader needs interaction:
 
 ## Motion-Wrapped Meshes with framer-motion-3d
 
-> **Note:** The `framer-motion-3d` package is deprecated — its functionality is now part of the main [`motion`](https://motion.dev/docs/react-three-fiber) package. Import from `motion/react-three` or `framer-motion-3d` (which re-exports from motion).
+> **Compatibility:** The [official integration guide](https://motion.dev/docs/react-three-fiber), checked on 2026-09-04, marks this integration deprecated, documents `framer-motion-3d`, and limits it to React 18. It does not document a `motion/react-three` replacement. Check installed versions and exports before using these examples. Preserve an existing compatible integration; select a supported approach for new work.
 
-The `motion` package provides motion components for R3F meshes:
+The documented `framer-motion-3d` integration provides motion components for R3F meshes:
 
 ```tsx
 import { motion } from 'framer-motion-3d';

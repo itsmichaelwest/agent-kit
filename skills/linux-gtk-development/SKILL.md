@@ -9,9 +9,9 @@ Build Linux desktop software with Rust, GTK 4, and libadwaita. The repository de
 
 ## Start with the repository
 
-Read the applicable `AGENTS.md` and project documentation. Inspect the whole path from workspace configuration to installed desktop artifacts before editing code.
+Read the applicable `AGENTS.md` and project documentation. Trace the affected behavior to its owning code and validation path. Inspect installed artifacts when packaging, resources, activation, or runtime differences affect the task.
 
-Establish these facts:
+Establish the relevant facts below; revisit them when the change crosses another boundary:
 
 - the Cargo workspace boundary and the package that owns the GTK binary;
 - exact `gtk4`, `glib`, `gio`, and `libadwaita` versions, Cargo features, and system-library minimums;
@@ -67,7 +67,7 @@ Use installed GIR data, crate source, generated documentation, and official spec
 
 ## Validation
 
-Run the repository's own commands. For a conventional Rust GTK workspace, the relevant set usually includes:
+Run the repository's required checks and select tests for the affected behavior. For a conventional Rust GTK workspace, choose the relevant commands from:
 
 ```bash
 cargo fmt --all --check
@@ -88,7 +88,7 @@ Add the checks that match the change:
 - inspect loading, empty, populated, disabled, error, offline, destructive, and long-content states;
 - repeat the same trace or benchmark before and after a performance change.
 
-Render and inspect every changed view. A successful compile does not validate layout, focus, accessibility, or interaction.
+Render and inspect the affected states of every changed view. Broaden coverage for shared styles, resources, packaging, or release work. A successful compile does not validate layout, focus, accessibility, or interaction. When a required runtime or display is unavailable, complete source checks and identify the visual or interaction evidence still missing.
 
 ## Handoff
 

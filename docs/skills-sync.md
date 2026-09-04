@@ -179,6 +179,11 @@ set `"fullDepth": true` on its manifest entry. Both update wrappers pass
 `--full-depth` while preserving the source's skill selectors. Microsoft's WinUI
 source needs this for its `plugins/winui/agent-plugin/skills` layout.
 
+`polishing-winui` is repo-authored. It was introduced as `winui-polish` in
+`cc42d2f` and explicitly classified as repo-authored in `5dd3ed4`. Its new name
+distinguishes it from Microsoft's `winui-*` skills. It belongs under `local`
+and has no upstream lockfile entry.
+
 The two skills from the inaccessible `mhagrelius/dotfiles` repository are also
 retained. Their last source paths and hashes live in the manifest. They have no
 active lockfile entries, so the CLI's global update does not retry that source.
@@ -206,8 +211,8 @@ source absent from the manifest.
 The earlier drift â€” manifest â‰  lockfile â‰  `skills/`, the manually-cloned
 `humanizer` carrying a nested `.git`, and `humanizer`/`oklch-skill` untracked and
 undeclared â€” was resolved when this was put in place: both are now upstream
-sources in the manifest, recorded in the lockfile, and vendored cleanly; the five
-repo-authored skills are declared under `local`.
+sources in the manifest, recorded in the lockfile, and vendored cleanly.
+Repo-authored skills are declared under `local`.
 
 ## Private skills (machine-local, not synced)
 
