@@ -1,7 +1,7 @@
 # Single entry point for Windows setup.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("install", "compile-agents", "capture-codex-config", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude", "bootstrap-codex")]
+    [ValidateSet("install", "compile-agents", "capture-codex-config", "preview-codex-config", "link", "link-dotfiles", "link-ai-agents", "reset", "status", "project-agents", "update-skills", "install-skill", "uninstall-skill", "list-skills", "reconcile-skills", "doctor", "plugin-status", "bootstrap-claude", "bootstrap-codex")]
     [string]$Action,
 
     [string]$ProjectPath,
@@ -77,7 +77,8 @@ Usage: setup.ps1 <command> [options]
 Commands:
   install             Full setup: deps + links
   compile-agents      Compile agent templates into tool outputs
-  capture-codex-config  Import portable settings from the live Codex config
+  preview-codex-config  Preview owned-key updates and conflicts without writes
+  capture-codex-config  Import changes to already-owned portable settings
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
@@ -159,6 +160,7 @@ function Get-InstallSkillArgs {
 switch ($Action) {
     "install"        { Install-Deps; Install-Toolchains; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
     "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "preview-codex-config" { $code = Sync-CodexConfig $DotfilesDir -Action preview; if ($code -ne 0) { exit $code } }
     "capture-codex-config" { $code = Sync-CodexConfig $DotfilesDir -Action capture; if ($code -ne 0) { exit $code } }
     "link"           { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir }
     "link-dotfiles"  { Link-Dotfiles $DotfilesDir }

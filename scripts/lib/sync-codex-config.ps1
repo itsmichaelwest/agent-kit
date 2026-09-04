@@ -1,7 +1,7 @@
 function Sync-CodexConfig {
     param(
         [Parameter(Mandatory=$true)][string]$DotfilesDir,
-        [ValidateSet("apply", "capture")][string]$Action = "apply"
+        [ValidateSet("apply", "capture", "preview")][string]$Action = "apply"
     )
 
     $scriptPath = Join-Path $DotfilesDir "scripts\lib\sync-codex-config.py"
@@ -16,6 +16,6 @@ function Sync-CodexConfig {
         return 1
     }
 
-    & $python[0] @($python | Select-Object -Skip 1) $scriptPath $Action --repo-root $DotfilesDir --home-dir $env:USERPROFILE
+    & $python[0] @($python | Select-Object -Skip 1) $scriptPath $Action --repo-root $DotfilesDir --home-dir $env:USERPROFILE | Out-Host
     return $LASTEXITCODE
 }

@@ -58,7 +58,8 @@ Usage: setup.sh <command> [options]
 Commands:
   install             Full setup: deps + links + shell config + MCP servers
   compile-agents      Compile agent templates into tool outputs
-  capture-codex-config  Import portable settings from the live Codex config
+  preview-codex-config  Preview owned-key updates and conflicts without writes
+  capture-codex-config  Import changes to already-owned portable settings
   link                Link dotfiles and AI agent configs (no installs)
   link-dotfiles       Link base dotfiles only
   link-ai-agents      Link AI agent configs only
@@ -87,7 +88,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|capture-codex-config|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude|bootstrap-codex)
+    install|compile-agents|capture-codex-config|preview-codex-config|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude|bootstrap-codex)
       ACTION="$1" ;;
     install-skill)
       ACTION="install-skill"; shift; SKILL_ARGS=("$@"); break ;;
@@ -149,6 +150,7 @@ case "$ACTION" in
   install)        install_deps; install_toolchains; compile_agents; sync_codex_config apply; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins; bootstrap_codex_plugins ;;
   install-mcp)    install_mcp ;;
   compile-agents) compile_agents; sync_codex_config apply ;;
+  preview-codex-config) sync_codex_config preview ;;
   capture-codex-config) sync_codex_config capture ;;
   link)           compile_agents; sync_codex_config apply; link_dotfiles; link_ai_agents ;;
   link-dotfiles)  link_dotfiles ;;

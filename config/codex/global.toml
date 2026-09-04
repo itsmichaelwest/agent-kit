@@ -1,8 +1,8 @@
-# Portable Codex settings. Machine-local runtime state stays outside the
-# Agent Kit managed block in ~/.codex/config.toml.
+# Portable Codex settings. Only the leaf keys listed here are synced.
+# Other keys in ~/.codex/config.toml remain machine-local.
+# Manage permissions locally in Codex rather than syncing a global policy.
 #:schema https://developers.openai.com/codex/config-schema.json
 personality = "pragmatic"
-sandbox_mode = "danger-full-access"
 web_search = "live"
 
 [features]

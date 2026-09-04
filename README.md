@@ -212,3 +212,10 @@ Some agent/skill designs and conventions in this repo were informed by:
 - [butter-zone/design-standards](https://github.com/butter-zone/design-standards) — Design standards and conventions
 - [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) — Community subagent catalog
 - [The 2-Minute Claude Code Upgrade You're Probably Missing: LSP](https://karanbansal.in/blog/claude-code-lsp/) — LSP guidance in coding agents
+
+## Codex config sync
+
+Portable settings sync by individual key; local app settings remain on each machine.
+Run `setup.ps1 preview-codex-config` (Windows) or `setup.sh preview-codex-config`
+through the scripts directory to inspect updates before `setup link`.
+See [Codex config sync](docs/codex-config-sync.md) for apply, capture, and conflicts.

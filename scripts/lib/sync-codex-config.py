@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Synchronize Agent Kit's managed block in the user's Codex config."""
-
+"""Sync explicitly owned Codex keys; keep all other configuration local."""
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import sys
@@ -12,463 +10,292 @@ import tempfile
 import time
 import tomllib
 from pathlib import Path
-from typing import Literal
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'vendor'))
+import tomlkit
 
-START_MARKER = "# >>> agent-kit managed codex config"
-END_MARKER = "# <<< agent-kit managed codex config"
-GENERATED_START_MARKER = "# >>> agent-kit generated agents"
-GENERATED_END_MARKER = "# <<< agent-kit generated agents"
-BASELINE_NAME = "agent-kit-config-baseline.json"
-LOCK_NAME = "agent-kit-config-sync.lock"
-MARKERS = {START_MARKER, END_MARKER, GENERATED_START_MARKER, GENERATED_END_MARKER}
-
-Classification = Literal["new", "unchanged", "repo-only", "live-only", "conflict"]
-
+BASELINE_NAME = 'agent-kit-config-baseline.json'
+LOCK_NAME = 'agent-kit-config-sync.lock'
+MARKERS = ('# >>> agent-kit managed codex config', '# <<< agent-kit managed codex config',
+           '# >>> agent-kit generated agents', '# <<< agent-kit generated agents')
 
 class SyncError(RuntimeError):
     pass
 
 
-def split_toml_key_path(text: str) -> list[str]:
-    """Split a TOML dotted key while respecting quoted key components."""
-    parts: list[str] = []
-    start = 0
-    quote: str | None = None
-    escaped = False
-    for index, character in enumerate(text):
-        if quote:
-            if quote == '"' and escaped:
-                escaped = False
-            elif quote == '"' and character == "\\":
-                escaped = True
-            elif character == quote:
-                quote = None
-        elif character in {'"', "'"}:
-            quote = character
-        elif character == ".":
-            parts.append(text[start:index].strip())
-            start = index + 1
-    parts.append(text[start:].strip())
-    return [part for part in parts if part]
+def read(path):
+    return path.read_bytes() if path.exists() else b''
 
 
-def unquote_toml_key(part: str) -> str:
-    if len(part) >= 2 and part[0] == part[-1] and part[0] in {'"', "'"}:
-        if part[0] == '"':
-            try:
-                return str(json.loads(part))
-            except json.JSONDecodeError:
-                pass
-        return part[1:-1]
-    return part
-
-
-def strip_toml_comment(line: str) -> str:
-    quote: str | None = None
-    escaped = False
-    for index, character in enumerate(line):
-        if quote:
-            if quote == '"' and escaped:
-                escaped = False
-            elif quote == '"' and character == "\\":
-                escaped = True
-            elif character == quote:
-                quote = None
-        elif character in {'"', "'"}:
-            quote = character
-        elif character == "#":
-            return line[:index]
-    return line
-
-
-def table_parts(line: str) -> list[str] | None:
-    stripped = strip_toml_comment(line).strip()
-    if stripped.startswith("[[") and stripped[-2:] == "]]":
-        body = stripped[2:-2]
-    elif stripped.startswith("[") and stripped.endswith("]"):
-        body = stripped[1:-1]
-    else:
-        return None
-    parts = split_toml_key_path(body)
-    return [unquote_toml_key(part) for part in parts] if parts else None
-
-
-def table_root(line: str) -> str | None:
-    parts = table_parts(line)
-    return parts[0] if parts else None
-
-
-def assignment_root(line: str) -> str | None:
-    stripped = line.lstrip()
-    if not stripped or stripped.startswith("#") or stripped.startswith("["):
-        return None
-    quote: str | None = None
-    escaped = False
-    for index, character in enumerate(stripped):
-        if quote:
-            if quote == '"' and escaped:
-                escaped = False
-            elif quote == '"' and character == "\\":
-                escaped = True
-            elif character == quote:
-                quote = None
-        elif character in {'"', "'"}:
-            quote = character
-        elif character == "=":
-            parts = split_toml_key_path(stripped[:index])
-            return unquote_toml_key(parts[0]) if parts else None
-    return None
-
-
-def codex_dir(home_dir: Path) -> Path:
-    return home_dir / ".codex"
-
-
-def live_config_path(home_dir: Path) -> Path:
-    return codex_dir(home_dir) / "config.toml"
-
-
-def baseline_path(home_dir: Path) -> Path:
-    return codex_dir(home_dir) / BASELINE_NAME
-
-
-def sha256(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def load_toml(path: Path) -> dict:
+def parse(raw):
     try:
-        return tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, tomllib.TOMLDecodeError) as exc:
-        raise SyncError(f"Invalid TOML in {path}: {exc}") from exc
+        text = raw.decode('utf-8')
+        tomllib.loads(text)
+        return tomlkit.parse(text)
+    except (ValueError, tomllib.TOMLDecodeError) as exc:
+        raise SyncError('Invalid TOML; no configuration changed') from exc
 
 
-def validate_portable_source(source_path: Path, source: dict) -> None:
-    forbidden = []
-    if "projects" in source:
-        forbidden.append("[projects]")
-    agents = source.get("agents")
-    if agents is not None and (
-        not isinstance(agents, dict)
-        or any(key != "max_threads" or isinstance(value, dict) for key, value in agents.items())
-    ):
-        forbidden.append("generated [agents.*]")
-    if forbidden:
-        joined = ", ".join(forbidden)
-        raise SyncError(f"{source_path} contains non-portable/generated sections: {joined}")
-
-
-def render_generated_agents(repo_root: Path) -> str:
-    generated_dir = repo_root / ".codex" / "agents"
-    lines = [GENERATED_START_MARKER]
-    paths = sorted(generated_dir.glob("*.toml")) if generated_dir.exists() else []
-    for path in paths:
-        agent = load_toml(path)
-        name = str(agent.get("name", path.stem))
-        description = str(agent.get("description", "")).replace("\\", "\\\\").replace('"', '\\"')
-        lines.extend(
-            [
-                f"[agents.{name}]",
-                f'config_file = "agents/{path.name}"',
-                f'description = "{description}"',
-                "",
-            ]
-        )
-    lines.append(GENERATED_END_MARKER)
-    return "\n".join(lines) + "\n"
-
-
-def render_managed_block(repo_root: Path) -> str:
-    source_path = repo_root / "config" / "codex" / "global.toml"
-    if not source_path.exists():
-        raise SyncError(f"Missing portable Codex config: {source_path}")
-    source_text = source_path.read_text(encoding="utf-8")
-    source = load_toml(source_path)
-    validate_portable_source(source_path, source)
-    source_text = source_text.rstrip() + "\n"
-    return f"{START_MARKER}\n{source_text}\n{render_generated_agents(repo_root)}{END_MARKER}\n"
-
-
-def managed_roots(repo_root: Path) -> set[str]:
-    source_path = repo_root / "config" / "codex" / "global.toml"
-    source = load_toml(source_path)
-    validate_portable_source(source_path, source)
-    # Agent registrations are always compiler-owned, even when the source also
-    # contains portable [agents] settings such as max_threads.
-    return set(source) | {"agents"}
-
-
-def strip_legacy_managed_content(text: str, roots: set[str], *, drop_comments: bool = False) -> str:
-    """Remove unmarked Agent Kit-owned TOML roots while preserving other text."""
-    output: list[str] = []
-    skipping = False
-    for line in text.splitlines(keepends=True):
-        if line.strip() in MARKERS:
-            continue
-        if drop_comments and line.lstrip().startswith("#"):
-            continue
-        root = table_root(line)
-        if root is not None:
-            nested = len(table_parts(line) or ()) > 1
-            skipping = root in roots and (not nested or root == "agents")
-            if not skipping:
-                output.append(line)
-            continue
-        if skipping:
-            continue
-        key = assignment_root(line)
-        if key in roots and not output_has_table(output):
-            continue
-        output.append(line)
-    return "".join(output)
-
-
-def output_has_table(output: list[str]) -> bool:
-    return any(table_root(line) is not None for line in output)
-
-
-def split_root_prelude(text: str) -> tuple[str, str]:
-    """Separate root assignments/comments from the first TOML table."""
-    lines = text.splitlines(keepends=True)
-    for index, line in enumerate(lines):
-        if table_root(line) is not None:
-            return "".join(lines[:index]), "".join(lines[index:])
-    return text, ""
-
-
-def canonical_config(unmanaged: str, desired: str, roots: set[str]) -> str:
-    cleaned = strip_legacy_managed_content(unmanaged, roots)
-    prelude, tables = split_root_prelude(cleaned)
-    if prelude and not prelude.endswith("\n"):
-        prelude += "\n"
-    result = prelude + desired + tables
-    try:
-        tomllib.loads(result)
-    except tomllib.TOMLDecodeError as exc:
-        raise SyncError(f"Rendered Codex config is invalid TOML: {exc}") from exc
+def flatten(data, prefix=()):
+    result = {}
+    for key, value in data.items():
+        path = prefix + (key,)
+        if isinstance(value, dict):
+            result.update(flatten(value, path))
+        else:
+            result[path] = value
     return result
 
 
-def split_managed_block(text: str) -> tuple[str, str | None, str]:
-    start = text.find(START_MARKER)
-    end = text.find(END_MARKER)
-    if (start == -1) != (end == -1):
-        raise SyncError("Codex config has an incomplete Agent Kit managed block")
-    if start == -1:
-        return text, None, ""
-    if end < start:
-        raise SyncError("Codex config has an invalid Agent Kit marker order")
-    end += len(END_MARKER)
-    if text.startswith("\n", end):
-        end += 1
-    if text.find(START_MARKER, start + len(START_MARKER)) != -1:
-        raise SyncError("Codex config has multiple Agent Kit managed blocks")
-    block = text[start:end]
-    generated_start = block.find(GENERATED_START_MARKER)
-    generated_end = block.find(GENERATED_END_MARKER)
-    if (generated_start == -1) != (generated_end == -1) or (
-        generated_start != -1 and generated_end < generated_start
-    ):
-        raise SyncError("Codex config has malformed generated-agent markers")
-    prefix = text[:start]
-    suffix = text[end:]
-    return prefix, block, suffix
+def state(data, path):
+    value = data
+    for key in path:
+        if not isinstance(value, dict) or key not in value:
+            return {'present': False}
+        value = value[key]
+    return {'present': True, 'value': value}
 
 
-def portable_from_block(block: str) -> str:
-    generated_start = block.find(GENERATED_START_MARKER)
-    if generated_start == -1:
-        raise SyncError("Managed block is missing generated-agent markers")
-    portable = block[len(START_MARKER) : generated_start].strip("\n")
-    if not portable:
-        raise SyncError("Managed block has no portable Codex settings")
-    portable += "\n"
-    try:
-        tomllib.loads(portable)
-    except tomllib.TOMLDecodeError as exc:
-        raise SyncError(f"Managed portable settings are invalid TOML: {exc}") from exc
-    return portable
+def same(left, right):
+    """TOML types matter: booleans, integers, and floats are distinct."""
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(same(left[k], right[k]) for k in left)
+    if isinstance(left, list):
+        return len(left) == len(right) and all(same(a, b) for a, b in zip(left, right))
+    return left == right
 
 
-def managed_portable_from_block(block: str, roots: set[str]) -> str:
-    body = block[len(START_MARKER) : block.find(END_MARKER)]
-    lines: list[str] = []
-    include = False
-    for line in body.splitlines(keepends=True):
-        if line.strip() in MARKERS:
-            continue
-        root = table_root(line)
-        if root is not None:
-            nested = len(table_parts(line) or ()) > 1
-            include = root in roots and not nested
-            if root == "agents" and nested:
-                include = False
-            if include:
-                lines.append(line)
-            continue
-        if include:
-            lines.append(line)
-        elif not output_has_table(lines):
-            key = assignment_root(line)
-            if key in roots:
-                lines.append(line)
-    portable = "".join(lines).strip() + "\n"
-    try:
-        tomllib.loads(portable)
-    except tomllib.TOMLDecodeError as exc:
-        raise SyncError(f"Managed portable settings are invalid TOML: {exc}") from exc
-    return portable
+def put(document, path, value):
+    node = document
+    for key in path[:-1]:
+        if key not in node:
+            node[key] = tomlkit.table()
+        elif not hasattr(node[key], 'items'):
+            raise SyncError('Cannot edit key through a scalar: ' + '.'.join(path))
+        node = node[key]
+    if value['present']:
+        node[path[-1]] = value['value']
+    else:
+        node.pop(path[-1], None)
 
 
-def load_baseline(home_dir: Path) -> dict | None:
-    path = baseline_path(home_dir)
+def label(path):
+    # JSON-quoted segments keep dotted role names unambiguous.
+    return '.'.join(json.dumps(k) if '.' in k else k for k in path)
+
+
+def load_source(repo):
+    path = repo / 'config/codex/global.toml'
     if not path.exists():
-        return None
+        raise SyncError('Missing portable config: ' + str(path))
+    raw = read(path)
+    doc = parse(raw)
+    data = tomllib.loads(raw.decode())
+    if 'projects' in data:
+        raise SyncError('Project trust must stay local')
+    for key, value in data.get('agents', {}).items():
+        if isinstance(value, dict):
+            raise SyncError('Agent registrations are compiler-owned')
+    return path, raw, doc, data
+
+
+def desired_keys(repo, data):
+    portable = flatten(data)
+    desired = {p: {'present': True, 'value': v} for p, v in portable.items()}
+    for path in sorted((repo / '.codex/agents').glob('*.toml')):
+        agent = tomllib.loads(path.read_text(encoding='utf-8'))
+        name = agent.get('name', path.stem)
+        for key, value in {'config_file': 'agents/' + path.name,
+                           'description': agent.get('description', '')}.items():
+            desired[('agents', name, key)] = {'present': True, 'value': value}
+    return portable, desired
+
+
+def load_baseline(path):
+    if not path.exists():
+        return {}, True
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise SyncError(f"Invalid baseline file {path}: {exc}") from exc
-    if not isinstance(data, dict) or not data.get("block_sha256") or not data.get("portable_sha256"):
-        raise SyncError(f"Invalid baseline file {path}")
-    return data
+        data = json.loads(path.read_text(encoding='utf-8'))
+        if data.get('version') == 2:
+            entries = data['keys']
+            result = {}
+            for item in entries:
+                p = tuple(item['path'])
+                if not p or not all(isinstance(k, str) for k in p) or p in result:
+                    raise ValueError('invalid path')
+                v = item['state']
+                if not isinstance(v.get('present'), bool) or (v['present'] and 'value' not in v):
+                    raise ValueError('invalid state')
+                result[p] = v
+            return result, False
+        if data.get('block_sha256') and data.get('portable_sha256'):
+            # Old hashes cannot recover individual values. Adopt equal keys,
+            # preserve differing values and expose them for explicit capture.
+            return {}, True
+        raise ValueError('unknown baseline')
+    except (ValueError, KeyError, TypeError) as exc:
+        raise SyncError('Invalid sync baseline: ' + str(path)) from exc
 
 
-def save_baseline(home_dir: Path, block: str) -> None:
-    path = baseline_path(home_dir)
-    payload = {
-        "block_sha256": sha256(block),
-        "portable_sha256": sha256(portable_from_block(block)),
-    }
-    atomic_write(path, json.dumps(payload, indent=2) + "\n", backup=False)
+def migrate_comments(raw):
+    # Remove only actual comment items, never marker text inside string values.
+    doc = parse(raw)
+    found = []
+    def visit(container):
+        body = container.body if hasattr(container, 'body') else container.value.body
+        for _, item in list(body):
+            if isinstance(item, tomlkit.items.Comment) and item.as_string().strip() in MARKERS:
+                found.append(item.as_string().strip())
+            elif isinstance(item, tomlkit.items.Table):
+                visit(item)
+    visit(doc)
+    for start, end in ((MARKERS[0], MARKERS[1]), (MARKERS[2], MARKERS[3])):
+        if found.count(start) != found.count(end) or found.count(start) > 1:
+            raise SyncError('Incomplete or duplicate legacy managed markers')
+        if start in found and found.index(start) > found.index(end):
+            raise SyncError('Invalid legacy marker order')
+    # Container.remove cannot address anonymous comments. Clear only their text.
+    def clear(container):
+        body = container.body if hasattr(container, 'body') else container.value.body
+        for _, item in list(body):
+            if isinstance(item, tomlkit.items.Comment) and item.as_string().strip() in MARKERS:
+                item.trivia.comment = ''
+            elif isinstance(item, tomlkit.items.Table):
+                clear(item)
+    clear(doc)
+    return doc
 
 
-def classify(current: str | None, desired: str, baseline: dict | None) -> Classification:
-    if current is None:
-        return "new"
-    current_hash = sha256(current)
-    desired_hash = sha256(desired)
-    if current_hash == desired_hash:
-        return "unchanged"
-    if baseline is None:
-        return "live-only"
-    baseline_hash = baseline["block_sha256"]
-    if current_hash == baseline_hash:
-        return "repo-only"
-    if desired_hash == baseline_hash:
-        return "live-only"
-    return "conflict"
-
-
-def acquire_lock(home_dir: Path) -> Path:
-    path = codex_dir(home_dir) / LOCK_NAME
-    try:
-        path.mkdir(parents=True)
-    except FileExistsError as exc:
-        raise SyncError(f"Another Codex config sync is already running: {path}") from exc
-    return path
-
-
-def atomic_write(path: Path, text: str, *, backup: bool) -> None:
+def checked_write(path, payload, expected):
+    """Atomic replacement with optimistic concurrency; not an app-wide lock."""
+    if path.is_symlink():
+        raise SyncError('Refusing to replace symlink: ' + str(path))
+    if read(path) != expected:
+        raise SyncError('File changed during sync; retry: ' + str(path))
+    if payload == expected:
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
-    if backup and path.exists():
-        stamp = time.strftime("%Y%m%d_%H%M%S")
-        backup_path = path.with_name(f"{path.name}.backup.{stamp}")
-        backup_path.write_bytes(path.read_bytes())
-    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    fd, name = tempfile.mkstemp(prefix='.' + path.name + '.', dir=path.parent)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp_name, path)
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if read(path) != expected:
+            raise SyncError('File changed during sync; retry: ' + str(path))
+        if expected:
+            backup = path.with_name(path.name + '.backup.' + str(time.time_ns()))
+            backup.write_bytes(expected)
+        os.replace(name, path)
     finally:
-        if os.path.exists(temp_name):
-            os.unlink(temp_name)
+        if os.path.exists(name):
+            os.unlink(name)
 
 
-def apply_config(repo_root: Path, home_dir: Path) -> int:
-    target = live_config_path(home_dir)
-    if target.is_symlink():
-        raise SyncError(f"Refusing to manage symlink target; remove it manually first: {target}")
-    desired = render_managed_block(repo_root)
-    roots = managed_roots(repo_root)
-    existing = target.read_text(encoding="utf-8") if target.exists() else ""
-    prefix, current, suffix = split_managed_block(existing)
-    prefix = strip_legacy_managed_content(prefix, roots)
-    suffix = strip_legacy_managed_content(suffix, roots)
-    baseline = load_baseline(home_dir)
-    state = classify(current, desired, baseline)
-    legacy_inside = (
-        strip_legacy_managed_content(current, roots, drop_comments=True) if current is not None else ""
-    )
-    if not legacy_inside.strip():
-        legacy_inside = ""
-    if legacy_inside.strip():
-        state = "repo-only"
-    if state == "live-only":
-        raise SyncError("Codex managed block has live-only changes; run capture-codex-config")
-    if state == "conflict":
-        raise SyncError("Codex managed block changed in both repository and live config; resolve before linking")
-    unmanaged = prefix + legacy_inside + suffix
-    updated = canonical_config(unmanaged, desired, roots)
-    if state == "unchanged" and updated == existing:
-        save_baseline(home_dir, current or desired)
+def sync(repo, home, action):
+    source, source_raw, source_doc, source_data = load_source(repo)
+    portable, desired = desired_keys(repo, source_data)
+    live = home / '.codex/config.toml'
+    baseline = home / '.codex' / BASELINE_NAME
+    if live.is_symlink():
+        raise SyncError('Live config must not be a symlink')
+    if action == 'capture' and not live.exists():
+        raise SyncError('Missing live config; apply before capture')
+    live_raw, baseline_raw = read(live), read(baseline)
+    live_doc = migrate_comments(live_raw)
+    live_data = tomllib.loads(live_raw.decode())
+    previous, migrating = load_baseline(baseline)
+    next_base = {}
+    edits = []
+    conflicts = []
+    reported = 0
+    for path, wanted in sorted(desired.items()):
+        actual = state(live_data, path)
+        old = previous.get(path)
+        if same(actual, wanted):
+            status = 'UNCHANGED'
+            next_base[path] = wanted
+        elif old is None:
+            status = 'APPLY' if not actual['present'] else 'LOCAL'
+            if status != 'APPLY' or action != 'capture':
+                next_base[path] = wanted
+        elif same(wanted, old):
+            status = 'LOCAL'
+            next_base[path] = old
+        elif same(actual, old):
+            status = 'APPLY'
+            next_base[path] = old
+        else:
+            status = 'CONFLICT'
+            conflicts.append(path)
+        if status != 'UNCHANGED':
+            print(f'[{status}] {label(path)}')
+            reported += 1
+        if status == 'APPLY' and action != 'capture':
+            edits.append((path, wanted))
+            next_base[path] = wanted
+        elif status == 'LOCAL' and action == 'capture' and path in portable:
+            edits.append((path, actual))
+            next_base[path] = actual
+        elif status == 'LOCAL' and action == 'capture':
+            print('[SKIP] Compiler-owned field: ' + label(path))
+    for path in sorted(set(previous) - set(desired)):
+        print('[RELEASE] ' + label(path))
+    if migrating:
+        print('[MIGRATE] Adopt per-key baseline; preserve existing local values')
+    if conflicts:
+        raise SyncError('Conflicting keys; no writes. Make repo and local values agree, then retry.')
+    if action == 'preview':
+        if not reported and not migrating and set(previous) == set(desired):
+            print('[OK] All owned settings are synchronized')
         return 0
-    atomic_write(target, updated, backup=target.exists())
-    save_baseline(home_dir, desired)
-    print(f"[WRITE] {target}")
+    target, expected, document = (source, source_raw, source_doc) if action == 'capture' else (live, live_raw, live_doc)
+    for path, value in edits:
+        put(document, path, value)
+    output = tomlkit.dumps(document).encode('utf-8')
+    parse(output)
+    # Capture can remove ownership; don't leave deleted source keys in baseline.
+    if action == 'capture':
+        remaining = flatten(tomllib.loads(output.decode()))
+        next_base = {p: v for p, v in next_base.items() if p not in portable or p in remaining}
+    payload = json.dumps({'version': 2, 'keys': [{'path': list(p), 'state': s}
+                         for p, s in sorted(next_base.items())]}, indent=2).encode() + b'\n'
+    # Check all inputs before any write. Baseline is committed last; if interrupted,
+    # converged keys are accepted on the next run.
+    for path, raw in ((source, source_raw), (live, live_raw), (baseline, baseline_raw)):
+        if read(path) != raw:
+            raise SyncError('Input changed during sync; retry: ' + str(path))
+    checked_write(target, output, expected)
+    checked_write(baseline, payload, baseline_raw)
+    print('[OK] ' + ('Captured owned local values' if action == 'capture' else 'Synced owned settings'))
     return 0
 
 
-def capture_config(repo_root: Path, home_dir: Path) -> int:
-    target = live_config_path(home_dir)
-    if target.is_symlink():
-        raise SyncError(f"Refusing to capture from symlink target; remove it manually first: {target}")
-    if not target.exists():
-        raise SyncError(f"Missing Codex config: {target}")
-    existing = target.read_text(encoding="utf-8")
-    _, current, _ = split_managed_block(existing)
-    if current is None:
-        raise SyncError("Codex config has no Agent Kit managed block to capture")
-    roots = managed_roots(repo_root)
-    portable = managed_portable_from_block(current, roots)
-    source_path = repo_root / "config" / "codex" / "global.toml"
-    source = load_toml(source_path)
-    validate_portable_source(source_path, source)
-    baseline = load_baseline(home_dir)
-    if baseline:
-        current_portable_hash = sha256(portable)
-        source_portable_hash = sha256(source_path.read_text(encoding="utf-8").rstrip() + "\n")
-        baseline_portable_hash = baseline["portable_sha256"]
-        if current_portable_hash != baseline_portable_hash and source_portable_hash != baseline_portable_hash:
-            raise SyncError("Portable Codex settings changed in both repository and live config; resolve before capture")
-    if portable != source_path.read_text(encoding="utf-8"):
-        atomic_write(source_path, portable, backup=True)
-        print(f"[CAPTURE] {source_path}")
-    save_baseline(home_dir, current)
-    return 0
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("apply", "capture"))
-    parser.add_argument("--repo-root", required=True, type=Path)
-    parser.add_argument("--home-dir", required=True, type=Path)
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', choices=('apply', 'capture', 'preview'))
+    parser.add_argument('--repo-root', type=Path, required=True)
+    parser.add_argument('--home-dir', type=Path, required=True)
     args = parser.parse_args()
-    lock = None
+    lock = args.home_dir / '.codex' / LOCK_NAME
+    acquired = False
     try:
-        lock = acquire_lock(args.home_dir)
-        if args.action == "apply":
-            return apply_config(args.repo_root, args.home_dir)
-        return capture_config(args.repo_root, args.home_dir)
-    except SyncError as exc:
-        print(f"[ERROR] {exc}", file=sys.stderr)
+        if args.action != 'preview':
+            try:
+                lock.mkdir(parents=True)
+                acquired = True
+            except FileExistsError as exc:
+                raise SyncError('Another config sync is running: ' + str(lock)) from exc
+        return sync(args.repo_root, args.home_dir, args.action)
+    except (SyncError, OSError, ValueError) as exc:
+        print('[ERROR] ' + str(exc), file=sys.stderr)
         return 1
     finally:
-        if lock is not None:
+        if acquired:
             lock.rmdir()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

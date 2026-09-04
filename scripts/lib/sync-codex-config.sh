@@ -1,5 +1,5 @@
 #!/bin/bash
-# Synchronize the managed Codex config block. Sourced by setup.sh.
+# Synchronize explicitly owned Codex settings. Sourced by setup.sh.
 
 SYNC_CODEX_CONFIG_SCRIPT="$DOTFILES_DIR/scripts/lib/sync-codex-config.py"
 
