@@ -1,70 +1,60 @@
 # Launch choreography
 
-The order that produced a window at about 550 ms and rows at 660 ms
-unpackaged (650 and 730 packaged) from process start on a ReadyToRun build,
-and 465 and 560 ms on Native AOT.
+Use the application's startup contract to decide what can overlap. Preserve
+session initialization, storage migrations, and first-run decisions before
+moving work across threads or changing when the window appears.
 
-## App constructor
+## Safe prewarm
 
-1. Mark the trace.
-2. `Task.Run` the serializer warm-up.
-3. Resolve the data root and log directory.
-4. Single-instance registration, then start the helper process if this is
-   the main instance and none is running.
-5. `InitializeComponent()`.
+Prewarm only services whose constructors and dependency chains are safe on the
+thread pool. A singleton resolution can block the UI while another thread
+constructs it; that constructor must never wait for a UI callback. Complete
+storage migration or fresh-install detection before reading credentials.
 
-## OnLaunched
+Keep dispatcher-capturing services and XAML objects on the UI thread. Keep
+expensive optional engines lazy until their feature is used. Resolving a facade
+must not force its lazy dependencies. Defer optional integrations until after
+the first frame, with an on-demand path if the user invokes them earlier.
+Warm-up failures must leave normal initialization usable. Avoid warm-up methods
+that repeat the same disk read on every call.
 
-1. Connect to the helper and complete the handshake.
-2. Start the event router (dispatches to the UI thread).
-3. Send the launch burst.
-4. If a configuration file exists and this is not a startup launch, build the
-   main window now, speculatively. `Populate()` runs on a later dispatcher
-   turn so any batch already posted (the summary, usually) applies first and
-   its page requests go out before the sidebar is built.
-5. Await the configuration reply with a timeout. Only when nothing is
-   configured does the inventory matter to the setup decision, so a
-   configured app does not wait for it.
-6. First run: discard the speculative window, show the wizard.
-7. Otherwise gate the reveal on `Task.WhenAll` of the replies the sidebar
-   needs, with a deadline (1.5 s) so a slow helper does not hold the window.
-   Do not gate on content rows: the page shows its loading state until they
-   land.
-8. Post the reveal at `DispatcherQueuePriority.Low`.
-9. Defer tray icon and notification registration until the first rows have
-   rendered, or a 1.5 s deadline when there is nothing to draw. Together they
-   held the UI thread for a few hundred milliseconds.
+## Order work by dependency
 
-## Window construction
+1. Record process-relative trace marks and establish single-instance ownership.
+2. Start independent background work after its prerequisites are satisfied.
+3. Initialize XAML and connect to the data source. Apply incoming data through
+   the UI dispatcher without blocking it on synchronous waits.
+4. Resolve the first-run or session decision before exposing the relevant UI.
+   Speculative window construction is useful only if it can be discarded safely.
+5. Build the window and the state needed for its initial navigation surface.
+6. Reveal it according to the product's contract. Give required remote data a
+   bounded wait and an explicit loading or error state.
+7. Defer optional work until the relevant rendered-content mark, with a fallback
+   for empty or failed content loads.
 
-`PrepareLaunchWindow` creates the window and applies chrome (backdrop,
-extended title bar, icon, remembered placement) without activating it.
-`RevealLaunchWindow` activates. `DiscardLaunchWindow` closes an unrevealed
-window when the helper says setup is incomplete. The window subscribes to
-`CompositionTarget.Rendered` before activation and marks the first frame and
-the first frame after rows.
+A low-priority reveal can let already queued data batches apply before the
+first frame. Measure whether this reduces layout work or merely delays reveal.
+Do not make first content depend on an unbounded background operation.
 
-## Matching another platform
+## Placement and reveal
 
-When a macOS or other client already has a launch rule (open once the
-sidebar can draw; spinner where the content goes), copy the rule rather than
-inventing a stricter one. Parity on the gate makes the two apps feel the
-same and removes a whole class of "why does Windows wait" questions.
+Separate window construction from activation. Apply saved placement after
+construction and event registration, just before activation. Native placement
+APIs can show the window themselves; calling them during construction can
+expose an incomplete surface. Let the framework arrange the restored size
+before reconciling responsive controls.
 
-## What the trace looked like after
+Trace placement, size, and display-mode events when navigation starts in an
+inconsistent state. Avoid competing assignments to adaptive control properties
+until the event sequence identifies the conflict.
 
-ReadyToRun, packaged, with the unpackaged figure in brackets:
+Keep the root visible by default. A reveal animation that fails must not leave
+an invisible window. Make completion idempotent and provide a visible fallback.
+Subscribe to the frame marker before activation, then detach it when the
+measurement completes. Record first frame and useful content separately.
 
-```
-   119 ms  app.constructing         (86 unpackaged)
-   193 ms  helper.spawned
-   281 ms  launched
-   319 ms  helper.connected         (214 unpackaged)
-   326 ms  startup.requests.sent
-   417 ms  window.xaml
-   487 ms  window.created
-   538 ms  sidebar.populated        (442 unpackaged)
-   647 ms  window.first-frame       (549 unpackaged)
-   663 ms  content.rows
-   730 ms  content.rows.rendered    (658 unpackaged)
-```
+## Match the product's launch contract
+
+If other supported clients establish when navigation appears and where loading
+states belong, preserve that behavior unless a change is requested. Evaluate
+cold startup, warm startup, and revealing a resident process separately.

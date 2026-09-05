@@ -1,5 +1,29 @@
 # Measuring a WinUI 3 launch
 
+## Build identity and evidence limits
+
+Identify the executable, architecture, configuration, runtime, package path,
+and profile before interpreting a trace. Debug output that loads CoreCLR is
+not evidence of a Native AOT run. Keep first-chance C++ exceptions separate
+from fatal events; an exception observed by a debugger may be handled normally.
+
+For a fatal regression, correlate the process and build with the event log,
+stowed exception, or managed stack. A wrapper failure in `Microsoft.UI.Xaml.dll`
+or `CoreMessagingXP.dll` does not identify the faulty application callback.
+Inspect the nested HRESULT and application frames before changing code. Prefer
+source and existing logs first, especially when the user excludes UI Automation
+or app launch. A non-UI native probe is useful only within the permitted scope.
+
+Fatal diagnostics can record a fixed phase identifier, exception type, HRESULT,
+and method stack without source filenames. Omit exception messages, `Data`,
+arguments, account details, and token-bearing URLs. Bound file size and nested
+exception depth, keep logging failures from replacing the original error, and
+leave the exception unhandled. Avoid continuous first-chance logging in Release.
+
+Keep measured timings, user observations, and untested hypotheses separate.
+Functional success does not establish lower memory use, fewer frame drops,
+rendering quality, or correct device behavior.
+
 ## The launch trace
 
 A static `LaunchTrace` class in a WinUI-free core assembly, so tests can use
@@ -13,7 +37,7 @@ it too:
   the app's log directory. Each line: time since process creation, gap since
   the previous mark, phase name.
 
-Marks that matter, in the order they usually land. "Helper" is whatever
+Example phase labels, in the order they usually occur. "Helper" is whatever
 process supplies the data; an app that reads its own database marks the
 open and the first query instead:
 
@@ -35,13 +59,18 @@ content.rows            first page applied to the ItemsSource
 content.rows.rendered   the next Rendered after that (Complete)
 ```
 
-The reference app uses `CompositionTarget.Rendered` as its frame marker.
+`CompositionTarget.Rendered` can serve as a frame marker.
 Subscribe before `Activate()`, then keep the subscription until a frame follows
 the rows mark. Unsubscribe there. Correlate the marks with pixels or a screen
 recording when claiming visible presentation; a callback alone does not show
 what the user actually saw.
 
 ## Bench loop
+
+Run this loop only when launches and interaction are allowed. User restrictions
+on architecture, app launch, and computer use also apply to helper scripts and
+UI Automation APIs. Use an explicit target architecture rather than a solution's
+default platform.
 
 Use a bounded PowerShell loop for the test instance: close it, stop only helper
 processes owned by that instance, launch, wait for its trace with a timeout,
@@ -61,60 +90,40 @@ only when needed to distinguish the effect from noise.
 
 ## Activation overhead
 
-For a packaged app, record the time before the shell launch call and compare
-it with the process `StartTime`. Launching through `explorer.exe` overstates a
-Start menu click, so treat the result as an upper bound. Measured 360 to
-410 ms through explorer; a screen recording of a real click showed nearer
-200 ms. Nothing in the process can move this.
+For a packaged app, record the time before the activation call and compare it
+with process creation. State which activation mechanism was used; a helper
+launch command and a direct user action may have different overhead. Keep this
+interval separate from the in-process trace.
 
-## Two data profiles
+## Data profiles and package registration
 
-In the reference app, a packaged run stored data under
-`%LOCALAPPDATA%\Packages\<PFN>\LocalCache\{Local,Roaming}`. The same exe run
-unpackaged stored data under `%APPDATA%` and `%LOCALAPPDATA%` directly. They held
-different databases, window sizes, and remembered state, so a bench on one
-does not describe the other. Offer an environment variable to point an
-unpackaged run at any root (used for first-run smokes that must never touch
-the real profile), and always say which profile a number came from. Resolve the
-target app's actual data roots and any explicit overrides before measuring;
-package identity alone does not establish its storage paths.
+Resolve the actual data roots and overrides for each launch mode. Packaged and
+unpackaged runs may use different databases, remembered state, and window sizes.
+Use a disposable profile for first-run checks and identify the profile in each
+measurement. Package identity alone does not establish storage paths.
 
-## Registering a published layout without a certificate
+When authorized, register the published layout through the project's supported
+development workflow. Verify that the registered path and executable match the
+intended output; a successful registration command is insufficient evidence.
+Account for existing registration and deployment behavior before modifying it.
 
-To measure a publish with package identity, register its folder loosely, as
-Visual Studio does. Developer mode is the only requirement:
-
-```powershell
-Add-AppxPackage -Register <layout>\AppxManifest.xml -ForceApplicationShutdown -ForceUpdateFromAnyVersion
-```
-
-Two traps:
-
-- Registering the same version at a new path is a no-op. Bump the manifest
-  `Version` in the copy first.
-- An MSIX stores `+` in file names percent-encoded (`libstdc%2B%2B-6.dll`).
-  A plain zip extract keeps the encoded name and the app dies with a missing
-  DLL dialog. Decode names with `[Uri]::UnescapeDataString` after extracting.
-
-Registration replaces the dev package Visual Studio registered; the next
-Visual Studio deploy replaces it back. App data survives both.
+Use package-aware extraction tools and verify final filenames and resource
+paths. Archive encoding can otherwise leave dependencies under names that the
+loader does not request.
 
 ## Verifying content without pixels
 
-`PrintWindow` and `CopyFromScreen` both produced black or wrong-region
-captures of a WinUI window from a non-DPI-aware PowerShell process. Before
-trusting a black screenshot, call `SetProcessDpiAwarenessContext(-4)` in the
-capturing process. In the reference session, `SetForegroundWindow` opened the
-Start menu over the app; verify capture state instead of assuming focus worked.
-Use UI Automation to check exposed content:
-load `UIAutomationClient` in Windows PowerShell 5.1, find the window by
-process id, and count descendants by control type. A working page shows
-hundreds of `Text` and `ListItem` elements with names; a trimmed-away
-binding shows the elements with empty names. The same API selects sidebar
-items and presses buttons, which is how the wizard and settings pages get
-exercised without a hand on the mouse. These checks do not establish visual
-layout, color, or pixel correctness. For those claims, inspect a usable image
-or recording; otherwise state that visual verification remains incomplete.
+This is still UI Automation and requires it to be within the user's scope.
+
+Check capture-process DPI awareness, bounds, focus, and the capture API before
+interpreting a black or incorrectly cropped screenshot as an application bug.
+
+When UI Automation is permitted, locate the intended process and inspect the
+expected elements and values. Compare names and item counts with synthetic test
+data rather than assuming a fixed tree size. Empty exposed values can help
+locate binding failures, but do not prove their cause. UI Automation does not
+establish layout, color, or pixel correctness; inspect usable images or
+recordings for those claims.
 
 ## Screen recordings
 

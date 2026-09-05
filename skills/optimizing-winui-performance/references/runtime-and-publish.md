@@ -1,48 +1,30 @@
 # Runtime and publish shape
 
-## Where the first 100 ms go
+## Measure runtime startup
 
-On the reference app, the .NET host, runtime, and Windows App SDK bootstrap
-spent 85 ms unpackaged and about 120 ms packaged before the App constructor.
-Native AOT reduced that cost in its measured configuration; trace the target
-app's pre-constructor cost before choosing a publish change.
+Trace the interval before the App constructor as well as managed startup.
+Runtime initialization, deployment mode, and framework bootstrap can contribute
+to that interval. Compare publish configurations on the same workload and
+hardware before choosing one for performance.
 
-## Knobs that moved the trace
+ReadyToRun can reduce JIT work. Native AOT changes compilation and interop
+requirements and needs its own functional validation. Treat tiered compilation
+and PGO as workload-dependent choices; a startup gain can trade against
+steady-state behavior. Inspect first-use serializer metadata cost separately.
 
-- `PublishReadyToRun=true`, self-contained. Removes JIT stalls on the
-  launch path. Measured 660 ms to rows against roughly 1000 ms for the JIT
-  build in the IDE. Superseded by Native AOT once that works (below), which
-  reached 560 ms and cut the package from 100 MB to 43 MB.
-- Exclude the WinRT projection assemblies from ReadyToRun when
-  self-contained, or the app crashes at startup with a `TypeLoad` around
-  `ComInterfaceEntry` / `IDynamicInterfaceCastable`:
-
-  ```xml
-  <ItemGroup Condition="'$(_IsPublishing)' == 'true' and '$(SelfContained)' == 'true'">
-    <PublishReadyToRunExclusions Include="WinRT.Runtime.dll" />
-    <PublishReadyToRunExclusions Include="Microsoft.Windows.SDK.NET.dll" />
-  </ItemGroup>
-  ```
-
-- `TieredPGO=false`. The launch path runs once, so instrumented tiers have
-  nothing to repay. Re-measure before keeping it on any app.
-- System.Text.Json source generation for every message type the app
-  decodes at launch. Reflection metadata for a large union of types took a
-  few hundred milliseconds to build on first use, on the UI thread. See
-  `helper-process.md`.
+If a ReadyToRun build fails around WinRT projection types, inspect the exact
+SDK targets and supported exclusions before changing publish properties. Keep
+version-specific workarounds tied to a reproduced diagnostic rather than making
+them defaults for every application.
 
 ## Trimming and Native AOT
 
-In the reference app, enabling `PublishTrimmed` produced blank bindings and
-empty lists despite a successful build and launch. Its WinRT
-projection needs a generated vtable for each .NET type it hands to XAML,
-and `{Binding}` needs a generated property provider; without them both fall
-back to reflection the trimmer removed. Check the target app's warnings,
-generated metadata, and runtime behavior before assigning the same cause.
+A trimmed build can launch while losing runtime-bound content. Check generated
+property providers and WinRT interface exposure for every type handed to XAML.
+A successful compile does not establish that reflection-dependent paths survive.
 
-Check Native AOT support and trimming requirements for the project's exact
-toolchain. On the reference app, the following changes moved rows-rendered
-from 660 ms to 560 ms unpackaged. Adapt them to the target's diagnostics:
+Check support and requirements for the installed toolchain, then apply the
+changes indicated by its diagnostics:
 
 1. In the csproj: `PublishAot=true` under the publish condition,
    `AllowUnsafeBlocks=true` (the generated vtable code needs it),
@@ -57,33 +39,37 @@ from 660 ms to 560 ms unpackaged. Adapt them to the target's diagnostics:
    link-compiles the view-model sources without a WinRT reference.
    `DependencyObject` sources whose bound members are dependency properties
    need nothing.
-4. `[RelayCommand]` on such a type produces `MVVMTK0046`: the bindable
-   generator cannot see a property another generator emits. Declare those
-   commands by hand (`_x ??= new RelayCommand(...)`).
-5. Types in a WinUI-free library cannot take the attribute. Bind to them
-   with `x:Bind` (with `Mode=OneWay`, since x:Bind defaults to OneTime) and
-   convert image URIs through a function, because x:Bind does no
-   string-to-ImageSource conversion.
-6. `XamlCompiler warning WMC1510` lists every remaining `{Binding}`; it is
-   informational once the sources carry the attribute.
+4. `[RelayCommand]` on a type with whole-type bindable metadata can produce
+   `MVVMTK0046`: one generator cannot see a property another generator emits.
+   Limit `GeneratedBindableCustomProperty` to the handwritten properties used
+   by runtime bindings. If runtime binding needs the command itself, declare
+   it by hand (`_x ??= new RelayCommand(...)`).
+5. A library targeting the Windows SDK can use the CsWinRT attributes without
+   referencing WinUI. Check its generator mode: `IsAotCompatible` alone does
+   not expose every concrete collection returned through an interface.
+   `x:Bind` avoids runtime property lookup but still crosses the native ABI
+   when assigning `ItemsSource`. See [native boundaries](native-boundaries.md)
+   for concrete collection exposure and an ABI regression probe. For image
+   URIs, use an explicit conversion function when the binding needs one.
+6. Check `WMC1510` runtime-binding warnings against the actual data contexts
+   and generated property providers. An attribute alone does not prove that
+   the full property path or its collection interfaces survive AOT.
 
-Verify exposed content with UI Automation: a dump of the window's
-element tree shows whether lists have items and text blocks have text
+When UI Automation is permitted, inspect the window's element tree to verify
+that lists have items and text blocks have text
 (see `measuring.md`). Check the wizard, every `{Binding}` window, and every
 `DisplayMemberPath` combo box, not only the launch page. Inspect screenshots or
 recordings separately for visual correctness; UI Automation does not prove it.
+When app interaction is excluded, use generated-code inspection and a native
+ABI probe, then request manual reproduction on the matched package.
 
-The native link needs the Visual Studio C++ tools. Visual Studio 18's
-`vcvarsall.bat` looks up `vswhere.exe` by name, so the publish fails at the
-linker unless the Visual Studio Installer directory is on `PATH` or the
-shell is a Developer PowerShell. The failure message is a garbled linker
-path containing "'vswhere.exe' is not recognized".
+Native linking requires the matching C++ toolchain and SDK. Diagnose missing
+compiler or linker discovery from the invoked tool paths and environment. Use
+the supported developer shell when the build relies on its setup.
 
-Visual Studio's Build, Deploy, and F5 never compile AOT; only the publish
-pipeline does, so the dev package the IDE registers stays a JIT layout. The
-packaging wizard (Package and Publish, Create App Packages) runs the publish
-profile and produces the AOT MSIX; register its unpacked contents loosely to
-run it (see `measuring.md`).
+Build, deploy, and publish targets can produce different layouts. Inspect the
+actual targets and profile instead of inferring Native AOT from a configuration
+name. Validate the output of the native publish and packaging pipeline.
 
 ## Publish hygiene
 
@@ -96,6 +82,34 @@ run it (see `measuring.md`).
   hashes of the relevant binaries in the published and extracted layouts.
   File sizes are a diagnostic clue, not proof of artifact identity.
 
+### Resource and native dependency layout
+
+Treat executable code, XBF, PRI, and native dependencies as one build output.
+A successful native link or MSIX creation does not establish a usable layout.
+
+- Stage compiled XBF and library assets at the paths encoded by the resource
+  index. A PRI pointing to a build-tree prefix such as `AppX/Library/Assets`
+  can package successfully while the files live elsewhere. Inspect a PRI dump
+  and validate every file-backed candidate against the final package root.
+- Rebuild or stage resource indexes for the intended final layout. Preserve
+  dependency resource registration required by the chosen self-contained
+  Windows App SDK deployment; copying only the application PRI is insufficient.
+  Missing embedded WinUI themes can fail at startup with a missing
+  `ms-appx:///Microsoft.UI.Xaml/Themes/themeresources.xaml` resource even when
+  loose XBF files are present. Merge the UI dependency PRI content and check
+  the embedded candidates as well as file-backed entries.
+- Include the runtime's native resource libraries, renderer DLLs, and their
+  architecture-matched dependencies. Inspect PE machine types using the
+  toolchain's supported ARM64/ARM64X rules, rather than rejecting legitimate
+  hybrid binaries or accepting an arbitrary mixed layout.
+- Verify the manifest's executable, identity, resource paths, and architecture
+  against extracted contents. Hash the intended publish payload and packaged
+  payload, then confirm which registered executable the launch actually uses.
+
+Keep compiler success, package layout validation, activation, rendered content,
+playback, and clean exit as separate results. Run only the checks permitted by
+the task; name any remaining manual check.
+
 ## A helper process built by MSBuild
 
 When the csproj builds a helper executable with another toolchain (a native
@@ -104,18 +118,14 @@ compiler, a package manager, a script) as a target:
 - Guard the target with `'$(DesignTimeBuild)' != 'true'`, or the IDE's
   design-time restore runs the build and reports the project as failing to
   load.
-- Give the IDE's Release configuration a fast optimized profile of the
-  helper (minutes) and reserve the fully optimized one (which can take ten
-  minutes or more with whole-program optimization) for publish and package
-  targets. Select by a property such as `ShipCore` that defaults to true
-  when `_IsPublishing` or `GenerateAppxPackageOnBuild` is set.
+- Separate interactive build and distribution optimization settings when the
+  helper's full optimization cost is unsuitable for normal development. Select
+  the profile explicitly from the build contract.
 - The build output folder must contain the helper exe or the app fails at
   its first connect; verify it in a target rather than at runtime.
 
 ## Packaged versus unpackaged
 
-Package identity costs about 0.1 s inside the process (runtime start, probe
-for the helper, child spawn are all slower) and 0.2 to 0.4 s of activation
-before the process starts. Unpackaged distribution avoids both but loses the
-identity that toast notifications and some shell integration need. Measure
-both and let the user choose.
+Package identity and activation can change measured startup costs. Compare
+matching profiles and separate activation from in-process work. Preserve any
+identity-dependent features when evaluating deployment alternatives.
