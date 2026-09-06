@@ -1,58 +1,33 @@
 # UI fed by a helper process
 
-Use this reference when a separate process supplies the UI's data. The same
-dependency and latency questions apply to pipes, sockets, and other transports.
+This reference covers UIs whose data comes from another process. Pipes, sockets, and other transports have the same dependency and latency questions.
 
 ## Overlap independent startup
 
-After establishing single-instance ownership, probe for the helper and start
-it if needed. When safe, overlap its startup with XAML initialization. Measure
-the probe, process creation, connection, and handshake separately.
+Once single-instance ownership is settled, probe for the helper and start it if needed. Its startup can overlap XAML initialization when the dependencies allow it. Time the probe, process creation, connection, and handshake individually.
 
-A resident helper changes both launch cost and idle resource use. Report that
-case separately from a cold launch and preserve the product's lifecycle.
+A resident helper changes launch work and consumes resources while idle. Measure it as a separate case without changing the intended process lifecycle.
 
 ## Request the first screen
 
-Send independent requests once the connection is ready rather than serializing
-them behind unrelated replies. Size the initial page for the visible content
-and a justified buffer. Keep configuration and subscription prerequisites in
-order.
+Once connected, send independent requests together instead of placing each behind an unrelated reply. The initial page should cover the visible content plus a measured buffer. Configuration and subscription prerequisites still run in their required order.
 
-Server-pushed initial state may remove round trips, but it changes the protocol.
-Consider it only when that contract is in scope and all consumers are covered.
+Pushing initial state from the server removes round trips but changes the protocol. Do it only when that contract and every consumer are in scope.
 
 ## Serializer cost
 
-Use System.Text.Json source generation for known message types and inspect
-remaining reflection paths. If first-use metadata work appears in the trace,
-warm representative valid messages off the UI thread. A failed warm-up may
-leave the original cost unchanged.
+For known message types, use `System.Text.Json` source generation and find any reflection paths left behind. If first-use metadata appears in the trace, warm representative valid messages away from the UI thread. Confirm that warm-up actually removes the cost.
 
-Check whether warm-up and the first real request contend on shared state before
-introducing separate serializer instances. For dynamic property access, prefer
-generated type metadata where suitable and declare any remaining reflection
-requirements so trimming analysis can verify them.
+Before adding serializer instances, check whether warm-up contends with the first real request on shared state. Generated type metadata suits many dynamic property accesses. Declare the reflection that remains so trimming analysis can check it.
 
 ## Pace event streams
 
-Coalesce frequent progress events off the UI thread and post bounded batches.
-Choose the interval from responsiveness requirements and measurements. Preserve
-ordering, terminal events, and updates that cannot be merged. Deliver initial
-content promptly rather than waiting for a batching interval.
+Coalesce frequent progress events away from the UI thread, then post bounded batches. Set the interval from the response budget and measurements. Ordering, terminal events, and non-mergeable updates must survive batching. Initial content should not wait for the first batch interval.
 
-When the producer's contract must remain unchanged, implement pacing in the
-consumer. A low-priority reveal can allow already queued batches to apply before
-the first frame; measure its effect on both reveal latency and layout work.
+If the producer's contract cannot change, pace events in the consumer. A low-priority reveal may let queued batches land before the first frame. Measure both the reveal delay and the layout work.
 
 ## Data-source latency
 
-Inspect query plans and request handling when data arrives after the UI is ready.
-Look for per-row lookups, repeated correlated work, expensive comparison
-callbacks, and unnecessary lease or connection maintenance. Keep semantic parity
-when changing queries or adding fast paths.
+Inspect query plans and request handling when data arrives after the UI is ready. Look for per-row lookups, repeated correlated work, expensive comparison callbacks, and unnecessary lease or connection maintenance. Keep semantic parity when changing queries or adding fast paths.
 
-A control loop blocked on slow hardware or storage delays unrelated replies.
-Move reads to an appropriate worker or maintain event-driven cached facts when
-freshness permits. Cover every write, restore, and cleanup path with cache
-invalidation. Trace request handling with the same discipline as UI startup.
+A control loop blocked on slow hardware or storage delays unrelated replies. Move reads to an appropriate worker or maintain event-driven cached facts when freshness permits. Cover every write, restore, and cleanup path with cache invalidation. Trace request handling with the same discipline as UI startup.
