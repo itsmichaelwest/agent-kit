@@ -110,11 +110,13 @@
     {
       "repo": "emilkowalski/skills",
       "skills": [
+        "animate",
         "animation-vocabulary",
         "apple-design",
         "emil-design-eng",
         "find-animation-opportunities",
         "improve-animations",
+        "pick-ui-library",
         "review-animations"
       ]
     },

@@ -272,6 +272,30 @@ them in the git-ignored `.claude/settings.local.json`,
 `.copilot/settings.local.json`, or `.codex/config.local.toml` — `enabledPlugins`
 merges across the committed base and the local overlay.
 
+## Deferred skill evaluation
+
+### Emil's prototype skill
+
+Status: **deferred (2026-09-09)**. Consider trying
+[Emil Kowalski's `prototype`](https://github.com/emilkowalski/skills/tree/main/skills/prototype)
+for polished UI exploration. Keep the installed `mattpocock/skills` `prototype`
+and `variant` for now; adoption remains undecided.
+
+The prerequisite is reworking the managed installer to support distinct upstream
+skills with the same declared name. Define source identity separately from the
+installed name, with deterministic aliases and provenance preserved through
+install, update, reconciliation, validation, and removal on both shell and
+PowerShell paths. Resolve invocation names and internal skill references without
+manual edits to vendored content.
+
+Before the trial, demonstrate that both `prototype` sources can coexist and be
+invoked unambiguously, that updating or removing either leaves the other intact,
+and that manifest, lockfile, disk inventory, and provider discovery agree. Use
+isolated fixtures before changing live installs. Then compare Emil's workflow
+with the existing `prototype` and `variant` on the same UI brief and decide
+whether it adds enough value to retain. Installer changes and the trial are
+follow-up work, not part of the `animate` / `pick-ui-library` installation.
+
 ## Revisit triggers
 
 Reconsider this strategy (likely toward the lockfile-and-restore model, dropping

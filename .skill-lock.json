@@ -812,6 +812,24 @@
       "skillFolderHash": "10e4d83f2f34cf226cf9819ab6b4dd6f8d7a0e6a",
       "installedAt": "2026-09-09T10:49:11.451Z",
       "updatedAt": "2026-09-09T10:49:11.451Z"
+    },
+    "animate": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/emilkowalski/skills.git",
+      "skillPath": "skills/animate/SKILL.md",
+      "skillFolderHash": "adf23358fac7bdce5febcb85d7fd985407ead56f",
+      "installedAt": "2026-09-09T11:21:18.447Z",
+      "updatedAt": "2026-09-09T11:21:18.447Z"
+    },
+    "pick-ui-library": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/emilkowalski/skills.git",
+      "skillPath": "skills/pick-ui-library/SKILL.md",
+      "skillFolderHash": "cfc9a519a1b554eef39bba7bd74bd6845524ccd1",
+      "installedAt": "2026-09-09T11:21:18.450Z",
+      "updatedAt": "2026-09-09T11:21:18.450Z"
     }
   },
   "dismissed": {
