@@ -1,0 +1,4 @@
+interface:
+  display_name: "Improve agent environment"
+  short_description: "Find and reduce recurring friction in agent work"
+  default_prompt: "Use $improve-agent-environment to assess this project's recurring agent friction and propose the smallest evidence-backed improvements."

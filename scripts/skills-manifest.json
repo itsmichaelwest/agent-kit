@@ -9,6 +9,7 @@
   "$local_comment": "Skills authored in this repo (not from an upstream source). Listed so `setup.sh doctor` treats them as intentional and never expects them in the lockfile. Folder names under skills/.",
   "local": [
     "frontend-guidelines",
+    "improve-agent-environment",
     "linux-gtk-development",
     "optimizing-winui-performance",
     "polishing-winui",
