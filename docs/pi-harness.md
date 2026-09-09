@@ -193,11 +193,10 @@ These are the `pi:` block values for each of the 19 templates. `model` is resolv
 | `security-auditor` | balanced | `read, grep, find, ls, bash` | `medium` | `fresh` | `true` | |
 | `technical-writer` | balanced | `read, grep, find, ls, bash, edit, write` | `low` | `fork` | `true` | |
 | `ui-polisher` | strong | `read, grep, find, ls, bash, edit, write` | `high` | `fork` | `true` | |
-| `ux-designer` | strong | `read, grep, find, ls` | `high` | `fresh` | `false` | Design advice; no project context |
 
 `defaultContext: fork` means the child Pi session starts from the parent's current conversation branch. `fresh` means an isolated clean context. For analysis and planning agents, `fresh` keeps them narrow; for implementation agents, `fork` lets them see what the parent established.
 
-`researcher` and `ux-designer` set `inheritProjectContext: false` intentionally — researcher benefits from a clean slate for unbiased web research; ux-designer is consulted for design opinions that should not be anchored to project-specific instructions.
+`researcher` sets `inheritProjectContext: false` intentionally because it benefits from a clean slate for unbiased web research.
 
 Example compiled output for `developer`:
 

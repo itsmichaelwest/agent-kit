@@ -8,11 +8,13 @@
   "scope": "global",
   "$local_comment": "Skills authored in this repo (not from an upstream source). Listed so `setup.sh doctor` treats them as intentional and never expects them in the lockfile. Folder names under skills/.",
   "local": [
+    "frontend-guidelines",
     "linux-gtk-development",
     "optimizing-winui-performance",
     "polishing-winui",
     "shader-prototyping",
-    "ui-polisher"
+    "ui-polisher",
+    "ux-design-spec"
   ],
   "$retained_comment": "Preserved skills outside active upstream refresh, including audit snapshots and skills with unverified provenance. They are not self-owned and may retain historical lockfile provenance.",
   "retained": [
@@ -29,12 +31,6 @@
       "skillPath": ".claude/skills/developing-gtk-apps/SKILL.md",
       "skillFolderHash": "ad99e8e3061531e39538e4030dcae318f5d2bca2",
       "reason": "Upstream inaccessible on 2026-09-04; user confirmed no access or replacement. Preserve the installed snapshot outside active updates."
-    },
-    {
-      "name": "ux-designer",
-      "source": "BumpyClock/dotfiles",
-      "skillFolderHash": "76da75e346ff5ccece851d0bf252938bcc23ec1f",
-      "reason": "Retained for instruction audit after the upstream skill was removed."
     }
   ],
   "sources": [
@@ -96,12 +92,6 @@
       ]
     },
     {
-      "repo": "jakubkrehel/make-interfaces-feel-better"
-    },
-    {
-      "repo": "raphaelsalaja/userinterface-wiki"
-    },
-    {
       "repo": "blader/humanizer"
     },
     {
@@ -142,9 +132,17 @@
     {
       "repo": "jakubkrehel/skills",
       "skills": [
+        "better-accessibility",
         "better-colors",
+        "better-interface",
+        "better-layout",
         "better-typography",
-        "better-ui"
+        "better-ui",
+        "better-writing",
+        "break",
+        "explain-interface",
+        "interface-review",
+        "variant"
       ]
     },
     {
@@ -212,6 +210,18 @@
       "repo": "LukeberryPi/skills",
       "skills": [
         "remove-dumb-comments"
+      ]
+    },
+    {
+      "repo": "raphaelsalaja/userinterface-wiki",
+      "skills": [
+        "skills"
+      ]
+    },
+    {
+      "repo": "OutThisLife/brooklyn-skills",
+      "skills": [
+        "runtime-debug"
       ]
     }
   ]

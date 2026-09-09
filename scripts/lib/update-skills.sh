@@ -75,6 +75,7 @@ update_skills() {
 
   info "Refreshing installed global skills..."
   npx -y skills@latest update -g -y
+  normalize_skills
 }
 
 install_skill() {

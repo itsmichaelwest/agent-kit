@@ -9,6 +9,7 @@ cross-cutting invariants.
 ## Core
 
 - Be direct. Push back with evidence. State uncertainty.
+- Prefer the smallest change that fully satisfies the request; do not add speculative features or abstractions.
 - State scope in files, contracts, or migrations; never estimate wall-clock time.
 - Diagnose root cause before retrying or patching symptoms.
 - Remove replaced paths. Compatibility needs a named public/API/CLI/config/data contract.

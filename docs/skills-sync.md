@@ -210,13 +210,13 @@ with no lockfile entry, a declared `local` skill missing on disk, or a lockfile
 source absent from the manifest.
 
 Doctor also warns when a skill contains nested `SKILL.md` entrypoints, which
-can cause duplicate discovery. On 2026-09-04, `swiftui-pro` has this upstream
-packaging issue: its root skill and nested Claude plugin wrapper both declare
-the same name. The nested wrapper uses an older instruction version, and its
-`references` symlink is checked out as a text file on this Windows host.
-The installed tree matches upstream; preserve it until the source packaging
-is corrected or an explicit local normalization policy is adopted. Strict
-doctor fails on this warning so an update cannot silently hide the issue.
+can cause duplicate discovery. `swiftui-pro` is a known upstream package
+exception: its current root skill and an older nested Claude plugin wrapper
+declare the same name. `setup.sh update-skills` runs the guarded normalizer
+after every managed refresh. It removes only the older `1.0` nested wrapper
+when the root remains version `1.1`; it stops instead of deleting anything if
+upstream changes that packaging. Strict doctor therefore verifies the actual
+agent-discovery tree rather than suppressing the warning.
 
 The earlier drift — manifest ≠ lockfile ≠ `skills/`, the manually-cloned
 `humanizer` carrying a nested `.git`, and `humanizer`/`oklch-skill` untracked and

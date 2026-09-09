@@ -34,6 +34,7 @@ source "$SCRIPTS_DIR/lib/link-ai-agents.sh"
 source "$SCRIPTS_DIR/lib/plugin-status.sh"
 source "$SCRIPTS_DIR/lib/shell-config.sh"
 source "$SCRIPTS_DIR/lib/update-skills.sh"
+source "$SCRIPTS_DIR/lib/normalize-skills.sh"
 source "$SCRIPTS_DIR/lib/reconcile-skills.sh"
 source "$SCRIPTS_DIR/lib/uninstall-skill.sh"
 source "$SCRIPTS_DIR/lib/doctor-skills.sh"
@@ -66,7 +67,8 @@ Commands:
   shell               Inject zsh config into ~/.zshrc
   shell-remove        Remove injected zsh config from ~/.zshrc
   reset               Remove all links and injected shell config
-  update-skills       Install/update skills from manifest
+  update-skills       Install/update skills from manifest and normalize known duplicate wrappers
+  normalize-skills    Normalize known duplicate upstream skill wrappers
   install-skill       Interactively install one source via npx skills, reconcile, then doctor
   uninstall-skill     Uninstall one upstream skill, update manifest, then doctor
   list-skills         Show skills and install status
@@ -88,7 +90,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    install|compile-agents|capture-codex-config|preview-codex-config|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude|bootstrap-codex)
+    install|compile-agents|capture-codex-config|preview-codex-config|link|link-dotfiles|link-ai-agents|shell|shell-remove|reset|status|update-skills|normalize-skills|list-skills|reconcile-skills|doctor|install-mcp|plugin-status|bootstrap-claude|bootstrap-codex)
       ACTION="$1" ;;
     install-skill)
       ACTION="install-skill"; shift; SKILL_ARGS=("$@"); break ;;
@@ -159,6 +161,7 @@ case "$ACTION" in
   shell-remove)   remove_zsh_config ;;
   reset)          unlink_dotfiles; unlink_ai_agents; uninstall_deps; uninstall_toolchains; remove_zsh_config ;;
   update-skills)  update_skills ;;
+  normalize-skills) normalize_skills ;;
   install-skill)  install_skill "${SKILL_ARGS[@]}"; reconcile_skills; doctor_skills --strict ;;
   uninstall-skill) uninstall_skill "$UNINSTALL_SKILL"; doctor_skills --strict ;;
   list-skills)    list_skills ;;
