@@ -6,6 +6,7 @@ install_deps() {
   local os
   os=$(detect_os)
   info "Detected OS: $os"
+  if [[ "$os" == macos ]]; then check_native_toolchain_host || return 1; fi
 
   if [[ "$os" == "unknown" ]]; then err "Unsupported OS"; exit 1; fi
   if [[ $EUID -eq 0 ]]; then err "Do not run as root"; exit 1; fi

@@ -22,8 +22,15 @@ source $ZSH/oh-my-zsh.sh
 export PATH="$HOME/.local/bin:$PATH"
 
 # Node (fnm)
-if [ -d "$HOME/.local/share/fnm" ]; then
-  export PATH="$HOME/.local/share/fnm:$PATH"
+if ! command -v fnm >/dev/null 2>&1; then
+  for fnm_dir in "$HOME/Library/Application Support/fnm" "$HOME/.local/share/fnm" "$HOME/.fnm"; do
+    if [ -x "$fnm_dir/fnm" ]; then
+      export PATH="$fnm_dir:$PATH"
+      break
+    fi
+  done
+fi
+if command -v fnm >/dev/null 2>&1; then
   eval "$(fnm env --use-on-cd --shell zsh)"
 fi
 

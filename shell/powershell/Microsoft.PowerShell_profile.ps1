@@ -12,7 +12,8 @@ if (Get-Command oh-my-posh -ErrorAction SilentlyContinue) {
 # NODE (fnm)
 # =============================================================================
 
-if (Get-Command fnm -ErrorAction SilentlyContinue) {
+if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne [System.Runtime.InteropServices.Architecture]::Arm64 -and
+    (Get-Command fnm -ErrorAction SilentlyContinue)) {
     fnm env --shell powershell | Out-String | Invoke-Expression
 }
 

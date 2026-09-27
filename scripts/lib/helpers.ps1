@@ -75,8 +75,18 @@ function Ensure-Linked {
 function Resolve-PythonCommand {
     # Resolve a Python interpreter >= 3.11 (required for the stdlib `tomllib`
     # module used to parse TOML config). Returns $null if none qualifies.
-    $versionCheck = 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'
-    $candidates = @(
+    $nativeArch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+    $versionCheck = if ($nativeArch -eq "arm64") {
+        'import sys, platform; sys.exit(0 if sys.version_info >= (3, 11) and platform.machine().lower() == "arm64" else 1)'
+    } else {
+        'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'
+    }
+    $candidates = @()
+    if ($nativeArch -eq "arm64") {
+        $candidates += @{ Exe = "pymanager"; Args = @("exec", "-V:3-arm64") }
+        $candidates += @{ Exe = "py"; Args = @("-V:3-arm64") }
+    }
+    $candidates += @(
         @{ Exe = "pymanager"; Args = @("exec") },
         @{ Exe = "py";        Args = @() },
         @{ Exe = "python3";   Args = @() },
@@ -93,5 +103,28 @@ function Resolve-PythonCommand {
         }
     }
 
+    return $null
+}
+
+function Get-ExecutableArchitecture {
+    param([string]$Name)
+    $command = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $command) { return $null }
+    try {
+        $stream = [IO.File]::OpenRead($command.Source)
+        $reader = [IO.BinaryReader]::new($stream)
+        try {
+            $stream.Position = 0x3c
+            $peOffset = $reader.ReadInt32()
+            $stream.Position = $peOffset + 4
+            switch ($reader.ReadUInt16()) {
+                0xAA64 { return "arm64" }
+                0x8664 { return "x64" }
+                0x014c { return "x86" }
+            }
+        } finally {
+            $reader.Dispose()
+        }
+    } catch { return $null }
     return $null
 }

@@ -22,7 +22,8 @@ class PythonInstallTests(unittest.TestCase):
         script = (ROOT / "scripts" / "lib" / "install-deps.ps1").read_text(encoding="utf-8")
 
         self.assertIn("9NQ7512CXL7T", script)
-        self.assertIn("install --update default", script)
+        self.assertIn('"3-arm64"', script)
+        self.assertIn('install --update $pythonTag', script)
         self.assertNotIn("install 3.14", script)
         self.assertIn("Resolve-PythonCommand", script)
 
@@ -32,6 +33,7 @@ class PythonInstallTests(unittest.TestCase):
         sync = (ROOT / "scripts" / "lib" / "sync-codex-config.ps1").read_text(encoding="utf-8")
 
         self.assertIn('Args = @("exec")', helpers)
+        self.assertIn('Args = @("exec", "-V:3-arm64")', helpers)
         self.assertNotIn('-V:3.14', helpers)
         self.assertIn("sys.version_info >= (3, 11)", helpers)
         self.assertIn("Resolve-PythonCommand", compiler)

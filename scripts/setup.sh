@@ -51,13 +51,14 @@ SKIP_SUBMODULES=0
 DOCTOR_STRICT=""
 SKILL_ARGS=()
 UNINSTALL_SKILL=""
+INSTALL_ALL=0
 
 usage() {
   cat <<'EOF'
 Usage: setup.sh <command> [options]
 
 Commands:
-  install             Full setup: deps + links + shell config + MCP servers
+  install             Choose dependencies, toolchains, links, and plugins
   compile-agents      Compile agent templates into tool outputs
   preview-codex-config  Preview owned-key updates and conflicts without writes
   capture-codex-config  Import changes to already-owned portable settings
@@ -84,6 +85,7 @@ Commands:
 
 Options:
   --skip-submodules   Skip git submodule initialization
+  --all               Install every component without prompts (install only)
   -h, --help          Show this help
 EOF
 }
@@ -99,6 +101,7 @@ while [[ $# -gt 0 ]]; do
     project-agents)
       ACTION="project-agents"; PROJECT_AGENTS="${2:-}"; shift ;;
     --skip-submodules) SKIP_SUBMODULES=1 ;;
+    --all) INSTALL_ALL=1 ;;
     --strict) DOCTOR_STRICT="--strict" ;;
     -h|--help) usage; exit 0 ;;
     *) err "Unknown: $1"; usage; exit 1 ;;
@@ -107,6 +110,35 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$ACTION" ]]; then usage; exit 1; fi
+if [[ $INSTALL_ALL -eq 1 && "$ACTION" != install ]]; then
+  err "--all is only valid with install"
+  exit 1
+fi
+
+install_selected() {
+  local label="$1" answer
+  if [[ $INSTALL_ALL -eq 1 ]]; then return 0; fi
+  if [[ ! -r /dev/tty ]]; then
+    err "Interactive install requires a terminal. Use 'setup.sh install --all' for unattended setup."
+    exit 1
+  fi
+  while true; do
+    read -r -p "$label [y/N]: " answer </dev/tty || {
+      err "Could not read install selection. Use --all for unattended setup."
+      exit 1
+    }
+    case "$answer" in
+      [Yy]|[Yy][Ee][Ss]) return 0 ;;
+      ""|[Nn]|[Nn][Oo]) return 1 ;;
+      *) echo "Enter y or n." >/dev/tty ;;
+    esac
+  done
+}
+
+if [[ "$ACTION" == install && $INSTALL_ALL -eq 0 && ! -t 0 ]]; then
+  err "Interactive install requires a terminal. Use 'setup.sh install --all' for unattended setup."
+  exit 1
+fi
 
 # Submodules
 if [[ $SKIP_SUBMODULES -eq 0 && -f "$DOTFILES_DIR/.gitmodules" ]]; then
@@ -149,7 +181,18 @@ show_status() {
 }
 
 case "$ACTION" in
-  install)        install_deps; install_toolchains; compile_agents; sync_codex_config apply; link_dotfiles; link_ai_agents; inject_zsh_config; install_mcp; bootstrap_claude_plugins; bootstrap_codex_plugins ;;
+  install)
+    if install_selected "Install shell and CLI dependencies (including Python)?"; then install_deps; fi
+    if install_selected "Install Node.js LTS and fnm?"; then install_toolchain fnm_node; fi
+    if install_selected "Install Rust via rustup?"; then install_toolchain rustup; fi
+    if install_selected "Compile agents and link configs?"; then
+      compile_agents; sync_codex_config apply; link_dotfiles; link_ai_agents
+    fi
+    if install_selected "Inject the zsh config?"; then inject_zsh_config; fi
+    if install_selected "Install MCP servers?"; then install_mcp; fi
+    if install_selected "Install Claude Code plugins?"; then bootstrap_claude_plugins; fi
+    if install_selected "Install Codex plugins?"; then bootstrap_codex_plugins; fi
+    ;;
   install-mcp)    install_mcp ;;
   compile-agents) compile_agents; sync_codex_config apply ;;
   preview-codex-config) sync_codex_config preview ;;

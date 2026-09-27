@@ -10,6 +10,7 @@ param(
     [Alias("a")]
     [string[]]$Agent,
     [switch]$All,
+    [switch]$AllowX64Fallback,
     [switch]$Copy,
     [string[]]$Subagent,
     [switch]$FullDepth,
@@ -23,12 +24,26 @@ param(
 # --- PowerShell 7 bootstrap (runs under PS 5.1) ---
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
+        if ($Action -eq "install" -and -not $All) {
+            if ([Console]::IsInputRedirected) {
+                Write-Host "[ERROR] Interactive install requires a terminal. Use 'setup.ps1 install -All' for unattended setup." -ForegroundColor Red
+                exit 1
+            }
+            $bootstrapAnswer = Read-Host "Install PowerShell 7 to run setup? [y/N]"
+            if ($bootstrapAnswer -notin @("y", "Y", "yes", "YES", "Yes")) { exit 0 }
+        }
         if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
             Write-Host "[ERROR] winget is required. Install App Installer from the Microsoft Store." -ForegroundColor Red
             exit 1
         }
         Write-Host "[INFO] Installing PowerShell 7..." -ForegroundColor Green
-        winget install --id Microsoft.PowerShell -h --accept-package-agreements --accept-source-agreements
+        $bootstrapArch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+        if ($bootstrapArch -notin @("x64", "arm64")) {
+            Write-Host "[ERROR] Unsupported Windows architecture: $bootstrapArch" -ForegroundColor Red
+            exit 1
+        }
+        winget install --id Microsoft.PowerShell --exact --architecture $bootstrapArch -h --accept-package-agreements --accept-source-agreements
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User") + ";" +
                      [System.Environment]::GetEnvironmentVariable("Path","Machine")
         if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
@@ -75,7 +90,7 @@ if ($Help -or -not $Action) {
 Usage: setup.ps1 <command> [options]
 
 Commands:
-  install             Full setup: deps + links
+  install             Choose dependencies, toolchains, links, and plugins
   compile-agents      Compile agent templates into tool outputs
   preview-codex-config  Preview owned-key updates and conflicts without writes
   capture-codex-config  Import changes to already-owned portable settings
@@ -100,6 +115,8 @@ Options:
   -ProjectPath <path>  Project path (for project-agents)
   -Skill, -s <name>    Skill selector for install-skill
   -Agent, -a <name>    Agent selector for install-skill
+  -All                Install every component without prompts; also selects all install-skill entries
+  -AllowX64Fallback   On ARM64, allow x64 CLI packages when no native installer exists
   -SkipSubmodules      Skip git submodule initialization
   -Help                Show this help
 "@
@@ -107,6 +124,42 @@ Options:
 }
 
 # Submodules
+if ($All -and $Action -ne "install" -and $Action -ne "install-skill") {
+    Write-Err "-All is only valid with install or install-skill"
+    exit 1
+}
+if ($AllowX64Fallback -and $Action -ne "install") {
+    Write-Err "-AllowX64Fallback is only valid with install"
+    exit 1
+}
+if ($Action -eq "install" -and -not $All -and [Console]::IsInputRedirected) {
+    Write-Err "Interactive install requires a terminal. Use 'setup.ps1 install -All' for unattended setup."
+    exit 1
+}
+
+function Confirm-Install {
+    param([string]$Label)
+    if ($All) { return $true }
+    while ($true) {
+        $answer = Read-Host "$Label [y/N]"
+        switch ($answer.ToLowerInvariant()) {
+            { $_ -in @("y", "yes") } { return $true }
+            { $_ -in @("", "n", "no") } { return $false }
+            default { Write-Host "Enter y or n." }
+        }
+    }
+}
+
+function Confirm-X64Fallback {
+    param([string]$Package)
+    if ($AllowX64Fallback) { return $true }
+    if ($All) {
+        Write-Warn "Skipping $Package x64 fallback; add -AllowX64Fallback to opt in during unattended setup."
+        return $false
+    }
+    return (Confirm-Install "WinGet found no ARM64 installer for $Package. Install its x64 version under emulation?")
+}
+
 if (-not $SkipSubmodules -and (Test-Path "$DotfilesDir\.gitmodules")) {
     Write-Info "Initializing git submodules..."
     git -C $DotfilesDir submodule update --init --recursive 2>$null
@@ -158,7 +211,18 @@ function Get-InstallSkillArgs {
 }
 
 switch ($Action) {
-    "install"        { Install-Deps; Install-Toolchains; $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }; Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir; $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code }; $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
+    "install"        {
+        if (Confirm-Install "Install CLI dependencies and Python?") { $code = Install-Deps; if ($code -ne 0) { exit $code } }
+        if (Confirm-Install "Install Node.js LTS?") { $code = Install-NodeToolchain; if ($code -ne 0) { exit $code } }
+        if (Confirm-Install "Install Rust via rustup?") { $code = Install-RustToolchain; if ($code -ne 0) { exit $code } }
+        if (Confirm-Install "Compile agents and link configs?") {
+            $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }
+            $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code }
+            Link-Dotfiles $DotfilesDir; Link-AiAgents $DotfilesDir
+        }
+        if (Confirm-Install "Install Claude Code plugins?") { $code = Bootstrap-ClaudePlugins; if ($code -ne 0) { exit $code } }
+        if (Confirm-Install "Install Codex plugins?") { $code = Bootstrap-CodexPlugins $DotfilesDir; if ($code -ne 0) { exit $code } }
+    }
     "compile-agents" { $code = Compile-Agents $DotfilesDir; if ($code -ne 0) { exit $code }; $code = Sync-CodexConfig $DotfilesDir; if ($code -ne 0) { exit $code } }
     "preview-codex-config" { $code = Sync-CodexConfig $DotfilesDir -Action preview; if ($code -ne 0) { exit $code } }
     "capture-codex-config" { $code = Sync-CodexConfig $DotfilesDir -Action capture; if ($code -ne 0) { exit $code } }

@@ -10,8 +10,14 @@ AI agent workspace, personal dotfiles, and shell configs for Windows, macOS, and
 git clone https://github.com/itsmichaelwest/agent-kit.git
 cd agent-kit
 
-# Full setup: installs deps via winget, links configs
+# Choose dependencies, toolchains, links, and plugins in PowerShell
 .\scripts\setup.ps1 install
+
+# Install every component without prompts
+.\scripts\setup.ps1 install -All
+
+# Also allow x64 CLI tools when an ARM64 package is unavailable
+.\scripts\setup.ps1 install -All -AllowX64Fallback
 
 # Or just link configs (no installs)
 .\scripts\setup.ps1 link
@@ -23,8 +29,11 @@ cd agent-kit
 git clone https://github.com/itsmichaelwest/agent-kit.git
 cd agent-kit
 
-# Full setup: installs deps, links configs, sets up shell
+# Choose dependencies, toolchains, links, shell config, and plugins
 ./scripts/setup.sh install
+
+# Install every component without prompts
+./scripts/setup.sh install --all
 
 # Or just link configs (no installs)
 ./scripts/setup.sh link
