@@ -116,7 +116,8 @@
     "claude-code-setup@claude-plugins-official": true,
     "chrome-devtools-mcp@claude-plugins-official": true,
     "hookify@claude-plugins-official": true,
-    "winui@win-dev-skills": true
+    "winui@win-dev-skills": true,
+    "clangd-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "win-dev-skills": {
@@ -133,5 +134,6 @@
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "switchModelsOnFlag": false
 }
