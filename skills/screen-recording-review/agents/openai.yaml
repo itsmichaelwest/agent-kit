@@ -1,0 +1,4 @@
+interface:
+  display_name: "Screen Recording Review"
+  short_description: "Review every frame of a screen recording"
+  default_prompt: "Use $screen-recording-review to analyze this screen recording frame by frame."
