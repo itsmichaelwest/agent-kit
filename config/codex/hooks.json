@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "python3 \"$HOME/.agents/hooks/agent_safety.py\"",
-            "commandWindows": "py -3 \"%USERPROFILE%\\.agents\\hooks\\agent_safety.py\"",
+            "commandWindows": "py -3 \"$env:USERPROFILE/.agents/hooks/agent_safety.py\"",
             "timeout": 2,
             "statusMessage": "Checking command safety"
           }
@@ -21,7 +21,7 @@
           {
             "type": "command",
             "command": "python3 \"$HOME/.agents/hooks/agent_safety.py\"",
-            "commandWindows": "py -3 \"%USERPROFILE%\\.agents\\hooks\\agent_safety.py\"",
+            "commandWindows": "py -3 \"$env:USERPROFILE/.agents/hooks/agent_safety.py\"",
             "timeout": 2
           }
         ]

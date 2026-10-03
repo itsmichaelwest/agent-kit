@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -32,6 +35,41 @@ def run_hook(event: str, command: str = "", response=None, *, codex: bool = True
 
 
 class AgentSafetyHookTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows hook launcher")
+    def test_codex_windows_commands_run_in_powershell(self) -> None:
+        shell = shutil.which("pwsh") or shutil.which("powershell")
+        self.assertIsNotNone(shell, "PowerShell is required for Windows hooks")
+        config = json.loads((ROOT / "config" / "codex" / "hooks.json").read_text())
+        with tempfile.TemporaryDirectory(prefix="hook profile ") as profile:
+            installed_hook = Path(profile) / ".agents" / "hooks" / HOOK.name
+            installed_hook.parent.mkdir(parents=True)
+            shutil.copyfile(HOOK, installed_hook)
+            for event in ("PreToolUse", "PostToolUse"):
+                with self.subTest(event=event):
+                    command = config["hooks"][event][0]["hooks"][0]["commandWindows"]
+                    payload = {
+                        "hook_event_name": event,
+                        "model": "gpt-test",
+                        "tool_input": {"command": "git reset --hard"},
+                        "tool_response": "password=abcdefghijklmnopqrstuvwxyz123456",
+                    }
+                    result = subprocess.run(
+                        [shell, "-NoProfile", "-NonInteractive", "-Command", command],
+                        input=json.dumps(payload),
+                        env={**os.environ, "USERPROFILE": profile},
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    output = json.loads(result.stdout)
+                    if event == "PreToolUse":
+                        self.assertEqual(
+                            output["hookSpecificOutput"]["permissionDecision"], "deny"
+                        )
+                    else:
+                        self.assertEqual(output["decision"], "block")
+
     def test_provider_configs_use_the_shared_hook(self) -> None:
         claude = json.loads((ROOT / ".claude" / "settings.json").read_text())
         codex = json.loads((ROOT / "config" / "codex" / "hooks.json").read_text())

@@ -38,6 +38,13 @@ Repository secret scanning still belongs in pre-commit and CI.
   Review or trust a changed command hook with `/hooks` before expecting it to
   run. Matching hooks from other active sources are additive.
 
+For Codex on Windows with PowerShell, `commandWindows` uses `$env:USERPROFILE`
+to locate the shared hook.
+The CMD syntax `%USERPROFILE%` stays literal in PowerShell, so Python cannot
+find the script and the PowerShell process exits with code 1.
+The Windows regression test runs both configured commands through PowerShell
+with a profile path containing spaces and checks that safety decisions still work.
+
 The hook is deliberately fail-closed: both configs invoke it by absolute path,
 and a `PreToolUse` hook that exits non-zero denies the call. If
 `~/.agents/hooks/agent_safety.py` is missing, the interpreter exits non-zero
