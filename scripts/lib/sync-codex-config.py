@@ -139,6 +139,42 @@ def load_baseline(path):
         raise SyncError('Invalid sync baseline: ' + str(path)) from exc
 
 
+def stale_agent_fields(repo, live, data, previous, desired):
+    repo_agents = repo / '.codex/agents'
+    home_agents = live.parent / 'agents'
+    managed_directory = (home_agents.is_dir() and repo_agents.is_dir()
+                         and home_agents.resolve() == repo_agents.resolve())
+    fields = {}
+    roles = data.get('agents', {})
+    if not isinstance(roles, dict):
+        raise SyncError('Agents must be a table in the live config')
+    for name, role in roles.items():
+        config_path = ('agents', name, 'config_file')
+        if not isinstance(role, dict) or config_path in desired or '/' in name or '\\' in name:
+            continue
+        config_file = 'agents/' + name + '.toml'
+        if role.get('config_file') != config_file:
+            continue
+        old = previous.get(config_path)
+        tracked = old == {'present': True, 'value': config_file}
+        # Older syncs released ownership while leaving these references behind.
+        # The linked directory is compiler-owned; missing canonical references
+        # there are stale even after an older sync dropped baseline ownership.
+        if not tracked and not managed_directory:
+            continue
+        if (repo_agents / (name + '.toml')).exists() or (live.parent / config_file).exists():
+            continue
+        fields[config_path] = {'present': False}
+        description_path = ('agents', name, 'description')
+        actual = state(data, description_path)
+        old_description = previous.get(description_path)
+        if actual['present'] and ((old_description is not None and same(actual, old_description))
+                                  or (not tracked and old_description is None
+                                      and isinstance(actual['value'], str))):
+            fields[description_path] = {'present': False}
+    return fields
+
+
 def migrate_comments(raw):
     # Remove only actual comment items, never marker text inside string values.
     doc = parse(raw)
@@ -207,6 +243,7 @@ def sync(repo, home, action):
     live_doc = migrate_comments(live_raw)
     live_data = tomllib.loads(live_raw.decode())
     previous, migrating = load_baseline(baseline)
+    retired = stale_agent_fields(repo, live, live_data, previous, desired)
     next_base = {}
     edits = []
     conflicts = []
@@ -241,7 +278,15 @@ def sync(repo, home, action):
             next_base[path] = actual
         elif status == 'LOCAL' and action == 'capture':
             print('[SKIP] Compiler-owned field: ' + label(path))
-    for path in sorted(set(previous) - set(desired)):
+    for path, absent in sorted(retired.items()):
+        reported += 1
+        if action == 'capture':
+            print('[SKIP] Retired agent field; apply to remove: ' + label(path))
+            next_base[path] = state(live_data, path)
+        else:
+            print('[REMOVE] ' + label(path))
+            edits.append((path, absent))
+    for path in sorted(set(previous) - set(desired) - set(retired)):
         print('[RELEASE] ' + label(path))
     if migrating:
         print('[MIGRATE] Adopt per-key baseline; preserve existing local values')
@@ -254,6 +299,17 @@ def sync(repo, home, action):
     target, expected, document = (source, source_raw, source_doc) if action == 'capture' else (live, live_raw, live_doc)
     for path, value in edits:
         put(document, path, value)
+    if action != 'capture':
+        for name in {path[1] for path in retired}:
+            role = document['agents'][name]
+            if not role:
+                # Keep standalone local notes after removing an empty role table.
+                for _, item in role.value.body:
+                    if isinstance(item, tomlkit.items.Comment):
+                        document['agents'].add(item)
+                if role.trivia.comment:
+                    document['agents'].add(tomlkit.comment(role.trivia.comment.lstrip('#').lstrip()))
+                document['agents'].pop(name)
     output = tomlkit.dumps(document).encode('utf-8')
     parse(output)
     # Capture can remove ownership; don't leave deleted source keys in baseline.
@@ -267,6 +323,8 @@ def sync(repo, home, action):
     for path, raw in ((source, source_raw), (live, live_raw), (baseline, baseline_raw)):
         if read(path) != raw:
             raise SyncError('Input changed during sync; retry: ' + str(path))
+    if action == 'apply' and stale_agent_fields(repo, live, live_data, previous, desired) != retired:
+        raise SyncError('Agent files changed during sync; retry')
     checked_write(target, output, expected)
     checked_write(baseline, payload, baseline_raw)
     print('[OK] ' + ('Captured owned local values' if action == 'capture' else 'Synced owned settings'))

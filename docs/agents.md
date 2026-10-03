@@ -30,8 +30,9 @@ file is a real machine-local file, not a symlink. Use `capture-codex-config` to
 explicitly import portable live edits back into `config/codex/global.toml`.
 
 It also removes generated agent files whose template no longer exists. Config
-registration keys released by a removed template remain local; remove those
-registrations explicitly when retiring the agent. See [config sync](codex-config-sync.md).
+sync removes stale generated registrations while preserving local path overrides
+and neighboring settings. See [config sync](codex-config-sync.md) for the cleanup
+and migration rules.
 It removes repo-local `agents/*.agent.md` aliases as stale compatibility files;
 Copilot aliases are generated only under `~/.copilot/agents` during linking.
 

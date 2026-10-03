@@ -62,7 +62,11 @@
       "Bash(cargo:*)"
     ],
     "deny": [],
-    "ask": ["Bash(git push:*)", "Bash(git reset:*)", "Bash(rm:*)"],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(rm:*)"
+    ],
     "defaultMode": "auto"
   },
   "enableAllProjectMcpServers": true,
@@ -130,7 +134,7 @@
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
+  "switchModelsOnFlag": false,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "switchModelsOnFlag": false
+  "skipAutoPermissionPrompt": true
 }

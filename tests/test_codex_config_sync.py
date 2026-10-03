@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import subprocess
 import sys
@@ -9,6 +10,7 @@ import textwrap
 import tomllib
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,6 +81,35 @@ class CodexConfigSyncTests(unittest.TestCase):
 
     def change(self, path, old, new):
         path.write_text(path.read_text().replace(old, new), encoding="utf-8")
+
+    def link_generated_agents(self) -> None:
+        link = self.home / '.codex' / 'agents'
+        target = self.repo / '.codex' / 'agents'
+        if os.name == 'nt':
+            env = os.environ.copy()
+            env['AGENT_KIT_TEST_LINK'] = str(link)
+            env['AGENT_KIT_TEST_TARGET'] = str(target)
+            result = subprocess.run(
+                ['powershell', '-NoProfile', '-NonInteractive', '-Command',
+                 'New-Item -ItemType Junction -Path $env:AGENT_KIT_TEST_LINK '
+                 '-Target $env:AGENT_KIT_TEST_TARGET -ErrorAction Stop | Out-Null'],
+                env=env, capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        else:
+            link.symlink_to(target, target_is_directory=True)
+        self.assertEqual(link.resolve(), target.resolve())
+
+    def prepare_legacy_retirement(self) -> None:
+        self.apply()
+        self.link_generated_agents()
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        previous = json.loads(self.baseline.read_text())
+        previous['keys'] = [
+            item for item in previous['keys']
+            if item['path'][:2] != ['agents', 'developer']
+        ]
+        self.baseline.write_text(json.dumps(previous), encoding='utf-8')
 
     def test_fresh_install_and_idempotence(self):
         self.apply()
@@ -194,14 +225,261 @@ class CodexConfigSyncTests(unittest.TestCase):
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertFalse(self.live.parent.exists())
 
-    def test_generated_fields_preserve_custom_neighbors_and_release_removed_roles(self):
+    def test_generated_fields_preserve_custom_neighbors_when_retiring_roles(self):
         self.apply()
         self.live.write_text(self.live.read_text()+'\n[agents.developer.extra]\nvalue = "local"\n')
         (self.repo/'.codex/agents/developer.toml').unlink()
         self.apply()
         data=tomllib.loads(self.live.read_text())
         self.assertEqual(data['agents']['developer']['extra']['value'],'local')
-        self.assertIn('config_file',data['agents']['developer'])
+        self.assertNotIn('config_file',data['agents']['developer'])
+        self.assertNotIn('description',data['agents']['developer'])
+
+    def test_retired_generated_role_is_removed_and_empty_table_pruned(self):
+        self.apply()
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        result = self.run_sync('apply')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('[REMOVE] agents.developer.config_file', result.stdout)
+        self.assertIn('[REMOVE] agents.developer.description', result.stdout)
+        self.assertNotIn('developer', tomllib.loads(self.live.read_text())['agents'])
+        self.assertNotIn('[agents.developer]', self.live.read_text())
+        before = [p.read_bytes() for p in (self.live, self.baseline)]
+        self.apply()
+        self.assertEqual(before, [p.read_bytes() for p in (self.live, self.baseline)])
+
+    def test_pruned_retired_role_preserves_standalone_and_header_comments(self):
+        self.apply()
+        self.change(
+            self.live, '[agents.developer]',
+            '[agents.developer] # Local header note\n# Local standalone note',
+        )
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        self.apply()
+        text = self.live.read_text()
+        data = tomllib.loads(text)
+        self.assertNotIn('developer', data['agents'])
+        self.assertNotIn('[agents.developer]', text)
+        self.assertIn('# Local header note', text)
+        self.assertIn('# Local standalone note', text)
+        self.assertEqual(data['agents']['max_threads'], 16)
+
+    def test_retired_role_preserves_edited_local_description(self):
+        self.apply()
+        self.change(self.live, 'description = "Developer agent"', 'description = "Local notes"')
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        self.apply()
+        role = tomllib.loads(self.live.read_text())['agents']['developer']
+        self.assertEqual(role, {'description': 'Local notes'})
+
+    def test_retired_role_with_repurposed_local_path_keeps_metadata(self):
+        self.apply()
+        self.change(self.live, 'config_file = "agents/developer.toml"', 'config_file = "custom/developer.toml"')
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['developer'],
+            {'config_file': 'custom/developer.toml', 'description': 'Developer agent'},
+        )
+
+    def test_legacy_stale_registration_in_linked_agents_directory_is_removed(self):
+        self.prepare_legacy_retirement()
+        self.apply()
+        self.assertNotIn('developer', tomllib.loads(self.live.read_text())['agents'])
+
+    def test_legacy_retirement_removes_unbaselined_registration_description(self):
+        self.prepare_legacy_retirement()
+        self.change(self.live, 'description = "Developer agent"', 'description = "Local notes"')
+        self.apply()
+        self.assertNotIn('developer', tomllib.loads(self.live.read_text())['agents'])
+
+    def test_legacy_cleanup_preserves_local_description_table(self):
+        self.prepare_legacy_retirement()
+        self.change(self.live, 'description = "Developer agent"\n', '')
+        self.live.write_text(self.live.read_text() + '\n[agents.developer.description]\nnote = "keep"\n')
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['developer'],
+            {'description': {'note': 'keep'}},
+        )
+
+    def test_legacy_cleanup_preserves_local_description_array(self):
+        self.prepare_legacy_retirement()
+        self.change(self.live, 'description = "Developer agent"', 'description = ["keep", "notes"]')
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['developer'],
+            {'description': ['keep', 'notes']},
+        )
+
+    def test_legacy_capture_keeps_pending_cleanup_owned_until_apply(self):
+        self.prepare_legacy_retirement()
+        before = [p.read_bytes() for p in (self.live, self.source)]
+        capture = self.run_sync('capture')
+        self.assertEqual(capture.returncode, 0, capture.stdout + capture.stderr)
+        self.assertIn('[SKIP] Retired agent field; apply to remove: agents.developer.config_file', capture.stdout)
+        self.assertIn('[SKIP] Retired agent field; apply to remove: agents.developer.description', capture.stdout)
+        self.assertEqual(before, [p.read_bytes() for p in (self.live, self.source)])
+        tracked = {tuple(item['path']): item['state'] for item in json.loads(self.baseline.read_text())['keys']}
+        self.assertEqual(tracked[('agents', 'developer', 'config_file')],
+                         {'present': True, 'value': 'agents/developer.toml'})
+        self.assertEqual(tracked[('agents', 'developer', 'description')],
+                         {'present': True, 'value': 'Developer agent'})
+        self.apply()
+        self.assertNotIn('developer', tomllib.loads(self.live.read_text())['agents'])
+
+    def test_unknown_missing_canonical_registration_in_linked_directory_is_removed(self):
+        self.apply()
+        self.link_generated_agents()
+        self.live.write_text(self.live.read_text() + '\n[agents.missingrole]\n'
+                             'config_file = "agents/missingrole.toml"\ndescription = "Custom role"\n')
+        self.apply()
+        self.assertNotIn('missingrole', tomllib.loads(self.live.read_text())['agents'])
+
+    def test_legacy_local_path_override_in_linked_directory_is_preserved(self):
+        self.prepare_legacy_retirement()
+        self.change(self.live, 'config_file = "agents/developer.toml"', 'config_file = "custom/developer.toml"')
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['developer'],
+            {'config_file': 'custom/developer.toml', 'description': 'Developer agent'},
+        )
+
+    def test_traversal_role_names_in_linked_directory_are_preserved(self):
+        self.apply()
+        self.link_generated_agents()
+        roles = ('../external', '..\\external')
+        text = self.live.read_text()
+        for role in roles:
+            text += '\n[agents.' + json.dumps(role) + ']\nconfig_file = ' + json.dumps('agents/' + role + '.toml')
+            text += '\ndescription = "External role"\n'
+        self.live.write_text(text)
+        self.apply()
+        data = tomllib.loads(self.live.read_text())['agents']
+        for role in roles:
+            with self.subTest(role=role):
+                self.assertEqual(data[role],
+                                 {'config_file': 'agents/' + role + '.toml', 'description': 'External role'})
+
+    def test_missing_local_canonical_registration_in_separate_directory_is_preserved(self):
+        self.apply()
+        (self.home / '.codex/agents').mkdir()
+        self.live.write_text(self.live.read_text() + '\n[agents.local]\n'
+                             'config_file = "agents/local.toml"\ndescription = "Local role"\n')
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['local'],
+            {'config_file': 'agents/local.toml', 'description': 'Local role'},
+        )
+
+    def test_retired_role_with_valid_local_file_is_preserved(self):
+        self.apply()
+        local_agents = self.home / '.codex/agents'
+        local_agents.mkdir()
+        generated = self.repo / '.codex/agents/developer.toml'
+        (local_agents / 'developer.toml').write_bytes(generated.read_bytes())
+        generated.unlink()
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['developer'],
+            {'config_file': 'agents/developer.toml', 'description': 'Developer agent'},
+        )
+
+    def test_existing_untracked_local_role_file_absent_from_repo_is_preserved(self):
+        self.apply()
+        local_agents = self.home / '.codex/agents'
+        local_agents.mkdir()
+        (local_agents / 'local.toml').write_text('name = "local"\n', encoding='utf-8')
+        self.live.write_text(self.live.read_text() + '\n[agents.local]\n'
+                             'config_file = "agents/local.toml"\ndescription = "Local role"\n')
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['local'],
+            {'config_file': 'agents/local.toml', 'description': 'Local role'},
+        )
+
+    def test_missing_external_registration_is_preserved(self):
+        self.apply()
+        self.link_generated_agents()
+        external = str(Path(self.temp.name) / 'external' / 'missing.toml')
+        self.live.write_text(self.live.read_text() + '\n[agents.external]\nconfig_file = '
+                             + json.dumps(external) + '\ndescription = "External role"\n')
+        self.apply()
+        self.assertEqual(
+            tomllib.loads(self.live.read_text())['agents']['external'],
+            {'config_file': external, 'description': 'External role'},
+        )
+
+    def test_retirement_preview_and_capture_preserve_live_config_and_tracking(self):
+        self.apply()
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        before = [p.read_bytes() for p in (self.live, self.source, self.baseline)]
+        preview = self.run_sync('preview')
+        self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
+        self.assertIn('[REMOVE] agents.developer.config_file', preview.stdout)
+        self.assertIn('[REMOVE] agents.developer.description', preview.stdout)
+        self.assertEqual(before, [p.read_bytes() for p in (self.live, self.source, self.baseline)])
+        capture = self.run_sync('capture')
+        self.assertEqual(capture.returncode, 0, capture.stdout + capture.stderr)
+        self.assertIn('[SKIP]', capture.stdout)
+        self.assertIn('agents.developer.config_file', capture.stdout)
+        self.assertEqual(before, [p.read_bytes() for p in (self.live, self.source, self.baseline)])
+        self.apply()
+        self.assertNotIn('developer', tomllib.loads(self.live.read_text())['agents'])
+
+    def test_conflict_writes_nothing_when_retirement_is_planned(self):
+        self.apply()
+        (self.repo / '.codex/agents/developer.toml').unlink()
+        self.change(self.live, '"pragmatic"', '"friendly"')
+        self.change(self.source, '"pragmatic"', '"none"')
+        before = [p.read_bytes() for p in (self.live, self.source, self.baseline)]
+        for action in ('apply', 'capture', 'preview'):
+            with self.subTest(action=action):
+                result = self.run_sync(action)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('[CONFLICT] personality', result.stdout)
+                self.assertEqual(before, [p.read_bytes() for p in (self.live, self.source, self.baseline)])
+
+    def test_restored_agent_target_aborts_retirement_before_any_write(self):
+        import importlib.util
+
+        self.apply()
+        generated = self.repo / '.codex/agents/developer.toml'
+        agent_bytes = generated.read_bytes()
+        generated.unlink()
+        before = [p.read_bytes() for p in (self.live, self.source, self.baseline)]
+        spec = importlib.util.spec_from_file_location('sync_retirement_race_test', SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        original = module.stale_agent_fields
+        calls = 0
+
+        def restore_before_recheck(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                generated.write_bytes(agent_bytes)
+            return original(*args, **kwargs)
+
+        with patch.object(module, 'stale_agent_fields', side_effect=restore_before_recheck):
+            with self.assertRaisesRegex(module.SyncError, 'Agent files changed during sync'):
+                module.sync(self.repo, self.home, 'apply')
+        self.assertEqual(calls, 2)
+        self.assertEqual(generated.read_bytes(), agent_bytes)
+        self.assertEqual(before, [p.read_bytes() for p in (self.live, self.source, self.baseline)])
+
+    def test_invalid_live_agents_root_fails_cleanly_without_writes(self):
+        self.apply()
+        for value in ('7', '[]', '["custom"]'):
+            self.live.write_text('agents = ' + value + '\npersonality = "pragmatic"\n')
+            before = [p.read_bytes() for p in (self.live, self.source, self.baseline)]
+            for action in ('apply', 'capture', 'preview'):
+                with self.subTest(value=value, action=action):
+                    result = self.run_sync(action)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('[ERROR]', result.stderr)
+                    self.assertNotIn('Traceback', result.stderr)
+                    self.assertEqual(before, [p.read_bytes() for p in (self.live, self.source, self.baseline)])
 
     def test_two_machine_round_trip(self):
         self.apply()
