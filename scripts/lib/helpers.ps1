@@ -111,7 +111,27 @@ function Get-ExecutableArchitecture {
     $command = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $command) { return $null }
     try {
-        $stream = [IO.File]::OpenRead($command.Source)
+        $executablePath = $command.Source
+        $item = Get-Item -LiteralPath $executablePath -Force -ErrorAction Stop
+        # MSIX app aliases are zero-byte reparse points, not PE files.
+        # Inspect the executable declared by the matching app manifest.
+        if ($item.Length -eq 0 -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            $aliasName = $item.Name
+            $targets = @(
+                foreach ($package in Get-AppxPackage -ErrorAction Stop) {
+                    $manifest = Get-AppxPackageManifest -Package $package -ErrorAction Stop
+                    foreach ($app in $manifest.SelectNodes("//*[local-name()='Application']")) {
+                        $aliases = $app.SelectNodes(".//*[local-name()='ExecutionAlias']")
+                        if ($aliases | Where-Object { $_.Alias -eq $aliasName }) {
+                            Join-Path $package.InstallLocation $app.Executable
+                        }
+                    }
+                }
+            )
+            if ($targets.Count -ne 1) { return $null }
+            $executablePath = $targets[0]
+        }
+        $stream = [IO.File]::OpenRead($executablePath)
         $reader = [IO.BinaryReader]::new($stream)
         try {
             $stream.Position = 0x3c

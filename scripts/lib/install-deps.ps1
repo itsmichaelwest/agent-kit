@@ -2,8 +2,16 @@
 
 function Get-WinGetInstallerStatus {
     param([string]$Id, [string]$Architecture)
-    winget show --id $Id --exact --source winget --architecture $Architecture --accept-source-agreements *> $null
-    if ($LASTEXITCODE -eq 0) { return "available" }
+    $output = winget show --id $Id --exact --source winget --architecture $Architecture --accept-source-agreements --disable-interactivity 2>$null | Out-String
+    if ($LASTEXITCODE -eq 0) {
+        # `show` succeeds without an applicable installer. An installer has a
+        # SHA256 field in the final section; ignore checksums in release notes
+        # and match the value without depending on localized labels.
+        $installerDetails = ($output -split '(?m)^[^\s:\r\n][^:\r\n]*:[ \t]*\r?$')[-1]
+        if ($installerDetails -match '(?m)^ {2}[^:\r\n]+:\s*[0-9a-fA-F]{64}\s*$') { return "available" }
+        if ($output -match "\[$([regex]::Escape($Id))\]") { return "unavailable" }
+        return "error"
+    }
     # APPINSTALLER_CLI_ERROR_NO_APPLICABLE_INSTALLER (0x8A150010).
     if ($LASTEXITCODE -eq -1978335216) { return "unavailable" }
     return "error"
@@ -12,6 +20,7 @@ function Get-WinGetInstallerStatus {
 function Install-Deps {
     Write-Info "Installing dependencies..."
     $nativeArch = Get-NativeArchitecture
+    Refresh-InstallPath
 
     $packages = @(
         "9NQ7512CXL7T",
@@ -29,7 +38,7 @@ function Install-Deps {
         "GitHub.cli" = "gh"; "eza-community.eza" = "eza"; "junegunn.fzf" = "fzf"
         "BurntSushi.ripgrep.MSVC" = "rg"; "sharkdp.bat" = "bat"; "sharkdp.fd" = "fd"
         "JanDeDobbeleer.OhMyPosh" = "oh-my-posh"; "Starship.Starship" = "starship"
-        "Microsoft.Coreutils" = "coreutils"
+        "Microsoft.Coreutils" = "coreutils-manager"
     }
     $skippedPackages = @()
     $x64Packages = @()
@@ -96,7 +105,11 @@ function Install-Deps {
 
         Write-Info "Installing $id ($selectedArch)..."
         winget install --id $id --exact --architecture $selectedArch -h --accept-package-agreements --accept-source-agreements | Out-Host
-        if ($LASTEXITCODE -ne 0) {
+        $installExitCode = $LASTEXITCODE
+        # APPINSTALLER_CLI_ERROR_UPDATE_NOT_APPLICABLE (0x8A15002B) means
+        # an existing package has no update; still verify its executable below.
+        $alreadyCurrent = $installExitCode -eq -1978335189 -and $output -match [regex]::Escape($id)
+        if ($installExitCode -ne 0 -and -not $alreadyCurrent) {
             Write-Warn "Could not install $id ($selectedArch); skipping it."
             $skippedPackages += $id
             continue
@@ -106,13 +119,15 @@ function Install-Deps {
                         [System.Environment]::GetEnvironmentVariable("Path", "Machine")
             $installedArch = Get-ExecutableArchitecture $name
             if (-not $installedArch) {
-                Write-Warn "Could not verify the architecture of $name after installing $id."
+                Write-Warn "$id is installed, but could not verify the architecture of $name on PATH. Restart PowerShell or check the package's command aliases."
                 $skippedPackages += $id
             } elseif ($installedArch -ne $selectedArch) {
                 Write-Warn "$name on PATH is $installedArch, expected $selectedArch; check for a conflicting installation."
                 $skippedPackages += $id
             } elseif ($selectedArch -eq "x64") {
                 $x64Packages += $id
+            } elseif ($alreadyCurrent) {
+                Write-Host "  [OK ARM64] $id (already up to date)"
             }
         }
     }

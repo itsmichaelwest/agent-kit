@@ -65,6 +65,9 @@ emulation. The default answer skips it. `-All` also skips x64 fallbacks; use
 are listed as skipped. Setup installs an ARM64 Python runtime by
 explicit tag and checks the resulting Python, Node, and Rust architectures.
 PowerShell, Python, Node.js, and Rust remain native-only install steps.
+Setup verifies installed MSIX commands through their app aliases and checks
+Coreutils through `coreutils-manager`. WinGet's "No available upgrade found"
+result still requires an architecture check; it does not mean installation failed.
 If an x64 Node.js or rustup executable already exists on ARM64, toolchain
 installation stops and asks you to remove that conflicting installation.
 Rust's MSVC target also needs Visual Studio C++ build tools and a Windows SDK
