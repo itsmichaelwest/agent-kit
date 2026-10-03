@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -300,6 +301,74 @@ if ($case.Alias) {
             Machine=0xAA64, Alias=True, PackageAliases=["oh-my-posh.exe", "oh-my-posh.exe"]
         )
         self.assertIsNone(result["Architecture"])
+
+    def symbolic_link_case(self, machine: int, *, nested: bool = False, dangling: bool = False) -> dict:
+        result = self.run_powershell(
+            """
+$fixture = Join-Path $ScratchRoot 'fixture.exe'
+$bytes = [byte[]]::new(256)
+$bytes[0] = 0x4d; $bytes[1] = 0x5a
+[BitConverter]::GetBytes([int]0x80).CopyTo($bytes, 0x3c)
+$bytes[0x80] = 0x50; $bytes[0x81] = 0x45
+[BitConverter]::GetBytes([uint16]$case.Machine).CopyTo($bytes, 0x84)
+[IO.File]::WriteAllBytes($fixture, $bytes)
+$link = Join-Path $ScratchRoot 'link.exe'
+try {
+    New-Item -ItemType SymbolicLink -Path $link -Target $fixture -ErrorAction Stop | Out-Null
+    if ($case.Nested) {
+        $nestedLink = Join-Path $ScratchRoot 'nested-link.exe'
+        New-Item -ItemType SymbolicLink -Path $nestedLink -Target $link -ErrorAction Stop | Out-Null
+        $link = $nestedLink
+    }
+} catch {
+    if ($_.FullyQualifiedErrorId -like '*ElevationRequired*' -or
+        $_.Exception -is [UnauthorizedAccessException] -or
+        $_.Exception.InnerException.NativeErrorCode -eq 1314) {
+        @{ Skip = 'Windows symbolic link privilege unavailable; enable Developer Mode or run elevated.' } |
+            ConvertTo-Json -Compress
+        return
+    }
+    throw
+}
+if ($case.Dangling) { [IO.File]::Delete($fixture) }
+$script:appxCalls = 0
+function Get-Command {
+    param($Name, $CommandType, $ErrorAction)
+    [pscustomobject]@{ Source = $link }
+}
+function Get-AppxPackage {
+    param($ErrorAction)
+    $script:appxCalls++
+    throw 'A filesystem symbolic link must not be treated as an MSIX alias'
+}
+$architecture = Get-ExecutableArchitecture 'fixture-link'
+@{ Architecture = $architecture; AppxCalls = $script:appxCalls } | ConvertTo-Json -Compress
+""",
+            {"Machine": machine, "Nested": nested, "Dangling": dangling},
+        )
+        if "Skip" in result:
+            self.skipTest(result["Skip"])
+        return result
+
+    @unittest.skipUnless(os.name == "nt", "Real Windows symbolic links are required")
+    def test_symbolic_link_resolves_arm64_and_x64_pe_targets(self) -> None:
+        for machine, architecture in ((0xAA64, "arm64"), (0x8664, "x64")):
+            with self.subTest(architecture=architecture):
+                result = self.symbolic_link_case(machine)
+                self.assertEqual(result["Architecture"], architecture)
+                self.assertEqual(result["AppxCalls"], 0)
+
+    @unittest.skipUnless(os.name == "nt", "Real Windows symbolic links are required")
+    def test_nested_symbolic_link_resolves_final_pe_target(self) -> None:
+        result = self.symbolic_link_case(0xAA64, nested=True)
+        self.assertEqual(result["Architecture"], "arm64")
+        self.assertEqual(result["AppxCalls"], 0)
+
+    @unittest.skipUnless(os.name == "nt", "Real Windows symbolic links are required")
+    def test_dangling_symbolic_link_does_not_enumerate_appx_packages(self) -> None:
+        result = self.symbolic_link_case(0xAA64, dangling=True)
+        self.assertIsNone(result["Architecture"])
+        self.assertEqual(result["AppxCalls"], 0)
 
 
 if __name__ == "__main__":

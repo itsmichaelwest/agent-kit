@@ -113,6 +113,12 @@ function Get-ExecutableArchitecture {
     try {
         $executablePath = $command.Source
         $item = Get-Item -LiteralPath $executablePath -Force -ErrorAction Stop
+        # WinGet portable aliases are filesystem links and can also have length zero.
+        if ($item.LinkType -in @("SymbolicLink", "Junction")) {
+            $item = $item.ResolveLinkTarget($true)
+            if (-not $item -or -not $item.Exists) { return $null }
+            $executablePath = $item.FullName
+        }
         # MSIX app aliases are zero-byte reparse points, not PE files.
         # Inspect the executable declared by the matching app manifest.
         if ($item.Length -eq 0 -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
