@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test audit"
+  short_description: "Keep tests that catch meaningful regressions"
+  default_prompt: "Use $test-audit to assess whether tests protect distinct behavior and reduce unnecessary maintenance within the requested scope."

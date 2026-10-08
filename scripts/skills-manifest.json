@@ -16,7 +16,8 @@
     "screen-recording-review",
     "shader-prototyping",
     "ui-polisher",
-    "ux-design-spec"
+    "ux-design-spec",
+    "test-audit"
   ],
   "$retained_comment": "Preserved skills outside active upstream refresh, including audit snapshots and skills with unverified provenance. They are not self-owned and may retain historical lockfile provenance.",
   "retained": [
@@ -162,10 +163,12 @@
         "grilling",
         "handoff",
         "implement",
+        "implement-spec",
         "improve-codebase-architecture",
+        "pr",
         "prototype",
         "research",
-        "resolving-merge-conflicts",
+        "retro",
         "setup-matt-pocock-skills",
         "tdd",
         "teach",

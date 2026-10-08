@@ -1,230 +1,84 @@
 # agent-kit
 
-AI agent workspace, personal dotfiles, and shell configs for Windows, macOS, and Linux.
+Shared agent instructions, skills, tool configuration, and shell dotfiles for
+Windows, macOS, and Linux. Supports Claude Code, Codex, and GitHub Copilot.
 
-## Getting Started
+## Set up a machine
 
-### Windows (PowerShell)
+Clone the repository, then use the entry point for your operating system.
+Setup needs Python 3.11+ for compilation and linking; the dependency step can
+install it. See [dependencies](docs/dependencies.md) for platform requirements.
 
 ```powershell
+# Windows
 git clone https://github.com/itsmichaelwest/agent-kit.git
 cd agent-kit
-
-# Choose dependencies, toolchains, links, and plugins in PowerShell
 .\scripts\setup.ps1 install
 
 # Install every component without prompts
 .\scripts\setup.ps1 install -All
 
-# Also allow x64 CLI tools when an ARM64 package is unavailable
+# Also permit x64 CLI fallbacks on ARM64
 .\scripts\setup.ps1 install -All -AllowX64Fallback
-
-# Or just link configs (no installs)
-.\scripts\setup.ps1 link
 ```
 
-### macOS / Linux
-
 ```bash
+# macOS/Linux
 git clone https://github.com/itsmichaelwest/agent-kit.git
 cd agent-kit
-
-# Choose dependencies, toolchains, links, shell config, and plugins
 ./scripts/setup.sh install
 
 # Install every component without prompts
 ./scripts/setup.sh install --all
+```
 
-# Or just link configs (no installs)
+To apply repository updates or link existing tools without installing packages:
+
+```bash
 ./scripts/setup.sh link
-```
-
-## Repository Layout
-
-```
-agent-kit/
-├── AGENTS.md                  # Global AI agent instructions
-├── agent-templates/           # Canonical agent source templates
-├── agents/                    # Generated Claude/Copilot agent definitions (.md)
-├── .claude/                   # Claude Code settings
-├── .codex/
-│   └── agents/                # Generated Codex agent definitions (.toml)
-├── config/codex/global.toml   # Portable Codex settings source
-├── prompts/                   # Slash commands (shared across tools)
-├── skills/                    # Canonical global skill source
-├── docs/                      # Reference docs for agents
-├── shell/
-│   ├── zsh/shared.zsh         # Zsh config (injected into ~/.zshrc)
-│   └── powershell/            # PowerShell profile
-└── scripts/
-    ├── setup.sh               # macOS/Linux entry point
-    ├── setup.ps1              # Windows entry point
-    ├── ai-agent-links.json    # Symlink manifest for AI tools
-    ├── skills-manifest.json   # Skills to install from GitHub repos
-    └── lib/                   # Modular script components
-```
-
-## What Gets Installed
-
-See [docs/dependencies.md](docs/dependencies.md) for the full list of tools installed by `setup.sh install` / `setup.ps1 install`.
-
-## What Gets Linked
-
-The setup scripts symlink agents, skills, prompts, and docs into the config directories for each supported AI tool (GitHub Copilot CLI, Codex, Claude Code). Most static link targets are defined declaratively in [`scripts/ai-agent-links.json`](scripts/ai-agent-links.json); a few tool-specific migrations are handled directly in the setup scripts.
-
-See [docs/linking.md](docs/linking.md) for the full mapping.
-See [docs/agents.md](docs/agents.md) for the agent template and compilation workflow.
-See [docs/plugins.md](docs/plugins.md) for the plugin model and config surfaces.
-See [docs/tool-surfaces.md](docs/tool-surfaces.md) for the per-tool agent and plugin discovery rules.
-
-For existing machines, the supported upgrade path is to pull the latest repo and re-run `./scripts/setup.sh link` or `.\scripts\setup.ps1 link`. The scripts migrate legacy targets in place, back up conflicting non-symlink files or directories, and relink the current global layout.
-
-## Agents
-
-Agents are specialized personas with distinct roles, models, and instructions. The editable source of truth lives in `agent-templates/`. Those templates compile into:
-
-- `agents/*.md` for Claude Code and Copilot
-- `.codex/agents/*.toml` for Codex
-
-During setup, Copilot-compatible global agent links are created with the required `*.agent.md` filenames under `~/.copilot/agents/`.
-Those filenames are not committed under `agents/`; keeping both `agents/*.md` and `agents/*.agent.md` in the repo makes VS Code/Copilot show duplicate custom agents.
-
-### Managing agents
-
-```bash
-# Rebuild generated agent outputs from templates
-./scripts/setup.sh compile-agents
-```
-
-```powershell
-.\scripts\setup.ps1 compile-agents
-```
-
-See [docs/agents.md](docs/agents.md) for the template schema, model mapping, and how to add a new agent.
-
-## Skills
-
-Skills are domain-specific knowledge packs that give agents deeper expertise. Each skill is a folder with a `SKILL.md` (YAML frontmatter: `name`, `description`) and supporting reference files. The repo `skills/` directory is the canonical global source: it is symlinked into `~/.agents/skills`, `~/.claude/skills`, and `~/.copilot/skills`.
-
-Skills are managed via [`vercel-labs/skills`](https://github.com/vercel-labs/skills) (`npx skills`). The repo's [`scripts/skills-manifest.json`](scripts/skills-manifest.json) declares the desired set of upstream skills; the lockfile committed at [`.skill-lock.json`](.skill-lock.json) is the symlinked source of truth that `npx skills` reads at `~/.agents/.skill-lock.json`.
-
-See [docs/skills-sync.md](docs/skills-sync.md) for the sync strategy — why skills are vendored rather than restored from a lockfile, how upstream updates work, and when to revisit this as `npx skills` matures.
-
-### Managing skills
-
-```bash
-# Install/update all skills declared in the manifest
-./scripts/setup.sh update-skills
-
-# Interactively add skills from a new upstream source, then reconcile and doctor
-./scripts/setup.sh install-skill shadcn/improve
-.\scripts\setup.ps1 install-skill vercel-labs/agent-skills -s react-best-practices
-
-# Skip prompts for an unattended install
-./scripts/setup.sh install-skill shadcn/improve -y
-
-# Remove one upstream skill, update the manifest, then doctor
-./scripts/setup.sh uninstall-skill improve
-
-# Show currently installed skills (delegates to `npx skills list -g`)
-./scripts/setup.sh list-skills
-
-# Reconcile skills installed directly with `npx skills add -g`
-./scripts/setup.sh reconcile-skills
-
-# Check manifest/lockfile/disk consistency (add --strict to fail on warnings)
 ./scripts/setup.sh doctor
-
-# Pull latest versions of already-installed skills (no manifest read)
-npx skills update -g -y
 ```
 
-### Adding a skill
+On Windows, use `.\scripts\setup.ps1 link` and
+`.\scripts\setup.ps1 doctor`. Use PowerShell rather than Git Bash.
 
-Add an entry to `scripts/skills-manifest.json`. Either group with an existing `repo` source or add a new one:
+## Maintain the kit
 
-```jsonc
-{
-  "repo": "owner/repo",
-  "skills": ["specific-skill-name"]   // omit "skills" to install all skills from the repo
-}
-```
+| Task | Reference |
+| --- | --- |
+| Install tools and toolchains | [Dependencies](docs/dependencies.md) |
+| Link configuration and troubleshoot discovery | [Linking](docs/linking.md) |
+| Create or modify agents | [Agents](docs/agents.md) |
+| Add, update, or remove skills | [Skills](docs/skills-sync.md) |
+| Curate skills and review imported guidance | [Skill maintenance](docs/skill-maintenance.md) |
+| Preview or capture Codex settings | [Codex config sync](docs/codex-config-sync.md) |
+| Declare and install plugins | [Plugins](docs/plugins.md) |
+| Configure safety hooks | [Hooks](docs/hooks.md) |
+| Change setup scripts and validate the kit | [Maintenance](docs/maintenance.md) |
+| Write technical documentation | [Technical writing](docs/technical-writing.md) |
 
-Then run `./scripts/setup.sh update-skills`, or use `./scripts/setup.sh install-skill owner/repo` to select skills interactively and update the lockfile/manifest in one pass. Pass `-s skill-name` to select directly or `-y` for an unattended install. Skill names follow the upstream package's canonical naming (the CLI may apply a vendor prefix on collision — e.g. `react-best-practices` from `vercel-labs/agent-skills` lands as `vercel-react-best-practices`).
+## Repository sources
 
-If you installed a skill directly with `npx skills add -g`, run `./scripts/setup.sh reconcile-skills` (or `.\scripts\setup.ps1 reconcile-skills` on Windows) before `doctor`. It recovers matching lockfile entries from the repo/global lockfiles and backed-up `~/.agents/.skill-lock.json.backup.*` files, adds on-disk upstream skills to the manifest for review in git, and removes only empty non-skill folders left by interrupted installs.
+| Path | Owns |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | Shared agent behavior |
+| `agent-templates/` | Agent definitions and provider model policy |
+| `agents/`, `.codex/agents/` | Generated agent outputs |
+| `skills/` | Vendored and local skills |
+| `scripts/skills-manifest.json`, `.skill-lock.json` | Skill inventory and upstream provenance |
+| `config/codex/global.toml` | Portable Codex setting keys |
+| `.claude/settings.json`, `.copilot/settings.json` | Native tool settings and plugin declarations |
+| `scripts/ai-agent-links.json` | Static global link targets |
+| `prompts/` | Shared commands |
+| `docs/` | Operational references |
+| `hooks/`, `mcp/`, `shell/` | Safety hooks, MCP configuration, shell configuration |
+| `scripts/setup.sh`, `scripts/setup.ps1` | Platform setup entry points |
 
-To remove an upstream skill, use `./scripts/setup.sh uninstall-skill installed-skill-name` (or `.\scripts\setup.ps1 uninstall-skill installed-skill-name`). The command refuses local skills and manifest entries that install every skill from a source, because those cases need an explicit manual inventory decision.
-
-### Local skills
-
-To author a local skill, drop a folder into `skills/` with a `SKILL.md` containing YAML frontmatter, then list its folder name under `"local"` in [`scripts/skills-manifest.json`](scripts/skills-manifest.json). Local skills are not tracked in the lockfile and coexist alongside `npx skills`-managed ones; the `local` list tells `setup.sh doctor` they're intentional (otherwise it flags them as undeclared).
-
-### Private skills
-
-For skills that should stay on one machine and never be committed or synced (anything whose name is private), git-ignore the folder — add it to `.git/info/exclude` (per-clone, never pushed). `setup.sh doctor` detects ignored skills via `git check-ignore` and skips them, so their names never appear in any tracked file. Don't install them with `npx skills add -g` (that writes the shared lockfile); the doctor warns if a git-ignored skill leaks into the lockfile. See [docs/skills-sync.md](docs/skills-sync.md#private-skills-machine-local-not-synced).
-
-## Plugins
-
-Plugins are declared per tool. Run `install` to link configs and bootstrap plugin managers.
-
-```bash
-./scripts/setup.sh plugin-status
-```
-
-| Tool | Declared in | Auto-installs on launch? |
-|------|------------|---------------------------|
-| Copilot | `.copilot/settings.json` `enabledPlugins` | Yes — documented as "Declarative plugin auto-install" |
-| Codex | `config/codex/global.toml` `[plugins."x@y"]` | Partially — use `./scripts/setup.sh bootstrap-codex` / `.\scripts\setup.ps1 bootstrap-codex` to force convergence |
-| Claude | `.claude/settings.json` `enabledPlugins` | No — requires `./scripts/setup.sh bootstrap-claude` to install (run once per machine) |
-
-Claude, Codex, and Copilot marketplace declarations are intentionally separate. `install` runs the available bootstrap commands, but each one reads only that tool's native config. Shared overlap belongs in the target tool's shared config only when that is the explicit policy, or in that tool's local overlay for one machine.
-
-### Per-tool layering
-
-**Copilot** — `~/.copilot/settings.json` is **generated** at link time by jq-merging the committed `.copilot/settings.json` (shared) with an optional `.copilot/settings.local.json` (gitignored, per-machine: `model`, `trustedFolders`). Copy `.copilot/settings.local.example.json` to bootstrap your local file. Runtime state (installed plugin cache paths, login info, first-launch timestamp) stays in `~/.copilot/config.json`, which Copilot CLI manages itself and is never touched by setup.
-
-**Codex** — `config/codex/global.toml` is rendered into a marked block inside
-`~/.codex/config.toml`; it is not linked. Re-running `compile-agents`, `link`, or
-`link-ai-agents` updates only that block and preserves machine-specific sections
-such as `[projects]` and app-generated MCP servers. Use
-`./scripts/setup.sh capture-codex-config` (or the PowerShell equivalent) to
-explicitly import portable live edits into the repository.
-
-**Claude** — `~/.claude/settings.json` is a plain symlink to the committed `.claude/settings.json`. Claude stores runtime state (OAuth, MCP user-scope configs, per-project trust) in a separate `~/.claude.json` file, so the symlinked settings file stays clean. Use `.claude/settings.local.json` (gitignored, project-scope per Claude convention) for any per-machine overrides.
-
-### Bootstrapping Claude plugins on a new machine
-
-```bash
-./scripts/setup.sh bootstrap-claude
-```
-
-Registers `extraKnownMarketplaces` from `~/.claude/settings.json`, refreshes Claude plugin marketplaces, then reads `enabledPlugins`, installs missing plugins, and updates declared plugins. Idempotent — already-registered marketplaces and already-installed/current plugins are skipped. `setup.sh install` runs this automatically.
-
-### Bootstrapping Codex plugins on a new machine
-
-```bash
-./scripts/setup.sh bootstrap-codex
-```
-
-Registers Codex marketplaces from `config/codex/global.toml`, refreshes marketplace snapshots, then installs enabled `[plugins."name@marketplace"]` entries through `codex plugin add`. `setup.sh install` and `setup.ps1 install` run this automatically after linking Codex config.
-
-## Adding a New AI Tool
-
-Add entries to [`scripts/ai-agent-links.json`](scripts/ai-agent-links.json) for simple link targets, then re-run `setup.sh link-ai-agents`. Tool-specific migrations such as Copilot agent filename rewriting live in the setup scripts rather than the manifest.
+Runtime credentials, trust, sessions, and plugin caches stay machine-local.
 
 ## Acknowledgements
 
-Some agent/skill designs and conventions in this repo were informed by:
-
-- [BumpyClock/dotfiles](https://github.com/BumpyClock/dotfiles) — Agent and prompt structure
-- [butter-zone/design-standards](https://github.com/butter-zone/design-standards) — Design standards and conventions
-- [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) — Community subagent catalog
-- [The 2-Minute Claude Code Upgrade You're Probably Missing: LSP](https://karanbansal.in/blog/claude-code-lsp/) — LSP guidance in coding agents
-
-## Codex config sync
-
-Portable settings sync by individual key; local app settings remain on each machine.
-Run `setup.ps1 preview-codex-config` (Windows) or `setup.sh preview-codex-config`
-through the scripts directory to inspect updates before `setup link`.
-See [Codex config sync](docs/codex-config-sync.md) for apply, capture, and conflicts.
+- [BumpyClock/dotfiles](https://github.com/BumpyClock/dotfiles): agent and prompt structure.
+- [butter-zone/design-standards](https://github.com/butter-zone/design-standards): design conventions.
+- [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents): community agent catalog.
+- [Claude Code LSP guidance](https://karanbansal.in/blog/claude-code-lsp/): code intelligence.

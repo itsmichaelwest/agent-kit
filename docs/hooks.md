@@ -42,8 +42,6 @@ For Codex on Windows with PowerShell, `commandWindows` uses `$env:USERPROFILE`
 to locate the shared hook.
 The CMD syntax `%USERPROFILE%` stays literal in PowerShell, so Python cannot
 find the script and the PowerShell process exits with code 1.
-The Windows regression test runs both configured commands through PowerShell
-with a profile path containing spaces and checks that safety decisions still work.
 
 The hook is deliberately fail-closed: both configs invoke it by absolute path,
 and a `PreToolUse` hook that exits non-zero denies the call. If
@@ -54,10 +52,11 @@ until the link is restored. Adding a hook to either config without running
 degrading quietly.
 
 `setup.sh doctor` / `setup.ps1 doctor` checks that both targets are linked. Run
-it after changing `scripts/ai-agent-links.json`; see `docs/linking.md`.
+it after changing `scripts/ai-agent-links.json`; see [Linking](linking.md).
 
 Run the local checks with:
 
 ```bash
-python3 -m unittest tests.test_agent_safety_hook tests.test_doctor_links
+python3 -m unittest discover -s tests -p 'test_agent_safety_hook.py'
+python3 -m unittest discover -s tests -p 'test_doctor_links.py'
 ```

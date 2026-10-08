@@ -74,29 +74,6 @@ installation stops and asks you to remove that conflicting installation.
 Rust's MSVC target also needs Visual Studio C++ build tools and a Windows SDK
 to link native programs; install those separately if they are not already present.
 
-### Choose Windows install components
-
-In an interactive PowerShell session, `setup.ps1 install` asks these questions
-in order. Press Enter to skip a step. The PowerShell 7 question appears only
-when setup starts in Windows PowerShell 5.1 and PowerShell 7 is absent.
-
-```text
-Install PowerShell 7 to run setup? [y/N]:
-Install CLI dependencies and Python? [y/N]:
-WinGet found no ARM64 installer for eza. Install its x64 version under emulation? [y/N]:
-Install Node.js LTS? [y/N]:
-Install Rust via rustup? [y/N]:
-Compile agents and link configs? [y/N]:
-Install Claude Code plugins? [y/N]:
-Install Codex plugins? [y/N]:
-```
-
-The x64 question appears once per selected CLI package only when WinGet offers
-an x64 installer but no ARM64 installer. The package name in that question
-varies with the available installers. `-All` skips selection questions and x64
-fallbacks. Add `-AllowX64Fallback` to `-All` to install those x64 packages
-without questions.
-
 ### PowerShell modules
 
 | Module | Purpose |

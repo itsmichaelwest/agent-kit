@@ -1,96 +1,72 @@
 # Plugins
 
-Plugin state is managed per tool. Plugin payloads are not tracked in this repo.
+Track desired plugin state in each host's native config. Hosts install their own
+packages and maintain runtime inventories. This repo does not vendor plugin
+caches or bundled skills, agents, hooks, and MCP definitions unless it owns or
+intentionally forks the plugin. Pin Git marketplace sources to a release tag
+or commit when reproducibility matters.
 
-The source of truth is the tool-native config already stored in this repo.
-This follows OpenAI's marketplace model: track a marketplace source and plugin
-policy, then let the host install its cached package. Vendor a plugin payload
-only when this repo owns or intentionally forks that plugin. Git marketplace
-sources should use a release tag or commit ref when reproducibility matters.
+## Sources and runtime state
 
-## Storage model
+| Surface | Desired state in this repo | Runtime inventory |
+| --- | --- | --- |
+| Claude Code | [`.claude/settings.json`](../.claude/settings.json): `enabledPlugins`, `extraKnownMarketplaces` | Claude plugin cache |
+| Codex app / CLI | [`config/codex/global.toml`](../config/codex/global.toml): `[marketplaces.<name>]`, `[plugins."<id>@<marketplace>"]` | Codex plugin manager |
+| Copilot CLI | [`.copilot/settings.json`](../.copilot/settings.json): `enabledPlugins`, `extraKnownMarketplaces` | `~/.copilot/config.json`: installed-plugin inventory and account/session state |
 
-### Claude Code
+Marketplace declarations remain separate across hosts. Cross-tool overlap must
+be intentional in that host's shared config; put machine experiments in its
+matching local overlay. Codex/OpenAI marketplaces are the default for Codex,
+and Copilot-native marketplaces are the default for Copilot.
+`superpowers@superpowers-marketplace`, sourced from `obra/superpowers-marketplace`,
+is intentional Copilot policy.
 
-- Desired plugin state lives in `.claude/settings.json`
-- Repo-managed keys:
-  - `enabledPlugins`
-  - `extraKnownMarketplaces`
+Linking writes `~/.copilot/settings.json` as a real file from the shared config
+and optional gitignored `.copilot/settings.local.json` overlay. It backs up an
+existing real file; settings are not symlinked and runtime edits are not imported
+back into the repo. Put persistent machine overrides in the overlay before
+linking again. The shell linker merges nested objects; the PowerShell linker
+replaces top-level keys supplied by the overlay, so provide complete nested
+values when an overlay must work on both platforms. Copilot's `config.json`
+remains host-managed and is not linked.
 
-### Codex
-
-- Desired plugin state lives in `config/codex/global.toml`
-- Repo-managed sections:
-  - `[marketplaces.<name>]`
-  - `[plugins."<plugin-id>@<marketplace>"]`
-- Codex does not mirror Claude Code marketplaces. Any overlap with Claude plugin
-  marketplaces must be declared intentionally in Codex config.
-
-### Copilot CLI
-
-- Desired plugin state lives in `.copilot/settings.json`
-- That file is linked into `~/.copilot/settings.json`
-- Installed plugin inventory is auto-managed in `~/.copilot/config.json`
-- Repo-managed keys:
-  - `enabledPlugins`
-  - `extraKnownMarketplaces`
-- Copilot does not mirror Claude Code or Codex marketplaces. Any overlap must be
-  declared intentionally in Copilot settings.
-
-`config.json` is not linked from this repo because Copilot manages it automatically and uses it for installed plugin inventory and account/session state.
+Codex's `~/.codex/config.toml` is also a real machine-local file, reconciled from
+the portable source and generated agent registrations. See [Codex config sync](codex-config-sync.md)
+for ownership and capture rules.
 
 ## Commands
 
+Run from the repo root:
+
 ```bash
 ./scripts/setup.sh plugin-status
-```
-
-```powershell
-.\scripts\setup.ps1 plugin-status
-```
-
-`install` and `link` relink the repo-owned tool config files into the home-directory tool locations.
-`bootstrap-claude` also registers and refreshes Claude Code marketplaces before installing and updating `enabledPlugins`, because a first-run machine may not have the marketplace checkout yet and an existing machine may have stale plugin caches.
-`bootstrap-codex` registers Codex marketplaces from `config/codex/global.toml`, refreshes marketplace snapshots, and installs enabled plugins with `codex plugin add`. `install` runs both bootstrap commands after linking config.
-The bootstrap/status commands read separate desired-state files; `bootstrap-codex` never reads `.claude/settings.json`, and Copilot status never imports Claude or Codex marketplace declarations into `.copilot/settings.json`.
-
-## What the repo controls
-
-The repo controls:
-
-- which plugins should be enabled
-- which extra marketplaces should be known
-- which Codex marketplaces should be present in config
-- which Codex plugins should be installed by `bootstrap-codex`
-
-The repo does not vendor:
-
-- installed plugin caches
-- plugin-bundled skills, agents, hooks, or MCP definitions
-- Copilot `installedPlugins` / `installed_plugins` inventory
-
-## Bootstrapping Codex plugins
-
-```bash
+./scripts/setup.sh bootstrap-claude
 ./scripts/setup.sh bootstrap-codex
 ```
 
-```powershell
-.\scripts\setup.ps1 bootstrap-codex
-```
+PowerShell uses `.\scripts\setup.ps1` with the same subcommands. `link` applies
+repo-owned config and overlays. `install` links config and runs both bootstrap
+commands.
 
-Codex app and CLI plugin availability is not just TOML state. The bootstrap command uses `codex plugin marketplace add`, `codex plugin marketplace upgrade`, and `codex plugin add` so the plugin manager converges on the repo-owned declarations. For app-managed local marketplaces such as `openai-bundled` and `openai-primary-runtime`, the bootstrapper infers their local runtime paths when those plugins are declared.
+`bootstrap-claude` registers and refreshes declared marketplaces, installs
+missing enabled plugins, and updates them. `bootstrap-codex` reads only Codex
+desired state and runs `codex plugin marketplace add`,
+`codex plugin marketplace upgrade`, and `codex plugin add`. TOML declarations
+alone do not install a package in the Codex plugin manager. For declared
+app-managed marketplaces such as `openai-bundled` and `openai-primary-runtime`,
+the bootstrapper infers local runtime paths.
 
-By default, committed Codex config should stay on Codex/OpenAI marketplaces. If you want a Codex install to use a third-party or Claude-origin marketplace, add that marketplace and its `[plugins.*]` entries explicitly to `config/codex/global.toml` when the cross-tool overlap is an intentional shared policy.
+`plugin-status` compares desired state with each host's runtime state. Copilot
+status checks `config.json` inventory against Copilot settings; it does not
+import another host's marketplaces. This kit has no Copilot bootstrap command.
 
-The same rule applies to Copilot: keep committed `.copilot/settings.json` on Copilot-native marketplaces unless a cross-tool marketplace is an intentional Copilot policy. Put one-machine experiments in `.copilot/settings.local.json`. `superpowers@superpowers-marketplace` is intentionally declared for Copilot from `obra/superpowers-marketplace`; do not treat it as accidental Claude/Codex bleed.
+## Skills and plugins
 
-## Mixing plugins with custom skills
+Repo skills are vendored and linked separately. Plugin-installed skills stay
+plugin-managed. Both can coexist, but avoid installing the same skill through
+both paths unless duplicate discovery is intentional.
 
-Custom skills remain in the repo and are linked separately from plugin state.
+## Host references
 
-- Plugin-installed skills stay plugin-managed
-- Repo skills stay repo-managed
-- They can coexist in all three tools
-
-For Copilot specifically, the desired plugin declarations are stored in `settings.json`, while actual installed plugin state is checked against `config.json` during `plugin-status`.
+- [Copilot CLI plugins](https://docs.github.com/copilot/concepts/agents/copilot-cli/about-cli-plugins)
+- [Copilot CLI plugin marketplaces](https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace)

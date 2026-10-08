@@ -1,27 +1,13 @@
-- Global cross-tool skills are safest when authored once in the repo and linked into `~/.agents/skills`; Claude still needs its own `~/.claude/skills` link, while Copilot global agents must be exposed as `*.agent.md` files.
-- Current Copilot CLI stores desired plugin declarations in repo-owned `.copilot/settings.json` linked to `~/.copilot/settings.json`, but keeps the installed plugin inventory in the auto-managed `~/.copilot/config.json`.
-- Current Codex agent configs should use the GPT-5 family model IDs (`gpt-5.4`, `gpt-5.4-mini`, `gpt-5.5`) rather than older `gpt-5.3-codex*` IDs, which are no longer the right default for new agent configs.
-- Codex user config is stateful: keep portable settings in `config/codex/global.toml`, inject them with generated agents inside a marked block, and use explicit capture for live portable edits; never link the whole file.
-- TOML table scope persists to end-of-file, so managed Codex content must be placed before unmanaged tables; appending a valid-looking block after `[projects]` changes the meaning of root settings.
-- Codex config cleanup must parse quoted TOML key/table components (including `["projects"."/path"]`); bare-name regexes can leave duplicate managed tables or misclassify trusted projects.
-- Agent definitions are now authored in `agent-templates/` and compiled into `agents/*.md` plus `.codex/agents/*.toml`; editing generated outputs directly will drift on the next compile.
-- Keep the simple sync model for global tool configs: link home config files directly to tracked repo files so a `git pull` updates live config without a render step. Codex uses `config/codex/global.toml` (not project-scoped `.codex/config.toml`); selectively stage portable edits and leave Codex runtime state unstaged.
-- Guard `Set-PSReadLineOption` prediction settings behind an interactive console check (`ConsoleHost` + non-redirected stdin/stdout/stderr) to avoid warnings in non-TTY hosts like Codex command runs.
-- MCP user-scope servers live in `~/.claude.json` at root `.mcpServers`; local-scope servers live under `.projects[<path>].mcpServers` and **shadow** user-scope when both exist for the same name. Don't symlink `~/.claude.json` (it holds OAuth tokens, project history, onboarding state) — instead declare servers in `mcp/mcp-config.json` and reapply via `claude mcp add --scope user` in `setup.sh install-mcp`.
-- Copilot CLI's MCP config (`~/.copilot/mcp-config.json`) uses the same `mcpServers` + `type` shape as Claude Code's `.mcp.json` and is a dedicated file (no state mixing), so it's symlinked directly to `mcp/mcp-config.json` via `ai-agent-links.json` — no installer needed. VS Code is the odd one out (`servers` key, not `mcpServers`).
-- No canonical SchemaStore entry exists for `mcp.json` (as of 2026-05); the de-facto shape is whatever Claude Desktop/Code and Copilot CLI accept. Our `mcp/mcp-config.schema.json` is the local validator.
-- Skills are vendored (committed in `skills/`) + symlinked, not restored from the lockfile: `npx skills experimental_install` is project-scope only and there's no global restore from `~/.agents/.skill-lock.json` (as of 2026-05). Rationale + revisit triggers in `docs/skills-sync.md`.
-- Skills source of truth: manifest `sources[]` = upstream repos, manifest `local[]` = repo-authored skills, `.skill-lock.json` = provenance, `skills/<name>/` = vendored output. Run `setup.sh doctor` (add `--strict` for CI) to assert they agree; it's the guard against the three-way drift.
-- Add new upstream skills with `setup.sh install-skill <source> [skills add options]` / `setup.ps1 install-skill ...`: it links the global lockfile, delegates to `npx skills add -g -y`, reconciles the manifest, then runs strict doctor.
-- Remove upstream skills with `setup.sh uninstall-skill <installed-name>` / `setup.ps1 uninstall-skill ...`; it refuses local skills and manifest sources without explicit `skills[]` selectors because those require manual inventory decisions.
-- `npx skills remove -g` mutates the shared repo lockfile through `~/.agents/.skill-lock.json`; `uninstall-skill` must persist its manifest-removal plan before invoking `npx`, then apply that saved plan afterward.
-- Out-of-band `npx skills add -g` installs can leave recoverable provenance in `~/.agents/.skill-lock.json.backup.*`; run `setup.sh reconcile-skills` / `setup.ps1 reconcile-skills` before `doctor` to merge on-disk upstream skills into the repo lockfile and manifest, while removing only empty non-skill directories bottom-up.
-- Install upstream skills via `npx skills add <repo> -g` (writes through the `~/.agents/skills` symlink into the repo), never a manual `git clone` into `skills/` — a manual clone leaves a nested `.git` (the [#492] footgun) and no lockfile entry. `setup.sh doctor` flags both.
-- Claude Code `enabledPlugins` installs depend on the marketplace registry/cache; `setup.sh bootstrap-claude` must register `.claude/settings.json` `extraKnownMarketplaces`, refresh marketplaces, install missing plugins, then run `claude plugin update` so machines converge.
-- Codex plugin convergence needs `codex plugin marketplace add/upgrade` plus `codex plugin add`; `[plugins.*]` in `config.toml` can be present while the app plugin manager still lacks the marketplace or installed bundle. Do not mirror Claude marketplace/plugin declarations into Codex by default; cross-market overlap must be explicit in `.codex/config.toml` or `.codex/config.local.toml`.
-- VS Code/Copilot custom agents can be discovered from `*.agent.md`; keep Copilot filename aliases only in `~/.copilot/agents`, not committed under repo `agents/`, or the same personas can appear twice.
-- `superpowers@superpowers-marketplace` is intentional Copilot plugin state from `obra/superpowers-marketplace`; do not remove it as cross-tool marketplace drift.
-- A commit that adds a target to `scripts/ai-agent-links.json` is not live until `setup.sh link` / `setup.ps1 link` runs on each machine. Adding a hook target is the dangerous case: `.claude/settings.json` invokes the hook by absolute path and a non-zero `PreToolUse` exit denies the call, so an unlinked hook blocks every Bash and PowerShell call in every session, in every project. Verify with `setup.sh doctor` / `setup.ps1 doctor`.
-- The layout marker is `<layoutVersion>+<sha256(topology)[:8]>`, computed identically in `doctor-links.py`, `link-ai-agents.ps1`, and `link-ai-agents.sh` from `source|sourceRel|path` lines in manifest document order (not sorted, so no collation agreement is needed). A manifest edit therefore invalidates the marker on its own; `layoutVersion` stays hand-bumped and is reserved for migrations that need `Cleanup-LegacyAiAgentTargets`.
-- Windows directory junctions are reparse points that `os.path.islink()` reports as `False`; use `os.readlink()` (works for both junctions and symlinks since 3.8) plus `os.path.realpath()` comparison when checking link targets in Python.
-- The Windows jq build (`jq-windows-amd64.exe`) opens stdout in text mode and emits CRLF. Under Git Bash the damage is uneven: a single-line `$(jq ...)` capture is safe because MSYS strips the trailing `\r\n`, but a multi-line capture keeps interior `\r`, and `while read` over `< <(jq ...)` keeps `\r` on every line. Route jq reads through the `jqr` wrapper in `helpers.sh`; jq output redirected straight to a file does not need it.
+# Repository guidance
+
+Keep durable guidance in the reference that owns it; use this file only to route
+future work to that material.
+
+- [Maintenance](docs/maintenance.md): script pitfalls and validation commands.
+- [Linking](docs/linking.md): shared sources, machine-local state, platform constraints.
+- [Codex config sync](docs/codex-config-sync.md): per-key ownership and conflict handling.
+- [Agents](docs/agents.md): template schema, inheritance, and compilation.
+- [Skills](docs/skills-sync.md): inventory, updates, private skills, package constraints.
+- [Skill maintenance](docs/skill-maintenance.md): imported guidance and evaluation.
+- [Plugins](docs/plugins.md): native declarations and bootstrap.
+- [Hooks](docs/hooks.md): safety checks and missing-link recovery.

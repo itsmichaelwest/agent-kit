@@ -1,235 +1,114 @@
 # Agents
 
-Agent definitions are authored once in `agent-templates/` and compiled into the
-provider-specific files used by the rest of the repo. Agents are isolated runtime
-roles; reusable domain knowledge and operational methods belong in skills.
+Agents define isolated runtime roles; skills hold reusable knowledge and workflows.
+The main session owns scope, user communication, integration, and final evidence.
+Delegate when a role supplies a useful context, permission, model, or independent
+output boundary.
 
-## Source of truth
+## Sources and discovery
 
-- Editable source: `agent-templates/*.md`
-- Generated Claude/Copilot output: `agents/*.md`
-- Generated Codex output: `.codex/agents/*.toml`
+Edit [`agent-templates/*.md`](../agent-templates/). Resolve `fast`, `balanced`,
+and `strong` through [`agent-templates/config.toml`](../agent-templates/config.toml)
+instead of copying model IDs into documentation. Do not edit generated outputs.
 
-Do not hand-edit generated files unless you are debugging the compiler. The next `compile-agents` run will overwrite them.
+| Surface | User scope | Workspace scope | Generated source |
+| --- | --- | --- | --- |
+| Claude Code | `~/.claude/agents/*.md` | `.claude/agents/*.md` | `agents/*.md` |
+| Codex app / CLI | `~/.codex/agents/*.toml` | `.codex/agents/*.toml` | `.codex/agents/*.toml` |
+| Copilot CLI / VS Code Copilot | `~/.copilot/agents/*.agent.md` | `.github/agents/*.agent.md` | `agents/*.md`, linked with the Copilot suffix |
 
-## Compile flow
+Copilot filename aliases exist only under `~/.copilot/agents`. Compilation removes
+repo-local `agents/*.agent.md` aliases to prevent duplicate discovery.
+`project-agents <path>` links Claude project agents. Use it only when project
+scope is needed; adding the same roles under `.github/agents` also exposes
+workspace-scoped Copilot copies alongside user-scoped copies.
 
-The compiler lives at [scripts/lib/compile-agents.py](/Users/michael/agent-kit/scripts/lib/compile-agents.py).
+## Template schema
 
-It does three things:
+Each Markdown template has frontmatter followed by the instruction body:
 
-1. Reads every template in `agent-templates/`
-2. Resolves provider model ids from `agent-templates/config.toml`
-3. Writes:
-   - `agents/<name>.md`
-   - `.codex/agents/<name>.toml`
-
-The setup command also reconciles the generated Codex agent registration fields
-and portable setting keys in `~/.codex/config.toml`. That config
-file is a real machine-local file, not a symlink. Use `capture-codex-config` to
-explicitly import portable live edits back into `config/codex/global.toml`.
-
-It also removes generated agent files whose template no longer exists. Config
-sync removes stale generated registrations while preserving local path overrides
-and neighboring settings. See [config sync](codex-config-sync.md) for the cleanup
-and migration rules.
-It removes repo-local `agents/*.agent.md` aliases as stale compatibility files;
-Copilot aliases are generated only under `~/.copilot/agents` during linking.
-
-### Commands
-
-```bash
-./scripts/setup.sh compile-agents
-```
-
-```powershell
-.\scripts\setup.ps1 compile-agents
-```
-
-`link`, `link-ai-agents`, and `install` run agent compilation automatically before linking.
-
-## Template format
-
-Each template is a Markdown file with frontmatter followed by the shared instruction body.
-
-Example:
-
-```md
+```markdown
 ---
 name: "developer"
-description: "Use this agent for medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
+description: "Implement bounded code changes."
 model_class: "strong"
 claude:
   color: "orange"
 codex:
-  description: "Medium-to-large coding tasks - implement features, fix bugs, or refactor with Test-Driven Development."
   model_reasoning_effort: "high"
 ---
 
-# Role
-
-You are a world-class software developer...
+Implement the requested behavior and validate it through the project harness.
 ```
 
-### Required fields
+Required fields are `name`, `description`, and `model_class`. Names match the
+filename and contain lowercase words separated by hyphens. Optional top-level
+fields are `extends`, `claude`, and `codex`; unknown fields are rejected.
 
-- `name`
-- `description`
-- `model_class`
+Provider controls do not have assumed parity. Add controls only to the block
+that supports them:
 
-### Supported `model_class` values
-
-- `fast`
-- `balanced`
-- `strong`
-
-These abstract classes are resolved per provider using `agent-templates/config.toml`.
-
-## Current roster
-
-The transitional roster contains eight agents:
-
-| Agent | Responsibility |
+| Provider | Supported optional fields |
 | --- | --- |
-| `developer` | Medium-to-large local implementation |
-| `developer-lite` | Small bounded implementation; inherits `developer` |
-| `investigator` | Read-only location, flow tracing, and diagnosis |
-| `planner` | Read-only architecture and implementation planning |
-| `reviewer` | Read-only spec, quality, and integration review |
-| `researcher` | Current external research and dependency evaluation |
-| `security-auditor` | Read-only security audit pending specialist-skill review |
-| `performance-engineer` | Read-only performance analysis pending specialist-skill review |
+| Claude | `background`, `color`, `disallowedTools`, `effort`, `initialPrompt`, `isolation`, `maxTurns`, `mcpServers`, `memory`, `permissionMode`, `skills`, `tools` |
+| Codex | `description`, `model_reasoning_effort`, `web_search`, `personality`, `sandbox_mode` |
 
-The main session owns user communication, scope, decomposition, integration, and
-final evidence. A specialist agent should exist only when it provides a useful
-context, permission, model, or independently delegable output boundary.
+Claude tool, skill, and MCP fields are string lists; `mcpServers` accepts named
+server references rather than inline definitions. `background` is Boolean and
+`maxTurns` is a positive integer. Effort values are `low`, `medium`, `high`,
+`xhigh`, and `max`; isolation is `worktree`; memory scope is `user`, `project`,
+or `local`. See the [compiler](../scripts/lib/compile-agents.py) for validated
+colors and permission modes.
 
-## Model mapping
+Codex `description` defaults to the template description. Supported reasoning
+efforts are `low`, `medium`, `high`, and `xhigh`; sandbox modes are `read-only`,
+`workspace-write`, and `danger-full-access`. These are the compiler's supported
+values, not a guarantee that every host or model supports the same controls.
 
-Current mappings are:
+## Inheritance
 
-### Claude
+Use `extends` when agents differ only in model or provider metadata:
 
-- `fast` -> `haiku`
-- `balanced` -> `sonnet`
-- `strong` -> `opus`
-
-### Codex
-
-- `fast` -> `gpt-5.6-luna`
-- `balanced` -> `gpt-5.6-terra`
-- `strong` -> `gpt-5.6-sol`
-
-If you want to change model policy globally, update `agent-templates/config.toml` and re-run `compile-agents`.
-
-## Provider-specific fields
-
-### `claude`
-
-The compiler currently passes through all keys in the `claude` block into the generated Markdown frontmatter.
-
-Current usage in this repo:
-
-- `color`
-
-The compiler validates these supported Claude subagent fields:
-
-- `background`
-- `color`
-- `disallowedTools`
-- `effort`
-- `initialPrompt`
-- `isolation`
-- `maxTurns`
-- `mcpServers` (named server references only)
-- `memory`
-- `permissionMode`
-- `skills`
-- `tools`
-
-### `codex`
-
-Supported optional keys:
-
-- `description`
-- `model_reasoning_effort`
-- `web_search`
-- `personality`
-- `sandbox_mode`
-
-`description` defaults to the top-level template description if omitted.
-
-Supported Codex reasoning efforts are `low`, `medium`, `high`, and `xhigh`.
-Supported sandbox modes are `read-only`, `workspace-write`, and
-`danger-full-access`.
-
-The compiler rejects unknown template or provider fields. Provider controls are
-not assumed to have parity: add a field only to the provider block that supports
-it.
-
-## Template inheritance
-
-Use `extends` when agents differ only in model or provider metadata. The child
-inherits its parent's instruction body and recursively merges provider blocks.
-Child values take precedence.
-
-```md
+```markdown
 ---
 name: "developer-lite"
-description: "Implement small, bounded local code changes."
+description: "Implement small local changes."
 model_class: "balanced"
 extends: "developer"
 claude:
   color: "yellow"
-codex:
-  model_reasoning_effort: "high"
 ---
 ```
 
-An empty child body inherits the parent body. A non-empty child body replaces it.
-The compiler rejects missing parents, inheritance cycles, duplicate names, names
-that do not match filenames, missing instruction bodies, and unsupported fields.
+Provider blocks merge recursively; child values take precedence. An empty child
+body inherits its parent's instructions; a non-empty body replaces them. The
+compiler rejects missing parents, inheritance cycles, duplicate names, filename
+mismatches, missing resolved instruction bodies, and unsupported fields.
 
-## How to add a new agent
+## Compile and link
 
-1. Create `agent-templates/<agent-name>.md`
-2. Add frontmatter:
-   - `name`
-   - `description`
-   - `model_class`
-   - optional `extends`
-   - optional `claude` block
-   - optional `codex` block
-3. Write the shared instruction body below the frontmatter
-4. Run:
+Create or edit a template, compile, and review the generated diffs in `agents/`
+and `.codex/agents/`. Re-link to refresh runtime discovery:
 
 ```bash
 ./scripts/setup.sh compile-agents
-```
-
-5. Verify the generated outputs:
-   - `agents/<agent-name>.md`
-   - `.codex/agents/<agent-name>.toml`
-6. Re-link if needed:
-
-```bash
 ./scripts/setup.sh link-ai-agents
 ```
 
-Because `compile-agents`, `link`, and `link-ai-agents` reconcile owned Codex
-keys automatically, step 6 is usually enough on a machine that already has the
-repo linked.
+PowerShell equivalents are `.\scripts\setup.ps1 compile-agents` and
+`.\scripts\setup.ps1 link-ai-agents`. `link`, `link-ai-agents`, and `install`
+compile before linking. Compilation removes generated files whose template no
+longer exists.
 
-## How to modify an existing agent
+Setup also reconciles generated Codex registrations and portable settings in
+the real machine-local `~/.codex/config.toml`, preserving local path overrides
+and unrelated settings. Use `capture-codex-config` to import portable live edits
+into [`config/codex/global.toml`](../config/codex/global.toml); see
+[Codex config sync](codex-config-sync.md) for ownership and cleanup rules.
 
-1. Edit `agent-templates/<agent-name>.md`
-2. Re-run `compile-agents`
-3. Review the generated diffs in:
-   - `agents/`
-   - `.codex/agents/`
+## Host references
 
-## Copilot note
-
-The compiler generates `agents/*.md`. Copilot-compatible `*.agent.md` files are still created as symlinks during the linking step under `~/.copilot/agents/`.
-
-Those symlinked filenames are a runtime compatibility detail, not the source of truth. Keeping `agents/*.agent.md` in the repo creates duplicate custom-agent discoveries in VS Code/Copilot when the same agents are also linked globally.
+- [Claude Code subagents](https://code.claude.com/docs/en/sub-agents)
+- [Codex subagents](https://developers.openai.com/codex/subagents)
+- [Copilot CLI custom agents](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli)
+- [VS Code custom agents](https://code.visualstudio.com/docs/agent-customization/custom-agents)

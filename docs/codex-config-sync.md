@@ -85,13 +85,10 @@ The vendored package preserves TOML structure, comments, and unmodified values.
 Apply and capture lock out other Agent Kit sync processes. Before writing, they
 check all inputs for changes and recheck missing agent files before cleanup and
 the target before atomically replacing it. Changed files get timestamped backups;
-the baseline is updated last. A second
-sync with unchanged inputs is a no-op. If a process stops between writes, rerunning
-sync accepts already-converged values.
+the baseline is updated last. A second sync with unchanged inputs is a no-op.
+If a process stops between writes, rerunning sync accepts already-converged values.
 
 This is optimistic concurrency, not a lock shared with Codex. A Codex write in
 the narrow interval between the final check and replacement can still race.
 Avoid changing app settings during apply/capture. Detected stale input produces
-an error instead of an automatic retry or overwrite. Codex's config API was
-considered, but it only permits writes to its user config and cannot implement
-capture back into the repo through the same editor.
+an error instead of an automatic retry or overwrite.
