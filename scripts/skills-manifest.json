@@ -145,8 +145,10 @@
         "better-ui",
         "better-writing",
         "break",
+        "build-design",
         "explain-interface",
         "interface-review",
+        "state-machine",
         "variant"
       ]
     },

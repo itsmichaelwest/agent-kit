@@ -105,6 +105,9 @@ configuration.
 
 ## Package-specific constraints
 
+- Jakub Krehel's interface skills retain their upstream content and
+  [MIT license](licenses/jakubkrehel-skills-MIT.txt). Keep the source's explicit
+  selectors aligned with the full upstream collection when adding new skills.
 - SwiftUI Pro includes an obsolete nested entrypoint. The guarded normalizer
   removes only the known root-version `1.1` / nested-version `1.0` duplicate;
   changed packaging stops normalization for review.
