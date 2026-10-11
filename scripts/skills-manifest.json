@@ -34,6 +34,14 @@
       "skillPath": ".claude/skills/developing-gtk-apps/SKILL.md",
       "skillFolderHash": "ad99e8e3061531e39538e4030dcae318f5d2bca2",
       "reason": "Upstream inaccessible on 2026-09-04; user confirmed no access or replacement. Preserve the installed snapshot outside active updates."
+    },
+    {
+      "name": "autonomous-delivery",
+      "source": "https://gist.github.com/EvanBoyle/8c1a97f682d92dab8c09d0e1ea73f4a0",
+      "ref": "5ce9f9486d3cbed37a8b03b1b0152917b4bdff90",
+      "version": "2.1.0",
+      "skillPath": "SKILL.md",
+      "reason": "Verbatim upstream package imported from the user-provided ZIP. Pinned gist snapshot outside managed repository updates; refresh manually from a reviewed gist archive."
     }
   ],
   "sources": [

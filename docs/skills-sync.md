@@ -105,6 +105,12 @@ configuration.
 
 ## Package-specific constraints
 
+- [`autonomous-delivery`](../skills/autonomous-delivery/SKILL.md) is Evan Boyle's
+  verbatim MIT-licensed gist package, version `2.1.0`, pinned to revision
+  `5ce9f9486d3cbed37a8b03b1b0152917b4bdff90`. Its source is recorded under
+  `retained[]`; refresh it manually from a reviewed gist archive, preserving
+  `SKILL.md`, `README.md`, and `LICENSE` together. Managed repository updates
+  leave this snapshot unchanged.
 - Jakub Krehel's interface skills retain their upstream content and
   [MIT license](licenses/jakubkrehel-skills-MIT.txt). Keep the source's explicit
   selectors aligned with the full upstream collection when adding new skills.
