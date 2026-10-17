@@ -113,6 +113,15 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
+    # Aliases must keep their publisher's provenance and upstream selector.
+    for source in manifest_sources:
+        for selector, installed in source.get("aliases", {}).items():
+            entry = lock_skills.get(installed)
+            if not isinstance(entry, dict) or entry.get("source") != source.get("repo"):
+                errors.append(f"aliased skill missing or has wrong source: {installed} ({source.get('repo')}@{selector})")
+            elif Path(entry.get("skillPath", "")).parent.name != selector:
+                errors.append(f"aliased skill has wrong upstream selector: {installed} ({selector})")
+
     # A plugin wrapper may ship a second entrypoint inside the installed skill.
     # Preserve upstream content, but expose duplicate discovery to the operator.
     for name in sorted(on_disk):

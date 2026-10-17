@@ -71,6 +71,22 @@ Omitting `skills` installs the entire source. `fullDepth: true` enables discover
 below the installer's normal depth; Microsoft's WinUI source requires it.
 Installed names can differ from source names, such as vendor-prefixed Vercel
 skills; preserve both the installed name and canonical upstream selector.
+For a name collision, declare a source-specific `aliases` mapping from the
+upstream selector to the installed name. The wrappers apply it before installing
+and preserve the original source path and folder hash in the lockfile:
+
+```json
+{
+  "repo": "emilkowalski/skills",
+  "skills": ["prototype"],
+  "aliases": {"prototype": "emil-prototype"}
+}
+```
+
+Invoke and remove the installed name (`emil-prototype`); use the upstream name
+(`prototype`) when selecting a skill from its source. When aliases are declared,
+`update-skills` refreshes sources through the manifest and skips the CLI's global
+update pass, which does not preserve these aliases.
 
 ## Remove a skill
 
@@ -124,10 +140,14 @@ configuration.
   and update pointers together; unrelated context documents keep their names.
   Run `setup-matt-pocock-skills` per project when configuring tracker and docs.
   Install either the linked skills or Matt's plugin per host to avoid duplicates.
-- Adopting Emil's `prototype` alongside Matt's requires source-aware aliases
-  across installation, refresh, reconciliation, invocation, and removal on both
-  platforms. Keep the existing selection until the installer supports that
-  collision without losing provenance.
+- Emil Kowalski's full 15-skill collection is included as reviewed at revision
+  `2d228630ba1446365f614a108cb8252f1feda202` (2026-10-17), with its
+  [MIT license](licenses/emilkowalski-skills-MIT.txt). The upstream `prototype`
+  installs as `emil-prototype`; `prototype` remains Matt Pocock's skill. Only
+  Emil's aliased entrypoint name changes; its other content and bundled references
+  stay upstream. References to Emil's `prototype` in his guidance mean
+  `emil-prototype` in this kit. Keep the explicit selectors aligned with the full
+  upstream collection when new skills appear.
 
 Doctor checks missing and undeclared skills, manifest/lockfile drift, nested
 entrypoints, and nested `.git` directories. Fix inventory drift before further

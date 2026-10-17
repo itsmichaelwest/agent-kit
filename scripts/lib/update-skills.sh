@@ -60,7 +60,11 @@ update_skills() {
     fi
 
     echo -e "  ${YELLOW}[ADD]${NC}  $repo"
-    if npx -y skills@latest add "$repo" -g -y "${agent_args[@]}" "${skill_args[@]}" >/dev/null 2>&1; then
+    local installer=(npx -y skills@latest add "$repo")
+    if [[ $(jqr ".sources[$i].aliases // {} | length" "$MANIFEST") -gt 0 ]]; then
+      installer=(python3 "$DOTFILES_DIR/scripts/lib/alias-skills.py" --repo-root "$DOTFILES_DIR" --source "$repo")
+    fi
+    if "${installer[@]}" -g -y "${agent_args[@]}" "${skill_args[@]}" >/dev/null 2>&1; then
       echo -e "  ${GREEN}[OK]${NC}   $repo"
       ((ok++))
     else
@@ -74,7 +78,10 @@ update_skills() {
   ((failed == 0)) || return 1
 
   info "Refreshing installed global skills..."
-  npx -y skills@latest update -g -y
+  # Upstream update ignores aliases and would overwrite another publisher's skill.
+  if [[ $(jqr '[.sources[] | .aliases // {} | length] | add // 0' "$MANIFEST") -eq 0 ]]; then
+    npx -y skills@latest update -g -y
+  fi
   normalize_skills
 }
 
@@ -106,7 +113,13 @@ install_skill() {
   fi
 
   info "Installing skill source via npx skills: $1"
-  npx -y skills@latest add "$@" -g "${agent_args[@]}"
+  if jqr -e --arg repo "$1" '.sources[] | select(.repo == $repo) | .aliases | select(length > 0)' "$MANIFEST" >/dev/null; then
+    local repo="$1"
+    shift
+    python3 "$DOTFILES_DIR/scripts/lib/alias-skills.py" --repo-root "$DOTFILES_DIR" --source "$repo" "$@" -g "${agent_args[@]}"
+  else
+    npx -y skills@latest add "$@" -g "${agent_args[@]}"
+  fi
 }
 
 list_skills() {

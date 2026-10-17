@@ -75,7 +75,12 @@ function Update-Skills {
 
         Write-Host "  [ADD]  $repo" -ForegroundColor Cyan
         $cmdArgs = @("-y", "skills@latest", "add", $repo, "-g", "-y") + $agentArgs + $skillArgs
-        & npx @cmdArgs *> $null
+        if ($src.aliases -and @($src.aliases.PSObject.Properties).Count -gt 0) {
+            $python = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1
+            & $python.Source (Join-Path $DotfilesDir "scripts/lib/alias-skills.py") --repo-root $DotfilesDir --source $repo -g -y @agentArgs @skillArgs *> $null
+        } else {
+            & npx @cmdArgs *> $null
+        }
         if ($LASTEXITCODE -eq 0) {
             Write-Host "  [OK]   $repo" -ForegroundColor Green
             $ok++
@@ -90,8 +95,11 @@ function Update-Skills {
     if ($failed -gt 0) { return 1 }
 
     Write-Info "Refreshing installed global skills..."
-    & npx -y skills@latest update -g -y | Out-Host
-    return $LASTEXITCODE
+    if (-not @($sources | Where-Object { $_.aliases -and @($_.aliases.PSObject.Properties).Count -gt 0 }).Count) {
+        & npx -y skills@latest update -g -y | Out-Host
+        return $LASTEXITCODE
+    }
+    return 0
 }
 
 function Test-SkillsArg {
@@ -134,7 +142,14 @@ function Install-Skill {
 
     Write-Info ("Installing skill source via npx skills: {0}" -f $SkillArgs[0])
     $cmdArgs = @("-y", "skills@latest", "add") + $SkillArgs + @("-g") + $agentArgs
-    & npx @cmdArgs | Out-Host
+    $source = $manifest.sources | Where-Object { $_.repo -eq $SkillArgs[0] -and $_.aliases } | Select-Object -First 1
+    if ($source) {
+        $python = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1
+        $options = @($SkillArgs | Select-Object -Skip 1) + @("-g") + $agentArgs
+        & $python.Source (Join-Path $DotfilesDir "scripts/lib/alias-skills.py") --repo-root $DotfilesDir --source $source.repo @options | Out-Host
+    } else {
+        & npx @cmdArgs | Out-Host
+    }
     return $LASTEXITCODE
 }
 

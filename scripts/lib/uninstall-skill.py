@@ -200,6 +200,10 @@ def apply_manifest_removal(root: Path, plan: UninstallPlan) -> UninstallResult:
         remaining = [skill for skill in skills if skill != plan.selector]
         if remaining:
             source["skills"] = remaining
+            if plan.selector in source.get("aliases", {}):
+                del source["aliases"][plan.selector]
+                if not source["aliases"]:
+                    del source["aliases"]
             write_json(manifest_path, manifest)
             return UninstallResult(removed_selector=plan.selector, removed_source=None)
         del sources[index]

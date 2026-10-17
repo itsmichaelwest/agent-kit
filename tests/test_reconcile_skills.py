@@ -22,6 +22,28 @@ def load_module():
 
 
 class ReconcileSkillsTests(unittest.TestCase):
+    def test_reconcile_preserves_publishers_with_same_upstream_selector(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "kit"
+            (root / "scripts").mkdir(parents=True)
+            sources = [
+                {"repo": "matt/skills", "skills": ["prototype"]},
+                {"repo": "emil/skills", "skills": ["prototype"],
+                 "aliases": {"prototype": "emil-prototype"}},
+            ]
+            manifest_path = root / "scripts/skills-manifest.json"
+            manifest_path.write_text(json.dumps({"sources": sources}))
+            entries = {}
+            for name, repo in [("prototype", "matt/skills"), ("emil-prototype", "emil/skills")]:
+                folder = root / "skills" / name
+                folder.mkdir(parents=True)
+                (folder / "SKILL.md").write_text(f"---\nname: {name}\n---\n")
+                entries[name] = {"source": repo, "skillPath": "skills/prototype/SKILL.md"}
+            (root / ".skill-lock.json").write_text(json.dumps({"version": 3, "skills": entries}))
+            module.reconcile(root, Path(temporary) / "home")
+            self.assertEqual(sources, json.loads(manifest_path.read_text())["sources"])
+
     def test_retained_lock_entry_does_not_reactivate_retired_source(self) -> None:
         module = load_module()
 

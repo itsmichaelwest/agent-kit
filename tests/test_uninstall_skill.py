@@ -33,6 +33,23 @@ def write_inventory(root: Path, manifest: dict, lock: dict) -> None:
 
 
 class UninstallSkillTests(unittest.TestCase):
+    def test_removing_alias_preserves_other_publishers_selector(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            matt = {"repo": "matt/skills", "skills": ["prototype"]}
+            write_inventory(root, {"sources": [matt, {
+                "repo": "emil/skills", "skills": ["prototype", "polish"],
+                "aliases": {"prototype": "emil-prototype"},
+            }]}, {"version": 3, "skills": {"emil-prototype": {
+                "source": "emil/skills", "skillPath": "skills/prototype/SKILL.md",
+            }}})
+            plan = module.plan_uninstall(root, "emil-prototype")
+            self.assertEqual("prototype", plan.selector)
+            module.apply_manifest_removal(root, plan)
+            sources = json.loads((root / "scripts/skills-manifest.json").read_text())["sources"]
+            self.assertEqual([matt, {"repo": "emil/skills", "skills": ["polish"]}], sources)
+
     def test_removes_retained_snapshot_without_active_source(self) -> None:
         module = load_module()
 

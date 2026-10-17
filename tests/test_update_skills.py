@@ -142,7 +142,7 @@ install_skill LukeberryPi/skills
         shell = SHELL_WRAPPER.read_text(encoding="utf-8")
         powershell = POWERSHELL_WRAPPER.read_text(encoding="utf-8")
 
-        self.assertIn('add "$repo" -g -y "${agent_args[@]}"', shell)
+        self.assertIn('"${installer[@]}" -g -y "${agent_args[@]}"', shell)
         self.assertIn('@("-y", "skills@latest", "add", $repo, "-g", "-y")', powershell)
         self.assertIn("npx -y skills@latest update -g -y", shell)
         self.assertIn("& npx -y skills@latest update -g -y", powershell)

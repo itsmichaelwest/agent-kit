@@ -159,6 +159,8 @@ def remove_stale_manifest_selectors(manifest: dict[str, Any], repo: str, skill_n
         if not isinstance(source, dict) or source.get("repo") == repo:
             continue
         skills = source.get("skills")
+        if skill_name in source.get("aliases", {}) or skill_name in source.get("aliases", {}).values():
+            continue
         if not isinstance(skills, list) or skill_name not in skills:
             continue
         remaining_skills = [skill for skill in skills if skill != skill_name]
@@ -230,7 +232,9 @@ def reconcile(root: Path, home: Path) -> ReconcileResult:
             lock_skills[name] = entry
             added_lock_entries.append(name)
         selector = manifest_skill_name(entry, name)
-        manifest_changed |= remove_stale_manifest_selectors(manifest, source, selector)
+        declared_source = manifest_source_index(manifest).get(source, {})
+        if declared_source.get("aliases", {}).get(selector) != name:
+            manifest_changed |= remove_stale_manifest_selectors(manifest, source, selector)
         added_source, added_skill = declare_manifest_skill(manifest, source, selector)
         manifest_changed |= added_source or added_skill
         if added_source:
