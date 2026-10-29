@@ -58,6 +58,11 @@ nested Git repository into `skills/`. Reconciliation recovers matching entries
 from repo/global lockfiles and `~/.agents/.skill-lock.json.backup.*`, declares
 installed upstream skills, and removes only empty non-skill directories.
 
+Import upstream skill packages verbatim, including their bundled references,
+scripts, and assets. Keep upstream fixes in upstream releases rather than local
+rewrites of vendored guidance. Declared name aliases and the guarded package
+normalizations below are the existing packaging exceptions.
+
 To declare a source manually, add an entry to `sources[]`, then run the updater:
 
 ```json
@@ -68,7 +73,8 @@ To declare a source manually, add an entry to `sources[]`, then run the updater:
 ```
 
 Omitting `skills` installs the entire source. `fullDepth: true` enables discovery
-below the installer's normal depth; Microsoft's WinUI source requires it.
+below the installer's normal depth; Microsoft's WinUI source in
+`microsoft/winappCli` requires it.
 Installed names can differ from source names, such as vendor-prefixed Vercel
 skills; preserve both the installed name and canonical upstream selector.
 For a name collision, declare a source-specific `aliases` mapping from the
@@ -130,9 +136,9 @@ configuration.
 - Jakub Krehel's interface skills retain their upstream content and
   [MIT license](licenses/jakubkrehel-skills-MIT.txt). Keep the source's explicit
   selectors aligned with the full upstream collection when adding new skills.
-- SwiftUI Pro includes an obsolete nested entrypoint. The guarded normalizer
-  removes only the known root-version `1.1` / nested-version `1.0` duplicate;
-  changed packaging stops normalization for review.
+- SwiftUI Pro `2.0.0` has one entrypoint and needs no normalization. The guarded
+  normalizer remains for older snapshots and removes only the known root-version
+  `1.1` / nested-version `1.0` duplicate; other duplicate layouts stop for review.
 - The retained GTK snapshots have no accessible active source. Preserve them
   until provenance and access are re-established.
 - Matt Pocock's domain-doc convention is `GLOSSARY.md` / `GLOSSARY-MAP.md`.
@@ -140,14 +146,23 @@ configuration.
   and update pointers together; unrelated context documents keep their names.
   Run `setup-matt-pocock-skills` per project when configuring tracker and docs.
   Install either the linked skills or Matt's plugin per host to avoid duplicates.
-- Emil Kowalski's full 15-skill collection is included as reviewed at revision
-  `2d228630ba1446365f614a108cb8252f1feda202` (2026-10-17), with its
+- Emil Kowalski's full 16-skill collection is included as reviewed at revision
+  `a81dbca07f2217b7103e510c0f13f8d5b017afc9` (2026-10-29), with its
   [MIT license](licenses/emilkowalski-skills-MIT.txt). The upstream `prototype`
   installs as `emil-prototype`; `prototype` remains Matt Pocock's skill. Only
   Emil's aliased entrypoint name changes; its other content and bundled references
   stay upstream. References to Emil's `prototype` in his guidance mean
   `emil-prototype` in this kit. Keep the explicit selectors aligned with the full
   upstream collection when new skills appear.
+- Microsoft's seven WinUI skills are maintained in `microsoft/winappCli` under
+  `plugins/winui/agent-plugin/skills/`. The former `microsoft/win-dev-skills`
+  source now directs WinUI users there. Preserve the
+  [MIT license](licenses/microsoft-winappcli-MIT.txt) with these imports.
+- The selected `backnotprop/pstack` packages are `benchmark-checklist`,
+  `create-verification-skill`, `maintain-verification-skill`, and `sharpen`,
+  with their [MIT license](licenses/pstack-MIT.txt). Install their full folders;
+  the verification creator includes feature-map examples. These are optional
+  workflows, not a replacement for the kit's shared instructions or orchestration.
 
 Doctor checks missing and undeclared skills, manifest/lockfile drift, nested
 entrypoints, and nested `.git` directories. Fix inventory drift before further

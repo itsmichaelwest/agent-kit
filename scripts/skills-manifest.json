@@ -133,6 +133,7 @@
         "mobile-native",
         "pick-ui-library",
         "prototype",
+        "remove-animations",
         "review-animations",
         "write-swift"
       ],
@@ -167,6 +168,7 @@
         "explain-interface",
         "interface-review",
         "state-machine",
+        "teardown",
         "variant"
       ]
     },
@@ -215,7 +217,7 @@
       ]
     },
     {
-      "repo": "microsoft/win-dev-skills",
+      "repo": "microsoft/winappCli",
       "fullDepth": true,
       "skills": [
         "winui-code-review",
@@ -249,6 +251,15 @@
       "repo": "OutThisLife/brooklyn-skills",
       "skills": [
         "runtime-debug"
+      ]
+    },
+    {
+      "repo": "backnotprop/pstack",
+      "skills": [
+        "benchmark-checklist",
+        "create-verification-skill",
+        "maintain-verification-skill",
+        "sharpen"
       ]
     }
   ]
