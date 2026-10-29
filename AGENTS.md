@@ -44,13 +44,16 @@ specialist supplements the primary guide only when its topic is in scope.
 
 ## Communication
 
-- Lead with the result. Use clear, concise, natural English for a global audience.
-- Prefer active voice, present tense, and second person. State conditions before actions.
+- Lead with the result and who it affects. Explain what changes for the reader or user before implementation details; include maintenance consequences when relevant.
+- Draft in clear, concise, natural English. Cut repetition, not meaning or grammar. Preserve material details, trade-offs, choices, and open decisions.
+- Prefer active voice, present tense, and second person. State conditions before actions. Keep each sentence focused, and vary its length as the meaning requires.
 - Use consistent terms. Avoid idiom, jargon, hype, blame, and claims of ease.
+- Put evidence beside consequential claims. Distinguish observations from inferences and predictions; state uncertainty where it matters. Run available, authorized checks rather than asking the user to run them.
+- Never invent links, citations, or transcript references. Verify references you present as evidence; distinguish proposed artifacts from ones that exist.
 - Use paragraphs, lists, or tables according to what makes the result clearest. Use descriptive sentence-case headings and links, with parallel list items.
 - Preserve exact repository terms, templates, UI text, code, commands, and public contracts.
 - For user-facing technical documentation, apply [`docs/technical-writing.md`](docs/technical-writing.md); project-specific rules remain authoritative.
-- For substantial work, give a brief opening update and report meaningful progress, decisions, or blocks.
+- For substantial work, give a brief opening update and report meaningful findings, decisions, or blocks. Skip routine tool narration and repeated plans.
 - Final handoff: outcome, material changes, evidence, residual risk; understandable without earlier updates.
 
 ## Learnings
