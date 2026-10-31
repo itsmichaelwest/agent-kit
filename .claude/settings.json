@@ -127,7 +127,7 @@
       }
     }
   },
-  "outputStyle": "explanatory",
+  "outputStyle": "Explanatory",
   "effortLevel": "high",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",

@@ -54,6 +54,30 @@ Verify model availability and supported effort levels before changing
 `agent-templates/config.toml`. Model recommendations expire; keep concrete
 routing policy in that config rather than copying model lists into documentation.
 
+## Product skills
+
+The owned product skills divide responsibilities by the work being done:
+
+| Work | Owning guide |
+| --- | --- |
+| Product positioning, argument, writing, evidence, imagery intent and narrative across formats | [product-storytelling](../skills/product-storytelling/SKILL.md) |
+| Product marketing website art direction, composition, typography, reusable presentation patterns, responsive behaviour and rendered review | [product-web-design](../skills/product-web-design/SKILL.md) |
+| Static or interactive deck story and scene direction | product-storytelling's [deck reference](../skills/product-storytelling/references/slide-decks.md), with the appropriate presentation production tool or guide |
+| HTML, CSS and JavaScript code quality | [frontend-guidelines](../skills/frontend-guidelines/SKILL.md), plus a framework specialist when relevant |
+
+For a new product website, develop the argument with product-storytelling and
+carry it into product-web-design. For an established page, select the guide for
+the actual change; a spacing repair need not reopen the story. The web guide
+encodes a specific approach to product presentation, rather than a general
+application-UI workflow. Its entrypoint and the storytelling entrypoint carry
+these boundaries so they remain visible outside this repository.
+
+Honour explicitly named skills in their requested roles. Use focused specialists
+for unresolved questions; do not automatically stack competing complete design
+workflows. Keep vendored skills available and unchanged. Keep the reusable
+product skills independent of source brands: source attribution, captures and
+observational limits belong in research notes, not in the skills.
+
 ## Sources
 
 First-party authoring guidance, reviewed 2026-10-08:

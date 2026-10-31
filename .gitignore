@@ -24,6 +24,9 @@ secrets/
 .claude/statsig/
 .claude/todos/
 
+# Local research: captures, trial outputs and working notes
+docs/research/local/
+
 # Dependencies
 node_modules/
 
