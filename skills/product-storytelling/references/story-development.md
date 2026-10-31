@@ -1,6 +1,6 @@
 # Develop the story beyond the page
 
-Use this reference for campaign concepts, launch scripts, films, demonstrations, and the relationship between them. Establish the product facts and governing promise with [Narrative strategy](narrative-strategy.md) first.
+Use this reference for campaign concepts, launch scripts, films, demonstrations, and the relationship between them. Establish the product facts and governing promise with [Narrative strategy](narrative-strategy.md) first. For a keynote's script, slides and delivery, use [Slide decks and keynotes](slide-decks.md#write-and-deliver-the-talk).
 
 ## Assign the communication job
 

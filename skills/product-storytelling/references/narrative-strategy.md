@@ -112,7 +112,7 @@ For the relationship between brand beliefs, campaign premises, launch propositio
 
 Preserve essential qualifications when reusing material. A cropped clip or abbreviated caption may lose the condition that made the original claim accurate. Recheck the final format. Approval of the source copy does not guarantee that it remains correct in every context.
 
-For speaker-led, self-paced, static, and interactive presentations, use [Slide decks](slide-decks.md), including its export checks. A deck can preserve the story while dividing its chapters into different-sized parts.
+For keynotes and for speaker-led, self-paced, static, and interactive presentations, use [Slide decks and keynotes](slide-decks.md), including its export checks. A deck can preserve the story while dividing its chapters into different-sized parts.
 
 ## Worked example
 

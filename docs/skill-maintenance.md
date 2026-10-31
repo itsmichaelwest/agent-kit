@@ -62,7 +62,7 @@ The owned product skills divide responsibilities by the work being done:
 | --- | --- |
 | Product positioning, argument, writing, evidence, imagery intent and narrative across formats | [product-storytelling](../skills/product-storytelling/SKILL.md) |
 | Product marketing website art direction, composition, typography, reusable presentation patterns, responsive behaviour and rendered review | [product-web-design](../skills/product-web-design/SKILL.md) |
-| Static or interactive deck story and scene direction | product-storytelling's [deck reference](../skills/product-storytelling/references/slide-decks.md), with the appropriate presentation production tool or guide |
+| Keynotes, presentation scripts and static or interactive deck story and scene direction | product-storytelling's [deck and keynote reference](../skills/product-storytelling/references/slide-decks.md), with the appropriate presentation production tool or guide |
 | HTML, CSS and JavaScript code quality | [frontend-guidelines](../skills/frontend-guidelines/SKILL.md), plus a framework specialist when relevant |
 
 For a new product website, develop the argument with product-storytelling and

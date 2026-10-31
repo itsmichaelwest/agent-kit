@@ -13,7 +13,7 @@ Use credible product imagery and make the main idea easy to find. Keep surroundi
 
 Use this skill for the website's visual design and execution. It covers how to present the product, arrange words and images, use type and surfaces, pace the page, adapt to different screens and build the controls people use to explore. Frontend precision helps those choices work as intended.
 
-Preserve the established product argument, factual boundaries and voice. Use `product-storytelling` when positioning, narrative or substantial copy needs development. Keep an approved story unless the task calls for revising it. Decks and general application interfaces do not need this website workflow. Honour explicitly named guides, and bring in a specialist for a specific question the task raises. Avoid combining several complete design workflows into one set of stylistic requirements.
+Preserve the established product argument, factual boundaries and voice. Use `product-storytelling` when positioning, narrative or substantial copy needs development. Keep an approved story unless the task calls for revising it. Decks and general application interfaces do not need this website workflow. A deck that runs in a browser can still use the interactive elements and scroll and motion references for its controls and motion. Honour explicitly named guides, and bring in a specialist for a specific question the task raises. Avoid combining several complete design workflows into one set of stylistic requirements.
 
 ## Design principles
 

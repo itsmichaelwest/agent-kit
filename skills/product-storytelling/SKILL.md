@@ -1,6 +1,6 @@
 ---
 name: product-storytelling
-description: Develop product positioning, narratives and writing for launches, marketing websites, and static or interactive decks. Use for the product argument, expressive copy, evidence, imagery intent and story coherence across formats. Pair with product-web-design for website art direction and implementation.
+description: Develop product positioning, narratives and writing for launches, marketing websites, keynotes, and static or interactive decks. Use for the product argument, expressive copy, evidence, imagery intent and story coherence across formats. Pair with product-web-design for website art direction and implementation.
 ---
 
 # Product storytelling
@@ -34,7 +34,7 @@ Start with the user's task and existing material. Use only the parts of this wor
 1. Find the argument and the feeling it should convey. Use [Narrative strategy](references/narrative-strategy.md) for the audience's situation, the main promise and what people need to understand before each claim. Use [Story development](references/story-development.md) for campaign premises, launch scripts and adapting the narrative.
 2. Choose what deserves attention with [Evidence and hierarchy](references/evidence-and-hierarchy.md). An invitation, explanation, proof and optional detail serve different purposes. Use them where needed; the story does not have to pass through each one in order.
 3. Develop words and scenes together. Read [Writing](references/writing.md) before drafting public copy. Use [Identity](references/identity.md) and [Visual direction](references/visual-direction.md) for campaign character, image purpose and scene planning. Inspect the actual assets and preserve the user's established direction.
-4. Adapt to the deliverable. Use [Slide decks](references/slide-decks.md) for static and interactive presentations. For website design or implementation, carry the product facts, copy intent and scene purposes into `product-web-design`. Frontend work should support the established argument.
+4. Adapt to the deliverable. Use [Slide decks and keynotes](references/slide-decks.md) for presented keynotes and for static and interactive presentations. For website design or implementation, carry the product facts, copy intent and scene purposes into `product-web-design`. Frontend work should support the established argument.
 5. Review the complete public story. Read the copy with its images as the audience will see it. Make the [subtraction pass](references/writing.md#read-the-whole-piece) to check the writing even when the layout looks good and the implementation works.
 
 ## Review questions
