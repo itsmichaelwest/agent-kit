@@ -982,6 +982,15 @@
       "skillPath": "skills/teardown/SKILL.md",
       "skillFolderHash": "91d64102b1eed1bba2cff8455ce4a0b0185f174b",
       "updatedAt": "2026-10-29T17:54:52.586Z"
+    },
+    "stageshow": {
+      "source": "benjitaylor/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/benjitaylor/skills.git",
+      "skillPath": "stageshow/SKILL.md",
+      "skillFolderHash": "5f24a58c1b28ba9d208e576e3c6267ccd1fc1769",
+      "installedAt": "2026-11-01T13:55:08.051Z",
+      "updatedAt": "2026-11-01T13:55:08.051Z"
     }
   },
   "dismissed": {

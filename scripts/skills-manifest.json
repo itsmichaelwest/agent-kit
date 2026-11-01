@@ -263,6 +263,12 @@
         "maintain-verification-skill",
         "sharpen"
       ]
+    },
+    {
+      "repo": "benjitaylor/skills",
+      "skills": [
+        "stageshow"
+      ]
     }
   ]
 }
