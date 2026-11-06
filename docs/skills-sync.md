@@ -146,8 +146,8 @@ configuration.
   and update pointers together; unrelated context documents keep their names.
   Run `setup-matt-pocock-skills` per project when configuring tracker and docs.
   Install either the linked skills or Matt's plugin per host to avoid duplicates.
-- Emil Kowalski's full 16-skill collection is included as reviewed at revision
-  `a81dbca07f2217b7103e510c0f13f8d5b017afc9` (2026-10-29), with its
+- Emil Kowalski's full 17-skill collection is included as reviewed at revision
+  `c8a79627b59d72d764d6ab6f2c87c09a48169833` (2026-11-06), with its
   [MIT license](licenses/emilkowalski-skills-MIT.txt). The upstream `prototype`
   installs as `emil-prototype`; `prototype` remains Matt Pocock's skill. Only
   Emil's aliased entrypoint name changes; its other content and bundled references
