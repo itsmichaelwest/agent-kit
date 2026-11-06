@@ -271,6 +271,12 @@
       "skills": [
         "stageshow"
       ]
+    },
+    {
+      "repo": "StewdioAI/blank-page",
+      "skills": [
+        "blank-page"
+      ]
     }
   ]
 }

@@ -127,6 +127,11 @@ configuration.
 
 ## Package-specific constraints
 
+- [`blank-page`](../skills/blank-page/SKILL.md) retains its complete upstream
+  folder and [MIT license](licenses/blank-page-MIT.txt). Invoke its reference
+  helper with `python3`; it also needs `curl`, and contact sheets need `ffmpeg`
+  and `ffprobe`. Upstream contact-sheet labels use a macOS Arial font path.
+  Sketchfab authentication is optional for downloads unavailable in Objaverse.
 - [`autonomous-delivery`](../skills/autonomous-delivery/SKILL.md) is Evan Boyle's
   verbatim MIT-licensed gist package, version `2.1.0`, pinned to revision
   `5ce9f9486d3cbed37a8b03b1b0152917b4bdff90`. Its source is recorded under

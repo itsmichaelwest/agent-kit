@@ -1000,6 +1000,15 @@
       "skillPath": "skills/choreograph/SKILL.md",
       "skillFolderHash": "a3766de3feddecbb5565d6eb41d32349c916ca4e",
       "updatedAt": "2026-11-06T01:55:36.483Z"
+    },
+    "blank-page": {
+      "source": "StewdioAI/blank-page",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/StewdioAI/blank-page.git",
+      "skillPath": "skills/blank-page/SKILL.md",
+      "skillFolderHash": "8faacac2cf4c2d3aa4fe9f3744b360f413a3a70c",
+      "installedAt": "2026-11-06T03:58:49.361Z",
+      "updatedAt": "2026-11-06T03:58:49.361Z"
     }
   },
   "dismissed": {
